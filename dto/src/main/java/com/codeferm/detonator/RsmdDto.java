@@ -26,6 +26,7 @@ public class RsmdDto {
     private String columnName;
     private int columnType;
     private String columnTypeName;
+    private Integer keySeq;
     private int precision;
     private int scale;
     private String schemaName;
@@ -105,6 +106,14 @@ public class RsmdDto {
 
     public void setPrecision(int precision) {
         this.precision = precision;
+    }
+
+    public Integer getKeySeq() {
+        return keySeq;
+    }
+
+    public void setKeySeq(Integer keySeq) {
+        this.keySeq = keySeq;
     }
 
     public int getScale() {
@@ -229,30 +238,31 @@ public class RsmdDto {
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 11 * hash + Objects.hashCode(this.catalogName);
-        hash = 11 * hash + Objects.hashCode(this.columnClassName);
-        hash = 11 * hash + this.columnDisplaySize;
-        hash = 11 * hash + Objects.hashCode(this.columnLabel);
-        hash = 11 * hash + Objects.hashCode(this.columnName);
-        hash = 11 * hash + this.columnType;
-        hash = 11 * hash + Objects.hashCode(this.columnTypeName);
-        hash = 11 * hash + this.precision;
-        hash = 11 * hash + this.scale;
-        hash = 11 * hash + Objects.hashCode(this.schemaName);
-        hash = 11 * hash + Objects.hashCode(this.tableName);
-        hash = 11 * hash + (this.autoIncrement ? 1 : 0);
-        hash = 11 * hash + (this.caseSensitive ? 1 : 0);
-        hash = 11 * hash + (this.currency ? 1 : 0);
-        hash = 11 * hash + (this.definitelyWritable ? 1 : 0);
-        hash = 11 * hash + Objects.hashCode(this.methodName);
-        hash = 11 * hash + this.nullable;
-        hash = 11 * hash + (this.readOnly ? 1 : 0);
-        hash = 11 * hash + (this.searchable ? 1 : 0);
-        hash = 11 * hash + (this.signed ? 1 : 0);
-        hash = 11 * hash + Objects.hashCode(this.varName);
-        hash = 11 * hash + Objects.hashCode(this.varType);
-        hash = 11 * hash + (this.writable ? 1 : 0);
+        int hash = 5;
+        hash = 79 * hash + Objects.hashCode(this.catalogName);
+        hash = 79 * hash + Objects.hashCode(this.columnClassName);
+        hash = 79 * hash + this.columnDisplaySize;
+        hash = 79 * hash + Objects.hashCode(this.columnLabel);
+        hash = 79 * hash + Objects.hashCode(this.columnName);
+        hash = 79 * hash + this.columnType;
+        hash = 79 * hash + Objects.hashCode(this.columnTypeName);
+        hash = 79 * hash + Objects.hashCode(this.keySeq);
+        hash = 79 * hash + this.precision;
+        hash = 79 * hash + this.scale;
+        hash = 79 * hash + Objects.hashCode(this.schemaName);
+        hash = 79 * hash + Objects.hashCode(this.tableName);
+        hash = 79 * hash + (this.autoIncrement ? 1 : 0);
+        hash = 79 * hash + (this.caseSensitive ? 1 : 0);
+        hash = 79 * hash + (this.currency ? 1 : 0);
+        hash = 79 * hash + (this.definitelyWritable ? 1 : 0);
+        hash = 79 * hash + Objects.hashCode(this.methodName);
+        hash = 79 * hash + this.nullable;
+        hash = 79 * hash + (this.readOnly ? 1 : 0);
+        hash = 79 * hash + (this.searchable ? 1 : 0);
+        hash = 79 * hash + (this.signed ? 1 : 0);
+        hash = 79 * hash + Objects.hashCode(this.varName);
+        hash = 79 * hash + Objects.hashCode(this.varType);
+        hash = 79 * hash + (this.writable ? 1 : 0);
         return hash;
     }
 
@@ -337,6 +347,9 @@ public class RsmdDto {
         if (!Objects.equals(this.varType, other.varType)) {
             return false;
         }
+        if (!Objects.equals(this.keySeq, other.keySeq)) {
+            return false;
+        }
         return true;
     }
 
@@ -344,10 +357,10 @@ public class RsmdDto {
     public String toString() {
         return "RsmdDto{" + "catalogName=" + catalogName + ", columnClassName=" + columnClassName + ", columnDisplaySize="
                 + columnDisplaySize + ", columnLabel=" + columnLabel + ", columnName=" + columnName + ", columnType=" + columnType
-                + ", columnTypeName=" + columnTypeName + ", precision=" + precision + ", scale=" + scale + ", schemaName="
-                + schemaName + ", tableName=" + tableName + ", autoIncrement=" + autoIncrement + ", caseSensitive=" + caseSensitive
-                + ", currency=" + currency + ", definitelyWritable=" + definitelyWritable + ", methodName=" + methodName
-                + ", nullable=" + nullable + ", readOnly=" + readOnly + ", searchable=" + searchable + ", signed=" + signed
-                + ", varName=" + varName + ", varType=" + varType + ", writable=" + writable + '}';
+                + ", columnTypeName=" + columnTypeName + ", keySeq=" + keySeq + ", precision=" + precision + ", scale=" + scale
+                + ", schemaName=" + schemaName + ", tableName=" + tableName + ", autoIncrement=" + autoIncrement
+                + ", caseSensitive=" + caseSensitive + ", currency=" + currency + ", definitelyWritable=" + definitelyWritable
+                + ", methodName=" + methodName + ", nullable=" + nullable + ", readOnly=" + readOnly + ", searchable=" + searchable
+                + ", signed=" + signed + ", varName=" + varName + ", varType=" + varType + ", writable=" + writable + '}';
     }
 }

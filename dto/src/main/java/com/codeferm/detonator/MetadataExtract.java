@@ -87,6 +87,29 @@ public class MetadataExtract {
     }
 
     /**
+     * Return Map of PK fields. Key determines position for composite keys.
+     *
+     * @param dataSource DataSoure to run queries against.
+     * @param tableName Name of table.
+     * @return Map of order and column names.
+     */
+    public Map<Integer, String> getPrimaryKey(final DataSource dataSource, String tableName) {
+        final Map<Integer, String> map = new TreeMap<>();
+        try (final Connection connection = dataSource.getConnection()) {
+            // Table name must be upper case
+            try (final ResultSet columns = connection.getMetaData().
+                    getPrimaryKeys(null, null, tableName.toUpperCase(Locale.ENGLISH))) {
+                while (columns.next()) {
+                    map.put(columns.getInt("KEY_SEQ"), columns.getString("COLUMN_NAME").toUpperCase(Locale.ENGLISH));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(String.format("getPrimaryKey: tableName=%s", tableName), e);
+        }
+        return map;
+    }
+
+    /**
      * Return a Map of ResultSetMetaData DTOs keyed by column name. Extra fields have been added to make it easier to convert to a
      * DTO class.
      *
@@ -137,31 +160,18 @@ public class MetadataExtract {
                 }
             }
             resultSet.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(String.format("getResultSetMetaData: sql=%s", sql), e);
-        }
-        return map;
-    }
-
-    /**
-     * Return Map of PK fields. Key determines position for composite keys.
-     *
-     * @param dataSource DataSoure to run queries against.
-     * @param tableName Name of table.
-     * @return Map of order and column names.
-     */
-    public Map<Integer, String> getPrimaryKey(final DataSource dataSource, String tableName) {
-        final Map<Integer, String> map = new TreeMap<>();
-        try (final Connection connection = dataSource.getConnection()) {
-            // Table name must be upper case
-            try (final ResultSet columns = connection.getMetaData().
-                    getPrimaryKeys(null, null, tableName.toUpperCase(Locale.ENGLISH))) {
-                while (columns.next()) {
-                    map.putIfAbsent(columns.getInt("KEY_SEQ"), columns.getString("COLUMN_NAME").toUpperCase(Locale.ENGLISH));
-                }
+            // Get table names from SQL
+            var tables = uniqueTableNames(sql);
+            // Get PK information only for single table SQL
+            if (tables.size() == 1) {
+                final var pkMap = getPrimaryKey(dataSource, tables.get(0));
+                // Set PK sequence in DTO
+                pkMap.entrySet().forEach((final  var entry) -> {
+                    map.get(entry.getValue()).setKeySeq(entry.getKey());
+                });
             }
         } catch (SQLException e) {
-            throw new RuntimeException(String.format("getPrimaryKey: tableName=%s", tableName), e);
+            throw new RuntimeException(String.format("getResultSetMetaData: sql=%s", sql), e);
         }
         return map;
     }
@@ -177,7 +187,7 @@ public class MetadataExtract {
      * @param tableNamePattern A table name pattern must match the table name as it is stored in the database.
      * @param types A list of table types, which must be from the list of table types returned from getTableTypes(),to include; null
      * returns all types.
-     * @param isQuoted Use quotes identifiers?
+     * @param isQuoted Use quoted identifiers?
      * @return List of table and/or view names.
      */
     public List<String> getTableNames(final DataSource dataSource, final String catalog, final String schemaPattern,
@@ -205,7 +215,7 @@ public class MetadataExtract {
             }
             resultSet.close();
         } catch (SQLException e) {
-            throw new RuntimeException(String.format("getPrimaryKey: tableNamePattern=%s", tableNamePattern), e);
+            throw new RuntimeException(String.format("getTableNames: tableNamePattern=%s", tableNamePattern), e);
         }
         return list;
     }

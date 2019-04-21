@@ -64,8 +64,8 @@ public class MakeDto {
         final var classes = new TreeSet<String>();
         // Used for equals and hashCode methods
         classes.add("java.util.Objects");
-        map.entrySet().stream().map((entry) -> entry.getValue()).filter((value) -> (value.getColumnClassName().startsWith(
-                "java.lang"))).forEachOrdered((value) -> {
+        map.entrySet().stream().map((final  var entry) -> entry.getValue()).filter((value) -> (value.getColumnClassName().startsWith(
+                "java.lang"))).forEachOrdered((final var value) -> {
             classes.add(value.getColumnClassName());
         });
         return classes;

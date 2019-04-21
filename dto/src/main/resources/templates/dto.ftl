@@ -16,7 +16,7 @@ public class ${className} {
 <#list map?values as rsmdDto>
 
     /**
-     * Mapped from database field ${rsmdDto.getColumnName()}, type ${rsmdDto.getColumnTypeName()}, precision ${rsmdDto.getPrecision()}, scale ${rsmdDto.getScale()}.
+     * Mapped from database field ${rsmdDto.getColumnName()}, type ${rsmdDto.getColumnTypeName()}, precision ${rsmdDto.getPrecision()}, scale ${rsmdDto.getScale()}<#if rsmdDto.getKeySeq()??>, PK sequence ${rsmdDto.getKeySeq()}</#if>.
      */
     private ${rsmdDto.getVarType()} ${rsmdDto.getVarName()};
 </#list>

@@ -156,7 +156,7 @@ public class MetadataExtractTest {
         // List should contain 5 items
         assertEquals(map.size(), 5);
         // Show DTOs
-        map.entrySet().forEach((var entry) -> {
+        map.entrySet().forEach((final  var entry) -> {
             logger.debug(entry.getValue());
         });
     }
@@ -195,7 +195,7 @@ public class MetadataExtractTest {
         // Map should contain two items
         assertEquals(map.size(), 2);
         // Show PK fields
-        map.entrySet().forEach((entry) -> {
+        map.entrySet().forEach((final  var entry) -> {
             logger.debug("{} : {}", entry.getKey(), entry.getValue());
         });
     }
@@ -211,7 +211,7 @@ public class MetadataExtractTest {
         // List should contain 12 items
         assertEquals(list.size(), 12);
         // Show DTOs
-        list.forEach((tableName) -> {
+        list.forEach((final  var tableName) -> {
             logger.debug(tableName);
         });
     }

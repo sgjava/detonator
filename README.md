@@ -12,7 +12,7 @@ schema is altered select * will pick up all changes.
 
 CQRS is supported out of the box since composite (i.e. more than one table in select) SQL is supported. You can generate a DTO that
 handles composite SQL (query) and use single table SQL (command) to generate DTOs and SQL for DML operations. This is also useful
-for legacy databases the were not forward engineered from an ORM type tool.
+for legacy databases that were not forward engineered from an ORM type tool.
 
 Currently Java DTOs and DML SQL are working against H2 and Oracle databases. DeTOnator is in the very early stages of development,
 but I wanted to put it out there for others to look at. Feel free to make suggestions in the issues section of this project.

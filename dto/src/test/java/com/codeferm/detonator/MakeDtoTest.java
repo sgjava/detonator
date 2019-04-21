@@ -12,6 +12,9 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -88,7 +91,32 @@ public class MakeDtoTest {
      * Test dtoTemplate.
      */
     @Test
+    void getClasses() {
+        logger.debug("getClasses");
+        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
+        final var metadataExtract = new MetadataExtract();
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_orders"));
+        // Test all columns
+        var classes = makeDto.getClasses(map, false);
+        // Set should not be empty
+        assertFalse(classes.isEmpty());
+        // Set should contain two items
+        assertEquals(classes.size(), 2);
+        for (final var className : classes) {
+            logger.debug(className);
+        }
+        // Test only PK columns
+        classes = makeDto.getClasses(map, true);
+        // Set should be empty
+        assertTrue(classes.isEmpty());
+    }
+
+    /**
+     * Test dtoTemplate.
+     */
+    @Test
     void dtoTemplate() {
+        logger.debug("dtoTemplate");
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
         final var metadataExtract = new MetadataExtract();
         final var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_orders"));
@@ -105,6 +133,7 @@ public class MakeDtoTest {
      */
     @Test
     void sqlTemplate() {
+        logger.debug("sqlTemplate");
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
         // Use StringWriter for template
         final var out = new StringWriter();

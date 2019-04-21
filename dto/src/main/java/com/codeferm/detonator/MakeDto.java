@@ -55,18 +55,24 @@ public class MakeDto {
     }
 
     /**
-     * Normalize classes for import section of DTO.
+     * Normalize classes.
      *
      * @param map Map of RsmdDtos keyed by column name.
+     * @param pkOnly Include only PK fields.
      * @return Set of unique class names without java.lang.* classes.
      */
-    public Set<String> getImports(final Map<String, RsmdDto> map) {
+    public Set<String> getClasses(final Map<String, RsmdDto> map, final boolean pkOnly) {
         final var classes = new TreeSet<String>();
-        // Used for equals and hashCode methods
-        classes.add("java.util.Objects");
-        map.entrySet().stream().map((final  var entry) -> entry.getValue()).filter((value) -> (value.getColumnClassName().startsWith(
+        map.entrySet().stream().map((entry) -> entry.getValue()).filter((value) -> (!value.getColumnClassName().startsWith(
                 "java.lang"))).forEachOrdered((final var value) -> {
-            classes.add(value.getColumnClassName());
+            // Only include PK columns?
+            if (pkOnly) {
+                if (value.getKeySeq() != null) {
+                    classes.add(value.getColumnClassName());
+                }
+            } else {
+                classes.add(value.getColumnClassName());
+            }
         });
         return classes;
     }
@@ -85,7 +91,10 @@ public class MakeDto {
         final var map = metadataExtract.getResultSetMetaData(dataSource, sql);
         // Template model
         final Map<String, Object> model = new HashMap<>();
-        model.put("imports", getImports(map));
+        final var classes = getClasses(map, false);
+        // Used for equals and hashCode methods
+        classes.add("java.util.Objects");
+        model.put("imports", classes);
         model.put("packageName", packageName);
         model.put("now", LocalDateTime.now().format(formatter));
         // Remove new line chars, so SQL statement fits on one line in comment.

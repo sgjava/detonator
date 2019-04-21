@@ -77,10 +77,10 @@ public class MetadataExtract {
     }
 
     /**
-     * Use ResultSetMetaData DTOs to get Set of table names.
+     * Use ResultSetMetaData DTOs to get List of table names.
      *
      * @param sql SQL statement to parse.
-     * @return Table names as Set.
+     * @return Table names as List.
      */
     public List<String> uniqueTableNames(final String sql) {
         return new TableNameParser(sql).tables().stream().collect(Collectors.toList());

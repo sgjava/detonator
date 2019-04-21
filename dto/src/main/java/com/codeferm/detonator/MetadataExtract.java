@@ -87,14 +87,15 @@ public class MetadataExtract {
     }
 
     /**
-     * Return a List of ResultSetMetaData DTOs. Extra fields have been added to make it easier to convert to a DTO class.
+     * Return a Map of ResultSetMetaData DTOs keyed by column name. Extra fields have been added to make it easier to convert to a
+     * DTO class.
      *
      * @param dataSource DataSoure to run queries against.
      * @param sql SQL statement used to get metadata.
-     * @return Result set meta data.
+     * @return Result set metadata.
      */
-    public List<RsmdDto> getResultSetMetaData(final DataSource dataSource, final String sql) {
-        final List<RsmdDto> list = new ArrayList<>();
+    public Map<String, RsmdDto> getResultSetMetaData(final DataSource dataSource, final String sql) {
+        final Map<String, RsmdDto> map = new TreeMap<>();
         try (final Connection connection = dataSource.getConnection()) {
             final ResultSet resultSet;
             try (final Statement statement = connection.createStatement()) {
@@ -132,14 +133,14 @@ public class MetadataExtract {
                     final var array = rsmd.getColumnClassName(col).split("\\.");
                     // Save only the class without the package
                     dto.setVarType(array[array.length - 1]);
-                    list.add(dto);
+                    map.put(dto.getColumnName(), dto);
                 }
             }
             resultSet.close();
         } catch (SQLException e) {
             throw new RuntimeException(String.format("getResultSetMetaData: sql=%s", sql), e);
         }
-        return list;
+        return map;
     }
 
     /**

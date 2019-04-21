@@ -1,6 +1,6 @@
 ![Title](images/title.png)
 
-Everything should be made as simple as possible, but not simpler. Albert Einstein
+Everything should be made as simple as possible, but not simpler - Albert Einstein
 
 DeTOnator is an easy to use code generator that explodes database schema into DTOs, CRUD operations, SQL statements, etc. Being
 template driven you can easily modify the templates to generate code for a particular framework or even another language

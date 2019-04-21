@@ -150,14 +150,14 @@ public class MetadataExtractTest {
     void getResultSetMetaData() throws SQLException {
         logger.debug("getResultSetMetaData");
         final var metadataExtract = new MetadataExtract();
-        final var list = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_orders"));
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_orders"));
         // List should not be empty
-        assertFalse(list.isEmpty());
+        assertFalse(map.isEmpty());
         // List should contain 5 items
-        assertEquals(list.size(), 5);
+        assertEquals(map.size(), 5);
         // Show DTOs
-        list.forEach((rsmdDto) -> {
-            logger.debug(rsmdDto);
+        map.entrySet().forEach((var entry) -> {
+            logger.debug(entry.getValue());
         });
     }
 

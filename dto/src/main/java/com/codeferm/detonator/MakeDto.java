@@ -12,7 +12,6 @@ import java.io.Writer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -58,17 +57,16 @@ public class MakeDto {
     /**
      * Normalize classes for import section of DTO.
      *
-     * @param list List of RsmdDtos.
+     * @param map Map of RsmdDtos keyed by column name.
      * @return Set of unique class names without java.lang.* classes.
      */
-    public Set<String> getImports(final List<RsmdDto> list) {
+    public Set<String> getImports(final Map<String, RsmdDto> map) {
         final var classes = new TreeSet<String>();
         // Used for equals and hashCode methods
         classes.add("java.util.Objects");
-        // Filter out java.lang or BigDecimal replaced with Long
-        list.stream().filter((rsmdDto) -> (!rsmdDto.getColumnClassName().startsWith("java.lang") && !rsmdDto.getVarType().equals(
-                "Long"))).forEachOrdered((rsmdDto) -> {
-            classes.add(rsmdDto.getColumnClassName());
+        map.entrySet().stream().map((entry) -> entry.getValue()).filter((value) -> (value.getColumnClassName().startsWith(
+                "java.lang"))).forEachOrdered((value) -> {
+            classes.add(value.getColumnClassName());
         });
         return classes;
     }
@@ -84,16 +82,16 @@ public class MakeDto {
     public void dtoTemplate(final String sql, final String packageName, final String className, final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
-        final var list = metadataExtract.getResultSetMetaData(dataSource, sql);
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sql);
         // Template model
         final Map<String, Object> model = new HashMap<>();
-        model.put("imports", getImports(list));
+        model.put("imports", getImports(map));
         model.put("packageName", packageName);
         model.put("now", LocalDateTime.now().format(formatter));
         // Remove new line chars, so SQL statement fits on one line in comment.
         model.put("sql", sql.replaceAll("\\R", " "));
         model.put("className", className);
-        model.put("list", list);
+        model.put("map", map);
         // Process DTO template
         try {
             final var temp = configuration.getTemplate("dto.ftl");
@@ -113,7 +111,7 @@ public class MakeDto {
     public void sqlTemplate(final String sql, final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
-        final var list = metadataExtract.getResultSetMetaData(dataSource, sql);
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sql);
         final var tables = metadataExtract.uniqueTableNames(sql);
         // If SQL has more than on table then skip template processing
         if (tables.size() == 1) {
@@ -127,7 +125,7 @@ public class MakeDto {
             model.put("sql", sql.replaceAll("\\R", " "));
             model.put("table", tableName);
             model.put("pk", pk);
-            model.put("list", list);
+            model.put("map", map);
             // Process DTO template
             try {
                 final var temp = configuration.getTemplate("sql.ftl");

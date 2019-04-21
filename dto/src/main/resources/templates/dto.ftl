@@ -13,7 +13,7 @@ import ${import};
  * ${sql}
  */
 public class ${className} {
-<#list list as rsmdDto>
+<#list map?values as rsmdDto>
 
     /**
      * Mapped from database field ${rsmdDto.getColumnName()}, type ${rsmdDto.getColumnTypeName()}, precision ${rsmdDto.getPrecision()}, scale ${rsmdDto.getScale()}.
@@ -27,7 +27,7 @@ public class ${className} {
     public ${className}() {
     }
 
-<#list list as rsmdDto>
+<#list map?values as rsmdDto>
     /**
      * Accessor for field ${rsmdDto.getVarName()}.
      *
@@ -60,7 +60,7 @@ public class ${className} {
             return false;
         }
         ${className} obj = (${className}) o;
-        return <#list list as rsmdDto>Objects.equals(${rsmdDto.getVarName()}, obj.${rsmdDto.getVarName()})<#if rsmdDto?has_next> && </#if></#list>;
+        return <#list map?values as rsmdDto>Objects.equals(${rsmdDto.getVarName()}, obj.${rsmdDto.getVarName()})<#if rsmdDto?has_next> && </#if></#list>;
     }
 
     /**
@@ -70,7 +70,7 @@ public class ${className} {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(<#list list as rsmdDto>${rsmdDto.getVarName()}<#if rsmdDto?has_next>, </#if></#list>);
+        return Objects.hash(<#list map?values as rsmdDto>${rsmdDto.getVarName()}<#if rsmdDto?has_next>, </#if></#list>);
     }
 
     /**
@@ -80,6 +80,6 @@ public class ${className} {
      */
     @Override
     public String toString() {
-        return "${className}{" + <#list list as rsmdDto><#if rsmdDto?is_first>"${rsmdDto.getVarName()}="<#else>", ${rsmdDto.getVarName()}="</#if> + ${rsmdDto.getVarName()} + </#list>"}";
+        return "${className}{" + <#list map?values as rsmdDto><#if rsmdDto?is_first>"${rsmdDto.getVarName()}="<#else>", ${rsmdDto.getVarName()}="</#if> + ${rsmdDto.getVarName()} + </#list>"}";
     }
 }

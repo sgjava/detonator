@@ -129,6 +129,23 @@ public class MakeDtoTest {
     }
 
     /**
+     * Test dtoTemplate.
+     */
+    @Test
+    void pkoTemplate() {
+        logger.debug("pkoTemplate");
+        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
+        final var metadataExtract = new MetadataExtract();
+        final var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_orders"));
+        // Use camelCase of table name
+        final var className = metadataExtract.toCamelCase(tables.get(0))+"Pk";
+        // Use StringWriter for template
+        final var out = new StringWriter();
+        makeDto.pkoTemplate(sqlMap.get("md_orders"), "com.codeferm.dto", className, out);
+        logger.debug(out.toString());
+    }
+    
+    /**
      * Test sqlTemplate.
      */
     @Test

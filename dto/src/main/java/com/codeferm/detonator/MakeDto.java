@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.sql.DataSource;
 
@@ -64,7 +65,7 @@ public class MakeDto {
     public Set<String> getClasses(final Map<String, RsmdDto> map, final boolean pkOnly) {
         final var classes = new TreeSet<String>();
         map.entrySet().stream().map((entry) -> entry.getValue()).filter((value) -> (!value.getColumnClassName().startsWith(
-                "java.lang"))).forEachOrdered((final var value) -> {
+                "java.lang"))).forEachOrdered((final    var value) -> {
             // Only include PK columns?
             if (pkOnly) {
                 if (value.getKeySeq() != null) {
@@ -101,6 +102,47 @@ public class MakeDto {
         model.put("sql", sql.replaceAll("\\R", " "));
         model.put("className", className);
         model.put("map", map);
+        // Process DTO template
+        try {
+            final var temp = configuration.getTemplate("dto.ftl");
+            temp.process(model, writer);
+        } catch (IOException | TemplateException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Use database metadata to generate Java PKO. Pass in the Writer required for a particular purpose.
+     *
+     * @param sql SQL used to generate metadata.
+     * @param packageName Java package name.
+     * @param className Java class name.
+     * @param writer Template output.
+     */
+    public void pkoTemplate(final String sql, final String packageName, final String className, final Writer writer) {
+        final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
+        final var metadataExtract = new MetadataExtract();
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sql);
+        // Create new map with just PK columns
+        final Map<String, RsmdDto> pkMap = new TreeMap<>();
+        for (final var entry : map.entrySet()) {
+            final var value = entry.getValue();
+            if (value.getKeySeq() != null) {
+                pkMap.put(entry.getKey(), value);
+            }
+        }
+        // Template model
+        final Map<String, Object> model = new HashMap<>();
+        final var classes = getClasses(map, true);
+        // Used for equals and hashCode methods
+        classes.add("java.util.Objects");
+        model.put("imports", classes);
+        model.put("packageName", packageName);
+        model.put("now", LocalDateTime.now().format(formatter));
+        // Remove new line chars, so SQL statement fits on one line in comment.
+        model.put("sql", sql.replaceAll("\\R", " "));
+        model.put("className", className);
+        model.put("map", pkMap);
         // Process DTO template
         try {
             final var temp = configuration.getTemplate("dto.ftl");

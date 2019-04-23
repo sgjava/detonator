@@ -4,6 +4,7 @@
 package com.codeferm.detonator;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -12,6 +13,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.AfterAll;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -67,6 +69,16 @@ public class DbDaoTest {
         ds.setMaxTotal(Integer.parseInt(properties.getProperty("db.pool.size")));
         dataSource = ds;
     }
+    
+    /**
+     * Shut down datasource.
+     * 
+     * @throws SQLException Possible exception.
+     */
+    @AfterAll
+    public static void afterAll() throws SQLException{
+        ((BasicDataSource)dataSource).close();
+    }    
 
     /**
      * Test dtoTemplate.

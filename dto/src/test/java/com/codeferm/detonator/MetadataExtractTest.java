@@ -12,6 +12,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.AfterAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.BeforeAll;
@@ -85,6 +86,16 @@ public class MetadataExtractTest {
                     getProperty("db.remove.delimiter")));
         }
     }
+    
+    /**
+     * Shut down datasource.
+     * 
+     * @throws SQLException Possible exception.
+     */
+    @AfterAll
+    public static void afterAll() throws SQLException{
+        ((BasicDataSource)dataSource).close();
+    }    
 
     /**
      * Test getTableNames.

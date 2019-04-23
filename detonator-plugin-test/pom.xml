@@ -5,15 +5,15 @@
         <artifactId>detonator</artifactId>
         <groupId>com.codeferm</groupId>
         <version>1.0.0-SNAPSHOT</version>
-    </parent>
-
+    </parent> 
+    
     <groupId>com.codeferm</groupId>
-    <artifactId>dao</artifactId>
+    <artifactId>detonator-plugin-test</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    
-    <name>DAO</name>    
 
+    <name>Detonator Plugin Test</name>
+            
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
@@ -22,45 +22,32 @@
     
     <build>
         <plugins>
+            <!-- Generate DTOs -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
+                <groupId>com.codeferm</groupId>
+                <artifactId>detonator-maven-plugin</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
+                    <propertyFile>${project.basedir}/src/main/resources/dto.properties</propertyFile>
+                    <templates>${project.basedir}/src/main/resources/templates</templates>
+                    <packageName>com.codeferm.dto</packageName>
+                    <sqlMap>
+                        <Orders>select * from orders</Orders>
+                    </sqlMap>                    
                 </configuration>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>dto</goal>
+                        </goals>
+                    </execution>
+                </executions>                
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.1</version>
-            </plugin>            
         </plugins>
     </build>
     
     <dependencies>
-        <!-- Compile -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.11.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.11.2</version>
-        </dependency>        
-        <dependency>
-            <groupId>commons-dbutils</groupId>
-            <artifactId>commons-dbutils</artifactId>
-            <version>1.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
-            <version>2.3.28</version>
-        </dependency>          
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -79,6 +66,6 @@
             <artifactId>commons-dbcp2</artifactId>
             <version>2.3.0</version>
             <scope>test</scope>
-        </dependency>        
+        </dependency>
     </dependencies>
 </project>

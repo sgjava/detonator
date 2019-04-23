@@ -5,6 +5,7 @@ package com.codeferm.detonator;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
@@ -12,6 +13,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.AfterAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -86,6 +88,16 @@ public class MakeDtoTest {
                     getProperty("db.remove.delimiter")));
         }
     }
+    
+    /**
+     * Shut down datasource.
+     * 
+     * @throws SQLException Possible exception.
+     */
+    @AfterAll
+    public static void afterAll() throws SQLException{
+        ((BasicDataSource)dataSource).close();
+    }    
 
     /**
      * Test dtoTemplate.

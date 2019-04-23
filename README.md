@@ -12,6 +12,10 @@ fields usually will not break your code. Typically with most Java data layers or
 run time. Just make sure to always use a field list for select instead of select *. select * is handy for generating DML SQL,
 but as the table schema is altered select * will pick up all changes.
 
+A Maven plugin is provided to generate DTOs anf PKOs in the generated-sources directory. This provides a simple way to generate
+DTOs and PKOs for your project. I plan on adding the DAO layer as well, so you will have out of the box data access without all
+the error prone manual labor!
+
 CQRS is supported out of the box since composite (i.e. more than one table in select) SQL is supported. You can generate a DTO that
 handles composite SQL (query) and use single table SQL (command) to generate DTOs and SQL for DML operations. This is also useful
 for legacy databases that were not forward engineered from an ORM type tool.

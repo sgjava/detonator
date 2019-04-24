@@ -130,10 +130,7 @@ public class MakeDto {
         }
         // Template model
         final Map<String, Object> model = new HashMap<>();
-        final var classes = getClasses(map, true);
-        // Used for equals and hashCode methods
-        classes.add("java.util.Objects");
-        model.put("imports", classes);
+        model.put("imports", getClasses(map, true));
         model.put("packageName", packageName);
         model.put("now", LocalDateTime.now().format(formatter));
         // Remove new line chars, so SQL statement fits on one line in comment.

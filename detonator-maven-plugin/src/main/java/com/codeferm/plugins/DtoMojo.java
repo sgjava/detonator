@@ -119,9 +119,13 @@ public class DtoMojo extends AbstractMojo {
             final var makeDto = new MakeDto(dataSource, templates);
             // Generate classes based on SQL Map
             for (final var entry : sqlMap.entrySet()) {
-                // Use FileWriter for template output
+                // Use FileWriter for DTO output
                 try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%s.java", classDir, entry.getKey())))) {
                     makeDto.dtoTemplate(entry.getValue(), packageName, entry.getKey(), out);
+                }
+                // Use FileWriter for PKO output
+                try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%sPk.java", classDir, entry.getKey())))) {
+                    makeDto.pkoTemplate(entry.getValue(), packageName, String.format("%sPk", entry.getKey()), out);
                 }
             }
             // Close DataSource

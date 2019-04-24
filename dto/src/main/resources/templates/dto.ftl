@@ -6,6 +6,7 @@ package ${packageName};
 <#list imports as import>
 import ${import};
 </#list>
+import java.util.Objects;
 
 /**
  * Created by DeTOnator on ${now}.

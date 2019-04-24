@@ -136,7 +136,7 @@ public class MakeDtoTest {
         final var className = metadataExtract.toCamelCase(tables.get(0));
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.dtoTemplate(sqlMap.get("md_orders"), "com.codeferm.dto", className, out);
+        makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, out);
         logger.debug(out.toString());
     }
 
@@ -153,7 +153,7 @@ public class MakeDtoTest {
         final var className = metadataExtract.toCamelCase(tables.get(0))+"Pk";
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.pkoTemplate(sqlMap.get("md_orders"), "com.codeferm.dto", className, out);
+        makeDto.pkoTemplate("dto.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, out);
         logger.debug(out.toString());
     }
     
@@ -166,7 +166,7 @@ public class MakeDtoTest {
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.sqlTemplate(sqlMap.get("md_order_items"), out);
+        makeDto.sqlTemplate("sql.ftl", sqlMap.get("md_order_items"), out);
         logger.debug(out.toString());
     }
 }

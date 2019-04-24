@@ -29,7 +29,9 @@
                 <version>1.0.0-SNAPSHOT</version>
                 <configuration>
                     <propertyFile>${project.basedir}/src/main/resources/dto.properties</propertyFile>
-                    <templates>${project.basedir}/../dto/src/main/resources/templates</templates>
+                    <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
+                    <dtoTemplate>dto.ftl</dtoTemplate>
+                    <pkoTemplate>dto.ftl</pkoTemplate>
                     <packageName>com.codeferm.dto</packageName>
                     <sqlMap>
                         <Orders>select * from orders</Orders>

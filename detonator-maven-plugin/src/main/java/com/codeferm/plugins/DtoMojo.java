@@ -48,8 +48,18 @@ public class DtoMojo extends AbstractMojo {
     /**
      * FreeMarker templates path.
      */
-    @Parameter(property = "templates", required = true)
-    private String templates;
+    @Parameter(property = "templatesDir", required = true)
+    private String templatesDir;
+    /**
+     * DTO template.
+     */
+    @Parameter(property = "dtoTtemplate", required = true)
+    private String dtoTemplate;
+    /**
+     * PKO template.
+     */
+    @Parameter(property = "pkoTtemplate", required = true)
+    private String pkoTemplate;
     /**
      * Map of class name (key) and SQL (value).
      */
@@ -116,16 +126,16 @@ public class DtoMojo extends AbstractMojo {
             final var classDir = String.format("%s/%s", outputDir, packageName.replace('.', '/'));
             final var dir = new File(classDir);
             dir.mkdirs();
-            final var makeDto = new MakeDto(dataSource, templates);
+            final var makeDto = new MakeDto(dataSource, templatesDir);
             // Generate classes based on SQL Map
             for (final var entry : sqlMap.entrySet()) {
                 // Use FileWriter for DTO output
                 try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%s.java", classDir, entry.getKey())))) {
-                    makeDto.dtoTemplate(entry.getValue(), packageName, entry.getKey(), out);
+                    makeDto.dtoTemplate(dtoTemplate, entry.getValue(), packageName, entry.getKey(), out);
                 }
                 // Use FileWriter for PKO output
                 try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%sPk.java", classDir, entry.getKey())))) {
-                    makeDto.pkoTemplate(entry.getValue(), packageName, String.format("%sPk", entry.getKey()), out);
+                    makeDto.pkoTemplate(pkoTemplate, entry.getValue(), packageName, String.format("%sPk", entry.getKey()), out);
                 }
             }
             // Close DataSource

@@ -35,6 +35,7 @@
                     <packageName>com.codeferm.dto</packageName>
                     <sqlMap>
                         <Orders>select * from orders</Orders>
+                        <RegionscCountries>select * from regions r, countries c where r.region_id = c.region_id</RegionscCountries>
                     </sqlMap>                    
                 </configuration>
                 <executions>

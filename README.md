@@ -4,7 +4,7 @@ Everything should be made as simple as possible, but not simpler - Albert Einste
 
 DeTOnator is an easy to use code generator that explodes database schema into DTOs, PKOs, DAOs, etc. Being template driven you can
 easily modify the templates to generate code for a particular framework or even another language besides Java. Since no IDE plugins
- or GUI are required it's ideal for headless environments like CI/CD, build servers, etc. About ten years ago a colleague and myself
+ or GUIs are required it's ideal for headless environments like CI/CD, build servers, etc. About ten years ago a colleague and myself
 came up with something similar, but it was built for Spring and JdbcTamplate. At the time there was FireStorm DAO, but it was commercial
 and now it's a dead project from what I can tell.
 
@@ -14,9 +14,9 @@ fields usually will not break your code. Typically with most Java data layers or
 run time. Just make sure to always use a field list for select instead of select *. select * is handy for generating DML SQL,
 but as the table schema is altered select * will pick up all changes.
 
-A Maven plugin is provided to generate DTOs anf PKOs in the generated-sources directory. This provides a simple way to generate
-DTOs and PKOs for your project. I plan on adding the DAO layer as well, so you will have out of the box data access without all
-the error prone manual labor!
+A Maven plugin is provided to generate DTOs and PKOs in the generated-sources directory. This provides a simple way to generate
+DTOs and PKOs for your project. I plan on adding the DAO layer as well, so you will have data access without all the error prone
+manual labor!
 
 CQRS is supported out of the box since composite (i.e. more than one table in select) SQL is supported. You can generate a DTO that
 handles composite SQL (query) and use single table SQL (command) to generate DTOs and SQL for DML operations. This is also useful

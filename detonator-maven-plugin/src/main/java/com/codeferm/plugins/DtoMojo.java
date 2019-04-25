@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -133,9 +134,16 @@ public class DtoMojo extends AbstractMojo {
                 try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%s.java", classDir, entry.getKey())))) {
                     makeDto.dtoTemplate(dtoTemplate, entry.getValue(), packageName, entry.getKey(), out);
                 }
-                // Use FileWriter for PKO output
-                try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%sPk.java", classDir, entry.getKey())))) {
-                    makeDto.pkoTemplate(pkoTemplate, entry.getValue(), packageName, String.format("%sPk", entry.getKey()), out);
+                // Use StringWriter in case PKO is empty (i.e. no PK or composite SQL)
+                final var out = new StringWriter();
+                makeDto.pkoTemplate(pkoTemplate, entry.getValue(), packageName, String.format("%sPk", entry.getKey()), out);
+                final var pkoStr = out.toString();
+                // Check for empty result
+                if (!pkoStr.isEmpty()) {
+                    // Use FileWriter for PKO output
+                    try (final var pkoOut = new BufferedWriter(new FileWriter(String.format("%s/%sPk.java", classDir, entry.getKey())))) {
+                        pkoOut.write(pkoStr);
+                    }
                 }
             }
             // Close DataSource

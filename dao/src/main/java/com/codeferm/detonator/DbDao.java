@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * DAO interface that simplifies common CRUD operations. Implementations should handle bean mapping and converting field names with
- * underscores to camelCase.
+ * Database DAO interface that simplifies common CRUD operations. Implementations should handle bean mapping and converting field
+ * names with underscores to camelCase.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0

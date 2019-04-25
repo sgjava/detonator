@@ -61,7 +61,8 @@ public class ${className} {
             return false;
         }
         ${className} obj = (${className}) o;
-        return <#list map?values as rsmdDto>Objects.equals(${rsmdDto.getVarName()}, obj.${rsmdDto.getVarName()})<#if rsmdDto?has_next> && </#if></#list>;
+        return <#list map?values as rsmdDto><#if !rsmdDto?is_first>                </#if>Objects.equals(${rsmdDto.getVarName()}, obj.${rsmdDto.getVarName()})<#if rsmdDto?has_next> && </#if>
+</#list>;
     }
 
     /**
@@ -71,7 +72,9 @@ public class ${className} {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(<#list map?values as rsmdDto>${rsmdDto.getVarName()}<#if rsmdDto?has_next>, </#if></#list>);
+        return Objects.hash(
+<#list map?values as rsmdDto>                ${rsmdDto.getVarName()}<#if rsmdDto?has_next>, </#if>
+</#list>                );
     }
 
     /**
@@ -81,6 +84,8 @@ public class ${className} {
      */
     @Override
     public String toString() {
-        return "${className}{" + <#list map?values as rsmdDto><#if rsmdDto?is_first>"${rsmdDto.getVarName()}="<#else>", ${rsmdDto.getVarName()}="</#if> + ${rsmdDto.getVarName()} + </#list>"}";
+        return "${className}{" +
+<#list map?values as rsmdDto>                <#if rsmdDto?is_first>"${rsmdDto.getVarName()}="<#else>", ${rsmdDto.getVarName()}="</#if> + ${rsmdDto.getVarName()} +
+</#list>                "}";
     }
 }

@@ -11,15 +11,14 @@ import java.util.List;
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
- * @param <P> PKO type.
+ * @param <I> ID type.
  * @param <D> DTO type.
  */
-public interface Dao<P, D> {
+public interface Dao<I, D> {
     
     public abstract List<D> findAll();
-    public abstract D findById(final P pko);
+    public abstract D findById(final I id);
     public abstract void save(final D dto);
-    public abstract void delete(final P pko);
-    public abstract void update(final P pko, final D dto);
-    
+    public abstract void delete(final I id);
+    public abstract void update(final I id, final D dto);
 }

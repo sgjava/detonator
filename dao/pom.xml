@@ -31,10 +31,11 @@
                     <propertyFile>${project.basedir}/src/main/resources/dto.properties</propertyFile>
                     <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
                     <dtoTemplate>dto.ftl</dtoTemplate>
-                    <pkoTemplate>pko.ftl</pkoTemplate>
+                    <idTemplate>id.ftl</idTemplate>
                     <packageName>com.codeferm.dto</packageName>
                     <sqlMap>
                         <Orders>select * from orders</Orders>
+                        <OrderItems>select * from order_items</OrderItems>
                         <RegionscCountries>select * from regions r, countries c where r.region_id = c.region_id</RegionscCountries>
                     </sqlMap>                    
                 </configuration>

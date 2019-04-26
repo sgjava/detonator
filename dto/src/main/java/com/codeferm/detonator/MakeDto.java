@@ -111,7 +111,7 @@ public class MakeDto {
     }
 
     /**
-     * Use database metadata to generate Java PKO. Pass in the Writer required for a particular purpose.
+     * Use database metadata to generate Java ID objects. Pass in the Writer required for a particular purpose.
      *
      * @param template Template to use.
      * @param sql SQL used to generate metadata.
@@ -119,7 +119,7 @@ public class MakeDto {
      * @param className Java class name.
      * @param writer Template output.
      */
-    public void pkoTemplate(final String template, final String sql, final String packageName, final String className, final Writer writer) {
+    public void idTemplate(final String template, final String sql, final String packageName, final String className, final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sql);

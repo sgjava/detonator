@@ -27,7 +27,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 /**
- * Goal to generate DTO and PKO classes based on SQL.
+ * Goal to generate DTO and ID classes based on SQL.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
@@ -54,13 +54,13 @@ public class DtoMojo extends AbstractMojo {
     /**
      * DTO template.
      */
-    @Parameter(property = "dtoTtemplate", required = true)
+    @Parameter(property = "dtoTemplate", required = true)
     private String dtoTemplate;
     /**
-     * PKO template.
+     * ID template.
      */
-    @Parameter(property = "pkoTtemplate", required = true)
-    private String pkoTemplate;
+    @Parameter(property = "idTemplate", required = true)
+    private String idTemplate;
     /**
      * Map of class name (key) and SQL (value).
      */
@@ -134,15 +134,15 @@ public class DtoMojo extends AbstractMojo {
                 try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%s.java", classDir, entry.getKey())))) {
                     makeDto.dtoTemplate(dtoTemplate, entry.getValue(), packageName, entry.getKey(), out);
                 }
-                // Use StringWriter in case PKO is empty (i.e. no PK or composite SQL)
+                // Use StringWriter in case ID is empty (i.e. no PK or composite SQL)
                 final var out = new StringWriter();
-                makeDto.pkoTemplate(pkoTemplate, entry.getValue(), packageName, String.format("%sPk", entry.getKey()), out);
-                final var pkoStr = out.toString();
+                makeDto.idTemplate(idTemplate, entry.getValue(), packageName, String.format("%sId", entry.getKey()), out);
+                final var idStr = out.toString();
                 // Check for empty result
-                if (!pkoStr.isEmpty()) {
-                    // Use FileWriter for PKO output
-                    try (final var pkoOut = new BufferedWriter(new FileWriter(String.format("%s/%sPk.java", classDir, entry.getKey())))) {
-                        pkoOut.write(pkoStr);
+                if (!idStr.isEmpty()) {
+                    // Use FileWriter for ID output
+                    try (final var idOut = new BufferedWriter(new FileWriter(String.format("%s/%sId.java", classDir, entry.getKey())))) {
+                        idOut.write(idStr);
                     }
                 }
             }

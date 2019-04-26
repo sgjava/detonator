@@ -31,7 +31,7 @@
                     <propertyFile>${project.basedir}/src/main/resources/dto.properties</propertyFile>
                     <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
                     <dtoTemplate>dto.ftl</dtoTemplate>
-                    <pkoTemplate>pko.ftl</pkoTemplate>
+                    <idTemplate>id.ftl</idTemplate>
                     <packageName>com.codeferm.dto</packageName>
                     <sqlMap>
                         <Orders>select * from orders</Orders>

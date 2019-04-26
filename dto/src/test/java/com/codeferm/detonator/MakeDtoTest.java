@@ -100,7 +100,7 @@ public class MakeDtoTest {
     }    
 
     /**
-     * Test dtoTemplate.
+     * Test getClasses.
      */
     @Test
     void getClasses() {
@@ -144,8 +144,8 @@ public class MakeDtoTest {
      * Test dtoTemplate.
      */
     @Test
-    void pkoTemplate() {
-        logger.debug("pkoTemplate");
+    void idTemplate() {
+        logger.debug("idTemplate");
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
         final var metadataExtract = new MetadataExtract();
         final var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_orders"));
@@ -153,7 +153,7 @@ public class MakeDtoTest {
         final var className = metadataExtract.toCamelCase(tables.get(0))+"Pk";
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.pkoTemplate("pko.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, out);
+        makeDto.idTemplate("id.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, out);
         logger.debug(out.toString());
     }
     

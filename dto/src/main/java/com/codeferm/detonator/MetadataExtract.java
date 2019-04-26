@@ -42,7 +42,7 @@ public class MetadataExtract {
     public String toUpperCase(final String str) {
         String retStr = null;
         if (str != null) {
-            retStr = str.toUpperCase(Locale.ENGLISH);
+            retStr = str.toUpperCase(Locale.US);
         }
         return retStr;
     }
@@ -56,7 +56,7 @@ public class MetadataExtract {
     public String toLowerCase(final String str) {
         String retStr = null;
         if (str != null) {
-            retStr = str.toLowerCase(Locale.ENGLISH);
+            retStr = str.toLowerCase(Locale.US);
         }
         return retStr;
     }
@@ -98,9 +98,9 @@ public class MetadataExtract {
         try (final Connection connection = dataSource.getConnection()) {
             // Table name must be upper case
             try (final ResultSet columns = connection.getMetaData().
-                    getPrimaryKeys(null, null, tableName.toUpperCase(Locale.ENGLISH))) {
+                    getPrimaryKeys(null, null, tableName.toUpperCase(Locale.US))) {
                 while (columns.next()) {
-                    map.put(columns.getInt("KEY_SEQ"), columns.getString("COLUMN_NAME").toUpperCase(Locale.ENGLISH));
+                    map.put(columns.getInt("KEY_SEQ"), columns.getString("COLUMN_NAME").toUpperCase(Locale.US));
                 }
             }
         } catch (SQLException e) {
@@ -151,7 +151,7 @@ public class MetadataExtract {
                     final var camelCase = toCamelCase(rsmd.getColumnName(col));
                     dto.setMethodName(camelCase);
                     // Set first character to lower case
-                    dto.setVarName(camelCase.substring(0, 1).toLowerCase(Locale.ENGLISH) + camelCase.substring(1));
+                    dto.setVarName(camelCase.substring(0, 1).toLowerCase(Locale.US) + camelCase.substring(1));
                     // Split by period
                     final var array = rsmd.getColumnClassName(col).split("\\.");
                     // Save only the class without the package
@@ -201,17 +201,17 @@ public class MetadataExtract {
             } else if ((isQuoted && databaseMetaData.storesUpperCaseQuotedIdentifiers()) || (!isQuoted && databaseMetaData.
                     storesUpperCaseIdentifiers())) {
                 resultSet = databaseMetaData.getTables(toUpperCase(catalog), toUpperCase(schemaPattern), tableNamePattern.
-                        toLowerCase(Locale.ENGLISH), types);
+                        toLowerCase(Locale.US), types);
             } else if ((isQuoted && databaseMetaData.storesLowerCaseQuotedIdentifiers()) || (!isQuoted && databaseMetaData.
                     storesLowerCaseIdentifiers())) {
                 resultSet = databaseMetaData.getTables(toLowerCase(catalog), toLowerCase(schemaPattern), tableNamePattern.
-                        toLowerCase(Locale.ENGLISH), types);
+                        toLowerCase(Locale.US), types);
             } else {
                 resultSet = databaseMetaData.getTables(catalog, schemaPattern, tableNamePattern, types);
             }
             while (resultSet.next()) {
                 String tableName = resultSet.getString("TABLE_NAME");
-                list.add(tableName.toUpperCase(Locale.ENGLISH));
+                list.add(tableName.toUpperCase(Locale.US));
             }
             resultSet.close();
         } catch (SQLException e) {

@@ -13,6 +13,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.Locale;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -23,6 +24,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import java.util.Map;
 import java.util.Properties;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.maven.model.Resource;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
@@ -42,10 +44,15 @@ public class DtoMojo extends AbstractMojo {
     @Parameter(property = "propertyFile", required = true)
     private String propertyFile;
     /**
-     * Location of generated sources.
+     * Location of generated-sources dir.
      */
-    @Parameter(defaultValue = "${project.build.directory}/generated-sources/java", property = "outputDir", required = true)
-    private String outputDir;
+    @Parameter(defaultValue = "${project.build.directory}/generated-sources", property = "generatedSourcesDir", required = true)
+    private String generatedSourcesDir;
+    /**
+     * Location of generated-sources dir.
+     */
+    @Parameter(defaultValue = "${project.build.directory}/generated-resources", property = "generatedResourcesDir", required = true)
+    private String generatedResourcesDir;
     /**
      * FreeMarker templates path.
      */
@@ -61,6 +68,11 @@ public class DtoMojo extends AbstractMojo {
      */
     @Parameter(property = "idTemplate", required = true)
     private String idTemplate;
+    /**
+     * ID template.
+     */
+    @Parameter(property = "sqlTemplate", required = true)
+    private String sqlTemplate;
     /**
      * Map of class name (key) and SQL (value).
      */
@@ -124,14 +136,21 @@ public class DtoMojo extends AbstractMojo {
             dataSource.setUrl(properties.getProperty("db.url"));
             dataSource.setMaxTotal(Integer.parseInt(properties.getProperty("db.pool.size")));
             // Make dirs
-            final var classDir = String.format("%s/%s", outputDir, packageName.replace('.', '/'));
-            final var dir = new File(classDir);
-            dir.mkdirs();
+            final var sourceDir = String.format("%s/java/%s", generatedSourcesDir, packageName.replace('.', '/'));
+            final var gsDir = new File(sourceDir);
+            gsDir.mkdirs();
+            final var grDir = new File(generatedResourcesDir);
+            grDir.mkdirs();
             final var makeDto = new MakeDto(dataSource, templatesDir);
             // Generate classes based on SQL Map
             for (final var entry : sqlMap.entrySet()) {
+                // Use FileWriter for SQL properties output
+                try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%s.properties", generatedResourcesDir, entry.
+                        getKey().toLowerCase(Locale.US))))) {
+                    makeDto.sqlTemplate(sqlTemplate, entry.getValue(), out);
+                }
                 // Use FileWriter for DTO output
-                try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%s.java", classDir, entry.getKey())))) {
+                try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%s.java", sourceDir, entry.getKey())))) {
                     makeDto.dtoTemplate(dtoTemplate, entry.getValue(), packageName, entry.getKey(), out);
                 }
                 // Use StringWriter in case ID is empty (i.e. no PK or composite SQL)
@@ -141,7 +160,7 @@ public class DtoMojo extends AbstractMojo {
                 // Check for empty result
                 if (!idStr.isEmpty()) {
                     // Use FileWriter for ID output
-                    try (final var idOut = new BufferedWriter(new FileWriter(String.format("%s/%sId.java", classDir, entry.getKey())))) {
+                    try (final var idOut = new BufferedWriter(new FileWriter(String.format("%s/%sId.java", sourceDir, entry.getKey())))) {
                         idOut.write(idStr);
                     }
                 }
@@ -153,7 +172,11 @@ public class DtoMojo extends AbstractMojo {
                 throw new RuntimeException("Close DataSource", e);
             }
             // Add generated sources
-            mavenProject.addCompileSourceRoot(outputDir);
+            mavenProject.addCompileSourceRoot(sourceDir);
+            // Add generated resources
+            final Resource resource = new Resource();
+            resource.setDirectory(generatedResourcesDir);
+            mavenProject.addResource(resource);
         } catch (IOException e) {
             getLog().error(e.getMessage());
         }

@@ -19,7 +19,7 @@ import java.util.TreeSet;
 import javax.sql.DataSource;
 
 /**
- * Make DTO from database metadata and template.
+ * Make DTO from database metadata and templates.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
@@ -65,7 +65,7 @@ public class MakeDto {
     public Set<String> getClasses(final Map<String, RsmdDto> map, final boolean pkOnly) {
         final var classes = new TreeSet<String>();
         map.entrySet().stream().map((entry) -> entry.getValue()).filter((value) -> (!value.getColumnClassName().startsWith(
-                "java.lang"))).forEachOrdered((final       var value) -> {
+                "java.lang"))).forEachOrdered((final        var value) -> {
             // Only include PK columns?
             if (pkOnly) {
                 if (value.getKeySeq() != null) {
@@ -119,7 +119,8 @@ public class MakeDto {
      * @param className Java class name.
      * @param writer Template output.
      */
-    public void idTemplate(final String template, final String sql, final String packageName, final String className, final Writer writer) {
+    public void idTemplate(final String template, final String sql, final String packageName, final String className,
+            final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sql);
@@ -142,7 +143,7 @@ public class MakeDto {
             model.put("sql", sql.replaceAll("\\R", " "));
             model.put("className", className);
             model.put("map", pkMap);
-            // Process DTO template
+            // Process ID template
             try {
                 final var temp = configuration.getTemplate(template);
                 temp.process(model, writer);
@@ -154,7 +155,7 @@ public class MakeDto {
 
     /**
      * Use database metadata to generate SQL statements. Pass in the Writer required for a particular purpose. For composite SQL
-     * (i.e. more than one table) or tables without a PK no output will be generated since that is required for DML operations.
+     * (i.e. more than one table) or tables without a PK the template will not generate DML operations.
      *
      * @param template Template to use.
      * @param sql SQL used to generate metadata.
@@ -165,26 +166,29 @@ public class MakeDto {
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sql);
         final var tables = metadataExtract.uniqueTableNames(sql);
-        // If SQL has more than on table then skip template processing
-        if (tables.size() == 1) {
-            final var tableName = tables.iterator().next();
-            // Get PK fields
-            final var pk = metadataExtract.getPrimaryKey(dataSource, tableName);
-            // Template model
-            final Map<String, Object> model = new HashMap<>();
-            model.put("now", LocalDateTime.now().format(formatter));
-            // Remove new line chars, so SQL statement fits on one line in comment.
-            model.put("sql", sql.replaceAll("\\R", " "));
-            model.put("table", tableName);
-            model.put("pk", pk);
-            model.put("map", map);
-            // Process DTO template
-            try {
-                final var temp = configuration.getTemplate(template);
-                temp.process(model, writer);
-            } catch (IOException | TemplateException e) {
-                throw new RuntimeException(e);
-            }
+        final var tableName = tables.iterator().next();
+        // Get PK fields
+        final var pkMap = metadataExtract.getPrimaryKey(dataSource, tableName);
+        // Sorted PK fields
+        final Set<String> pkSet = new TreeSet<>();
+        pkMap.entrySet().forEach((entry) -> {
+            pkSet.add(entry.getValue());
+        });
+        // Template model
+        final Map<String, Object> model = new HashMap<>();
+        model.put("now", LocalDateTime.now().format(formatter));
+        // Remove new line chars, so SQL statement fits on one line in comment.
+        model.put("sql", sql.replaceAll("\\R", " "));
+        model.put("tables", tables);
+        model.put("table", tableName);
+        model.put("pkSet", pkSet);
+        model.put("map", map);
+        // Process SQL template
+        try {
+            final var temp = configuration.getTemplate(template);
+            temp.process(model, writer);
+        } catch (IOException | TemplateException e) {
+            throw new RuntimeException(e);
         }
     }
 }

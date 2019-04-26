@@ -5,12 +5,13 @@ package com.codeferm.detonator;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 import javax.sql.DataSource;
 
 /**
@@ -19,10 +20,10 @@ import javax.sql.DataSource;
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
- * @param <I> Identity Object.
- * @param <D> Data Transfer Object.
+ * @param <T> Identity Object.
+ * @param <ID> Data Transfer Object.
  */
-public class GenDbDao<I, D> implements Dao<I, D> {
+public class GenDbDao<T, ID> implements Dao<T, ID> {
 
     /**
      * DataSource.
@@ -33,9 +34,9 @@ public class GenDbDao<I, D> implements Dao<I, D> {
      */
     private final DbDao dbDao;
     /**
-     * Query map.
+     * SQL as properties.
      */
-    private final Map<String, String> sqlMap;
+    private final Properties properties;
     /**
      * ID class type.
      */
@@ -53,18 +54,35 @@ public class GenDbDao<I, D> implements Dao<I, D> {
      * Constructor to initialize DataSource.
      *
      * @param dataSource DataSource to use for connections.
-     * @param sqlMap Map of SQL for select, insert, update and delete operations.
+     * @param propertyFile Name of property file.
      * @param idClass ID class type.
      * @param dtoClass DTO class type.
      */
-    public GenDbDao(final DataSource dataSource, final Map<String, String> sqlMap, final Class idClass, final Class dtoClass) {
+    public GenDbDao(final DataSource dataSource, final String propertyFile, final Class idClass, final Class dtoClass) {
         this.dataSource = dataSource;
-        this.sqlMap = sqlMap;
         this.idClass = idClass;
         this.dtoClass = dtoClass;
+        this.properties = loadProperties(propertyFile);
         // Get ID class read methods
         idReadMethods = getReadMethods(idClass.getDeclaredFields(), idClass);
         dbDao = new DbUtilsDsDao(this.dataSource);
+    }
+
+    /**
+     * Load properties file from class path.
+     *
+     * @param propertyFile Name of property file.
+     * @return Properties.
+     */
+    public final Properties loadProperties(final String propertyFile) {
+        Properties props = new Properties();
+        // Get properties from classpath
+        try (final var stream = GenDbDao.class.getClassLoader().getResourceAsStream(propertyFile)) {
+            props.load(stream);
+        } catch (IOException e) {
+            throw new RuntimeException("Property file exception", e);
+        }
+        return props;
     }
 
     /**
@@ -97,7 +115,7 @@ public class GenDbDao<I, D> implements Dao<I, D> {
      * @param id Identity object.
      * @return Array of parameters.
      */
-    public Object[] beanToParams(final I id) {
+    public Object[] beanToParams(final ID id) {
         final var params = new Object[idReadMethods.size()];
         int i = 0;
         for (final var idReadMethod : idReadMethods) {
@@ -111,27 +129,27 @@ public class GenDbDao<I, D> implements Dao<I, D> {
     }
 
     @Override
-    public List<D> findAll() {
-        return dbDao.selectList(sqlMap.get("findAll"), dtoClass);
+    public List<T> findAll() {
+        return dbDao.selectList(properties.getProperty("findAll"), dtoClass);
     }
 
     @Override
-    public D findById(I Id) {
-        return dbDao.select(sqlMap.get("findById"), beanToParams(Id), dtoClass);
+    public T findById(ID Id) {
+        return dbDao.select(properties.getProperty("findById"), beanToParams(Id), dtoClass);
     }
 
     @Override
-    public void save(D dto) {
+    public void save(T dto) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void delete(I Id) {
+    public void delete(ID Id) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void update(I Id, D dto) {
+    public void update(T dto, ID Id) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

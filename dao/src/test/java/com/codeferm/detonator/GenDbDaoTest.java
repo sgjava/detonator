@@ -88,7 +88,7 @@ public class GenDbDaoTest {
      */
     @Test
     void genDbDao() {
-        final Dao dao = new GenDbDao(dataSource, sqlMap, OrderItemsId.class, OrderItems.class);
+        final Dao dao = new GenDbDao(dataSource, "orderitems.properties", OrderItemsId.class, OrderItems.class);
         final List<OrderItems> list = dao.findAll();
         // List should not be empty
         assertFalse(list.isEmpty());

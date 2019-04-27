@@ -54,35 +54,18 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
      * Constructor to initialize DataSource.
      *
      * @param dataSource DataSource to use for connections.
-     * @param propertyFile Name of property file.
+     * @param properties SQL statements as properties.
      * @param idClass ID class type.
      * @param dtoClass DTO class type.
      */
-    public GenDbDao(final DataSource dataSource, final String propertyFile, final Class idClass, final Class dtoClass) {
+    public GenDbDao(final DataSource dataSource, final Properties properties, final Class idClass, final Class dtoClass) {
         this.dataSource = dataSource;
         this.idClass = idClass;
         this.dtoClass = dtoClass;
-        this.properties = loadProperties(propertyFile);
+        this.properties = properties;
         // Get ID class read methods
         idReadMethods = getReadMethods(idClass.getDeclaredFields(), idClass);
         dbDao = new DbUtilsDsDao(this.dataSource);
-    }
-
-    /**
-     * Load properties file from class path.
-     *
-     * @param propertyFile Name of property file.
-     * @return Properties.
-     */
-    public final Properties loadProperties(final String propertyFile) {
-        Properties props = new Properties();
-        // Get properties from classpath
-        try (final var stream = GenDbDao.class.getClassLoader().getResourceAsStream(propertyFile)) {
-            props.load(stream);
-        } catch (IOException e) {
-            throw new RuntimeException("Property file exception", e);
-        }
-        return props;
     }
 
     /**

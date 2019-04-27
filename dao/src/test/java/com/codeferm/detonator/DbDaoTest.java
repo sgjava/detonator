@@ -3,6 +3,7 @@
  */
 package com.codeferm.detonator;
 
+import com.codeferm.dto.OrderItems;
 import com.codeferm.dto.Orders;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -82,7 +83,7 @@ public class DbDaoTest {
     }    
 
     /**
-     * Test dtoTemplate.
+     * Test DbDao.
      */
     @Test
     void dbDao() {

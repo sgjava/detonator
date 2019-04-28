@@ -95,17 +95,26 @@ public class GenDbDaoTest {
     void genDbDao() {
         final var sql = loadProperties("orderitems.properties");
         final Dao<OrderItems, OrderItemsId> dao = new GenDbDao<>(dataSource, sql, OrderItemsId.class, OrderItems.class);
+        // Get all records
         final List<OrderItems> list = dao.findAll();
         // List should not be empty
         assertFalse(list.isEmpty());
         list.forEach((orderItems) -> {
             logger.debug(orderItems);
         });
+        // Get one record by PK
         final var orderItems = dao.findById(new OrderItemsId(BigDecimal.valueOf(9), BigDecimal.valueOf(69)));
         // Verify PK
         assertEquals(orderItems.getItemId(), BigDecimal.valueOf(9));
         assertEquals(orderItems.getOrderId(), BigDecimal.valueOf(69));
         logger.debug(orderItems);
+        // Insert new OrderItems bean
+        orderItems.setOrderId(BigDecimal.valueOf(70));
+        dao.save(orderItems);
+        // Update inserted record
+        dao.update(orderItems, new OrderItemsId(BigDecimal.valueOf(9), BigDecimal.valueOf(70)));
+        // Delete saved record
+        dao.delete(new OrderItemsId(BigDecimal.valueOf(9), BigDecimal.valueOf(70)));
     }
 
 }

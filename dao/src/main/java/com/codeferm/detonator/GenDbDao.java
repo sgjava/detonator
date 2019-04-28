@@ -5,11 +5,11 @@ package com.codeferm.detonator;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import javax.sql.DataSource;
@@ -48,6 +48,10 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     /**
      * ID read methods.
      */
+    private final List<Method> dtoReadMethods;
+    /**
+     * ID read methods.
+     */
     private final List<Method> idReadMethods;
 
     /**
@@ -63,7 +67,9 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
         this.idClass = idClass;
         this.dtoClass = dtoClass;
         this.properties = properties;
-        // Get ID class read methods
+        // Get DTO read methods
+        dtoReadMethods = getReadMethods(dtoClass.getDeclaredFields(), dtoClass);
+        // Get ID read methods
         idReadMethods = getReadMethods(idClass.getDeclaredFields(), idClass);
         dbDao = new DbUtilsDsDao(this.dataSource);
     }
@@ -95,15 +101,16 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     /**
      * Return Object array with values in order of then bean's accessor methods.
      *
-     * @param id Identity object.
+     * @param bean Bean object.
+     * @param readMethods Bean's read methods.
      * @return Array of parameters.
      */
-    public Object[] beanToParams(final ID id) {
-        final var params = new Object[idReadMethods.size()];
+    public Object[] beanToParams(final Object bean, final List<Method> readMethods) {
+        final var params = new Object[readMethods.size()];
         int i = 0;
-        for (final var idReadMethod : idReadMethods) {
+        for (final var readMethod : readMethods) {
             try {
-                params[i++] = idReadMethod.invoke(id, (Object[]) null);
+                params[i++] = readMethod.invoke(bean, (Object[]) null);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
@@ -117,23 +124,26 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     }
 
     @Override
-    public T findById(ID Id) {
-        return dbDao.select(properties.getProperty("findById"), beanToParams(Id), dtoClass);
+    public T findById(ID id) {
+        return dbDao.select(properties.getProperty("findById"), beanToParams(id, idReadMethods), dtoClass);
     }
 
     @Override
     public void save(T dto) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        dbDao.update(properties.getProperty("save"), beanToParams(dto, dtoReadMethods));
     }
 
     @Override
-    public void delete(ID Id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void delete(ID id) {
+        dbDao.update(properties.getProperty("delete"), beanToParams(id, idReadMethods));
     }
 
     @Override
-    public void update(T dto, ID Id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void update(T dto, ID id) {
+        // Combine DTO and ID fields into one List
+        final var list = new ArrayList(Arrays.asList(beanToParams(dto, dtoReadMethods)));
+        list.addAll(Arrays.asList(beanToParams(id, idReadMethods)));
+        dbDao.update(properties.getProperty("update"), list.toArray());
     }
 
 }

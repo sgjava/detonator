@@ -23,7 +23,7 @@ import org.apache.maven.project.MavenProject;
  * @version 1.0.0
  * @since 1.0.0
  */
-@Mojo(name = "testGenerate", defaultPhase = LifecyclePhase.GENERATE_TEST_SOURCES, requiresDependencyResolution
+@Mojo(name = "testGenerate", defaultPhase = LifecyclePhase.GENERATE_TEST_SOURCES, threadSafe = true, requiresDependencyResolution
         = ResolutionScope.TEST)
 public class TestGenMojo extends AbstractMojo {
 

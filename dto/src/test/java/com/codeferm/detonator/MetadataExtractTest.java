@@ -52,13 +52,13 @@ public class MetadataExtractTest {
      * @param delimiter Line delimiter.
      * @param removeDelimiter True to remove delimiter from statement
      */
-    static void createDb(final String fileName, final String delimiter, boolean removeDelimiter) {
+    public static void createDb(final String fileName, final String delimiter, boolean removeDelimiter) {
         final var dataLoader = new DataLoader(dataSource);
         dataLoader.execScript(fileName, delimiter, removeDelimiter);
     }
 
     @BeforeAll
-    static void beforeAll() {
+    public static void beforeAll() {
         properties = new Properties();
         // Get properties from classpath
         try (final var stream = MetadataExtractTest.class.getClassLoader().getResourceAsStream("app.properties")) {
@@ -101,7 +101,7 @@ public class MetadataExtractTest {
      * Test getTableNames.
      */
     @Test
-    void uniqueTableNames() {
+    public void uniqueTableNames() {
         logger.debug("uniqueTableNames");
         final var metadataExtract = new MetadataExtract();
         var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_single_table"));
@@ -126,7 +126,7 @@ public class MetadataExtractTest {
      * Test toUpperCase.
      */
     @Test
-    void toUpperCase() {
+    public void toUpperCase() {
         logger.debug("toUpperCase");
         final var metadataExtract = new MetadataExtract();
         // Test upper case with lower case
@@ -141,7 +141,7 @@ public class MetadataExtractTest {
      * Test toLowerCase.
      */
     @Test
-    void toLowerCase() {
+    public void toLowerCase() {
         logger.debug("toLowerCase");
         final var metadataExtract = new MetadataExtract();
         // Test lower case with upper case
@@ -156,7 +156,7 @@ public class MetadataExtractTest {
      * Test getResultSetMetaData.
      */
     @Test
-    void getResultSetMetaData() throws SQLException {
+    public void getResultSetMetaData() throws SQLException {
         logger.debug("getResultSetMetaData");
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_orders"));
@@ -174,7 +174,7 @@ public class MetadataExtractTest {
      * Test camelCase.
      */
     @Test
-    void toCamelCase() {
+    public void toCamelCase() {
         logger.debug("toCamelCase");
         final var metadataExtract = new MetadataExtract();
         // Test upper case with underscore
@@ -195,7 +195,7 @@ public class MetadataExtractTest {
      * Get map of primary key fields sorted by sequence.
      */
     @Test
-    void getPrimaryKey() {
+    public void getPrimaryKey() {
         logger.debug("getPrimaryKey");
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getPrimaryKey(dataSource, "inventories");
@@ -210,7 +210,7 @@ public class MetadataExtractTest {
     }
 
     @Test
-    void getTableNames() {
+    public void getTableNames() {
         logger.debug("getTableNames");
         final var metadataExtract = new MetadataExtract();
         final var list = metadataExtract.getTableNames(dataSource, properties.getProperty("db.catalog"), properties.getProperty(

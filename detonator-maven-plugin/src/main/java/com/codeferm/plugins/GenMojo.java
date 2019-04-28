@@ -23,7 +23,8 @@ import org.apache.maven.project.MavenProject;
  * @version 1.0.0
  * @since 1.0.0
  */
-@Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
+@Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true, requiresDependencyResolution
+        = ResolutionScope.COMPILE)
 public class GenMojo extends AbstractMojo {
 
     /**

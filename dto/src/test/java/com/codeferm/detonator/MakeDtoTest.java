@@ -54,13 +54,13 @@ public class MakeDtoTest {
      * @param delimiter Line delimiter.
      * @param removeDelimiter True to remove delimiter from statement
      */
-    static void createDb(final String fileName, final String delimiter, boolean removeDelimiter) {
+    public static void createDb(final String fileName, final String delimiter, boolean removeDelimiter) {
         final var dataLoader = new DataLoader(dataSource);
         dataLoader.execScript(fileName, delimiter, removeDelimiter);
     }
 
     @BeforeAll
-    static void beforeAll() {
+    public static void beforeAll() {
         properties = new Properties();
         // Get properties from classpath
         try (final var stream = MakeDtoTest.class.getClassLoader().getResourceAsStream("app.properties")) {
@@ -103,7 +103,7 @@ public class MakeDtoTest {
      * Test getClasses.
      */
     @Test
-    void getClasses() {
+    public void getClasses() {
         logger.debug("getClasses");
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
         final var metadataExtract = new MetadataExtract();
@@ -127,7 +127,7 @@ public class MakeDtoTest {
      * Test dtoTemplate.
      */
     @Test
-    void dtoTemplate() {
+    public void dtoTemplate() {
         logger.debug("dtoTemplate");
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
         final var metadataExtract = new MetadataExtract();
@@ -144,7 +144,7 @@ public class MakeDtoTest {
      * Test dtoTemplate.
      */
     @Test
-    void idTemplate() {
+    public void idTemplate() {
         logger.debug("idTemplate");
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
         final var metadataExtract = new MetadataExtract();
@@ -161,7 +161,7 @@ public class MakeDtoTest {
      * Test sqlTemplate.
      */
     @Test
-    void sqlTemplate() {
+    public void sqlTemplate() {
         logger.debug("sqlTemplate");
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
         // Use StringWriter for template

@@ -15,10 +15,37 @@ import java.util.List;
  * @param <ID> ID type.
  */
 public interface Dao<T, ID> {
-    
+    /**
+     * Return all records.
+     * 
+     * @return List of all records.
+     */
     public abstract List<T> findAll();
+    /**
+     * Return one record by ID.
+     * 
+     * @param id ID of record to return.
+     * 
+     * @return Single record.
+     */
     public abstract T findById(final ID id);
+    /**
+     * Save the record.
+     * 
+     * @param dto Record to save.
+     */
     public abstract void save(final T dto);
+    /**
+     * Delete the record by ID.
+     * 
+     * @param id ID of record to delete.
+     */
     public abstract void delete(final ID id);
+    /**
+     * Update the record.
+     * 
+     * @param dto Updated record.
+     * @param id ID of record to update.
+     */
     public abstract void update(final T dto, final ID id);
 }

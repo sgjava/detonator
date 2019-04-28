@@ -15,7 +15,9 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 /**
- * Generic Database DAO.
+ * Generic Database DAO. The SQL parameter markers must match the order of the DTO and ID fields for mapping to work correctly.
+ * Currently DTO, ID and SQL generation put fields is in alpha order. DTO and ID methods are cached on construction to improve
+ * mapping performance.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
@@ -36,7 +38,7 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     /**
      * SQL as properties.
      */
-    private final Properties properties;
+    private final Properties sql;
     /**
      * ID class type.
      */
@@ -55,7 +57,7 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     private final List<Method> idReadMethods;
 
     /**
-     * Constructor to initialize DataSource.
+     * Constructor to initialize DataSource and cache DTO and ID methods.
      *
      * @param dataSource DataSource to use for connections.
      * @param properties SQL statements as properties.
@@ -66,7 +68,7 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
         this.dataSource = dataSource;
         this.idClass = idClass;
         this.dtoClass = dtoClass;
-        this.properties = properties;
+        this.sql = properties;
         // Get DTO read methods
         dtoReadMethods = getReadMethods(dtoClass.getDeclaredFields(), dtoClass);
         // Get ID read methods
@@ -77,9 +79,9 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     /**
      * Get read method of each property.
      *
-     * @param fields {@code Array} containing bean field names
-     * @param clazz {@code Class} of bean
-     * @return {@code Map} of bean write methods
+     * @param fields {@code Array} containing bean field names.
+     * @param clazz {@code Class} of bean.
+     * @return {@code Map} of bean write methods.
      */
     public final List<Method> getReadMethods(final Field[] fields, final Class clazz) {
         final List<Method> list = new ArrayList<>();
@@ -120,30 +122,30 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
 
     @Override
     public List<T> findAll() {
-        return dbDao.selectList(properties.getProperty("findAll"), dtoClass);
+        return dbDao.selectList(sql.getProperty("findAll"), dtoClass);
     }
 
     @Override
     public T findById(ID id) {
-        return dbDao.select(properties.getProperty("findById"), beanToParams(id, idReadMethods), dtoClass);
+        return dbDao.select(sql.getProperty("findById"), beanToParams(id, idReadMethods), dtoClass);
     }
 
     @Override
     public void save(T dto) {
-        dbDao.update(properties.getProperty("save"), beanToParams(dto, dtoReadMethods));
+        dbDao.update(sql.getProperty("save"), beanToParams(dto, dtoReadMethods));
     }
 
     @Override
     public void delete(ID id) {
-        dbDao.update(properties.getProperty("delete"), beanToParams(id, idReadMethods));
+        dbDao.update(sql.getProperty("delete"), beanToParams(id, idReadMethods));
     }
 
     @Override
     public void update(T dto, ID id) {
-        // Combine DTO and ID fields into one List
+        // DTO params array as List
         final var list = new ArrayList(Arrays.asList(beanToParams(dto, dtoReadMethods)));
+        // Add ID params array to List
         list.addAll(Arrays.asList(beanToParams(id, idReadMethods)));
-        dbDao.update(properties.getProperty("update"), list.toArray());
+        dbDao.update(sql.getProperty("update"), list.toArray());
     }
-
 }

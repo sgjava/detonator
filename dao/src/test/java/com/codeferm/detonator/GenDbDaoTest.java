@@ -3,12 +3,13 @@
  */
 package com.codeferm.detonator;
 
-import com.codeferm.dto.OrderItems;
-import com.codeferm.dto.OrderItemsId;
+import com.codeferm.dto.Orders;
+import com.codeferm.dto.OrdersId;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.sql.SQLException;
-import java.util.List;
+import java.time.LocalDate;
 import java.util.Properties;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -17,6 +18,8 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -43,15 +46,27 @@ public class GenDbDaoTest {
     private static DataSource dataSource;
 
     /**
+     * Create test database.
+     *
+     * @param fileName SQL script to create database.
+     * @param delimiter Line delimiter.
+     * @param removeDelimiter True to remove delimiter from statement
+     */
+    public static void createDb(final String fileName, final String delimiter, boolean removeDelimiter) {
+        final var dataLoader = new DataLoader(dataSource);
+        dataLoader.execScript(fileName, delimiter, removeDelimiter);
+    }
+
+    /**
      * Load properties file from class path.
      *
      * @param propertyFile Name of property file.
      * @return Properties.
      */
-    public final Properties loadProperties(final String propertyFile) {
+    public static Properties loadProperties(final String propertyFile) {
         Properties props = new Properties();
         // Get properties from classpath
-        try (final var stream = GenDbDao.class.getClassLoader().getResourceAsStream(propertyFile)) {
+        try (final var stream = GenDbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
             props.load(stream);
         } catch (IOException e) {
             throw new RuntimeException("Property file exception", e);
@@ -60,14 +75,10 @@ public class GenDbDaoTest {
     }
 
     @BeforeAll
-    static void beforeAll() {
+    public static void beforeAll() {
         properties = new Properties();
         // Get properties from classpath
-        try (final var stream = GenDbDaoTest.class.getClassLoader().getResourceAsStream("app.properties")) {
-            properties.load(stream);
-        } catch (IOException e) {
-            throw new RuntimeException("Property file exception", e);
-        }
+        properties = loadProperties("app.properties");
         // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
@@ -76,6 +87,11 @@ public class GenDbDaoTest {
         ds.setUrl(properties.getProperty("db.url"));
         ds.setMaxTotal(Integer.parseInt(properties.getProperty("db.pool.size")));
         dataSource = ds;
+        // Create database?
+        if (Boolean.parseBoolean(properties.getProperty("db.create"))) {
+            createDb(properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.parseBoolean(properties.
+                    getProperty("db.remove.delimiter")));
+        }
     }
 
     /**
@@ -89,32 +105,119 @@ public class GenDbDaoTest {
     }
 
     /**
-     * Test GenDbDao.
+     * Test DAO findAll method.
      */
     @Test
-    void genDbDao() {
-        final var sql = loadProperties("orderitems.properties");
-        final Dao<OrderItems, OrderItemsId> dao = new GenDbDao<>(dataSource, sql, OrderItemsId.class, OrderItems.class);
+    public void findAll() {
+        logger.debug("findAll");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Get all records
-        final List<OrderItems> list = dao.findAll();
+        final var list = dao.findAll();
         // List should not be empty
         assertFalse(list.isEmpty());
-        list.forEach((orderItems) -> {
-            logger.debug(orderItems);
-        });
-        // Get one record by PK
-        final var orderItems = dao.findById(new OrderItemsId(BigDecimal.valueOf(9), BigDecimal.valueOf(69)));
-        // Verify PK
-        assertEquals(orderItems.getItemId(), BigDecimal.valueOf(9));
-        assertEquals(orderItems.getOrderId(), BigDecimal.valueOf(69));
-        logger.debug(orderItems);
-        // Insert new OrderItems bean
-        orderItems.setOrderId(BigDecimal.valueOf(70));
-        dao.save(orderItems);
-        // Update inserted record
-        dao.update(orderItems, new OrderItemsId(BigDecimal.valueOf(9), BigDecimal.valueOf(70)));
-        // Delete saved record
-        dao.delete(new OrderItemsId(BigDecimal.valueOf(9), BigDecimal.valueOf(70)));
+        // Verify exact count
+        assertEquals(list.size(), 105);
     }
 
+    /**
+     * Test DAO findById method.
+     */
+    @Test
+    public void findById() {
+        logger.debug("findById");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        // Create ID to find
+        final var id = new OrdersId(1);
+        final var dto = dao.findById(id);
+        // Verify record exists
+        assertNotNull(dto);
+        // Verify ID matches
+        assertEquals(dto.getOrderId(), 1);
+        // Create ID that doesn't exist
+        final var badId = new OrdersId(0);
+        final var badDto = dao.findById(badId);
+        // DTO should be null if not found
+        assertNull(badDto);
+    }
+
+    /**
+     * Test DAO save method.
+     */
+    @Test
+    public void save() {
+        logger.debug("save");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
+        final var dto = new Orders();
+        dto.setCustomerId(BigDecimal.valueOf(1));
+        dto.setOrderDate(Date.valueOf(LocalDate.now()));
+        dto.setSalesmanId(BigDecimal.valueOf(1));
+        dto.setStatus("Pending");
+        // Save DTO
+        dao.save(dto);
+        // Create ID to find (should be 106 based on last orderId)
+        final var id = new OrdersId(106);
+        final var findDto = dao.findById(id);
+        // Verify ID matches
+        assertEquals(findDto.getOrderId(), 106);
+        // Delete saved record
+        dao.delete(id);
+    }
+
+    /**
+     * Test DAO update method.
+     */
+    @Test
+    public void update() {
+        logger.debug("update");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        // Create ID to find
+        final var id = new OrdersId(1);
+        final var dto = dao.findById(id);
+        dto.setStatus("Shipped");
+        // Uopdate record
+        dao.update(dto, id);
+        // Verify update
+        final var updateDto = dao.findById(id);
+        // Verify status matches
+        assertEquals(updateDto.getStatus(), "Shipped");
+        // Set status back
+        dto.setStatus("Pending");
+        dao.update(dto, id);
+    }
+    
+    /**
+     * Test DAO update method.
+     */
+    @Test
+    public void delete() {
+        logger.debug("delete");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        // Create ID to delete
+        final var id = new OrdersId(1);
+        // Save record
+        final var saveDto = dao.findById(id);
+        // Delete record
+        dao.delete(id);
+        final var dto = dao.findById(id);
+        // Verify record was deleted
+        assertNull(dto);
+        // Save record back
+        dao.save(saveDto);
+    }    
 }

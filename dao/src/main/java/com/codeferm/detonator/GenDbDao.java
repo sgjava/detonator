@@ -120,32 +120,108 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
         return params;
     }
 
+    /**
+     * Return all records.
+     *
+     * @return List of all records.
+     */
     @Override
     public List<T> findAll() {
         return dbDao.selectList(sql.getProperty("findAll"), dtoClass);
     }
 
+    /**
+     * Return one record by ID.
+     *
+     * @param id ID of record to return.
+     * @return Single record.
+     */
     @Override
-    public T findById(ID id) {
+    public T findById(final ID id) {
         return dbDao.select(sql.getProperty("findById"), beanToParams(id, idReadMethods), dtoClass);
     }
 
+    /**
+     * Return List of records using named query parameters.
+     *
+     * @param name Query name.
+     * @param params Query parameters,
+     * @return List of records.
+     */
     @Override
-    public void save(T dto) {
+    public List<T> findBy(final String name, final Object[] params) {
+        return dbDao.selectList(sql.getProperty(name), params, dtoClass);
+    }
+
+    /**
+     * Save the record.
+     *
+     * @param dto Record to save.
+     */
+    @Override
+    public void save(final T dto) {
         dbDao.update(sql.getProperty("save"), beanToParams(dto, dtoReadMethods));
     }
 
+    /**
+     * Save List of records using batch operation.
+     *
+     * @param list Save List of records.
+     */
     @Override
-    public void delete(ID id) {
+    public void save(final List<T> list) {
+        final var params = new Object[list.size()][];
+        var i = 0;
+        for (final T t : list) {
+            params[i++] = beanToParams(t, dtoReadMethods);
+        }
+        dbDao.batch(sql.getProperty("save"), params);
+    }
+
+    /**
+     * Delete the record by ID.
+     *
+     * @param id ID of record to delete.
+     */
+    @Override
+    public void delete(final ID id) {
         dbDao.update(sql.getProperty("delete"), beanToParams(id, idReadMethods));
     }
 
+    /**
+     * Delete records using named query and parameters.
+     *
+     * @param name Query name.
+     * @param params Query parameters,
+     */
     @Override
-    public void update(T dto, ID id) {
+    public void deleteBy(final String name, final Object[] params) {
+        dbDao.update(sql.getProperty(name), params);
+    }
+
+    /**
+     * Update the record.
+     *
+     * @param dto Updated record.
+     * @param id ID of record to update.
+     */
+    @Override
+    public void update(final T dto, final ID id) {
         // DTO params array as List
         final var list = new ArrayList(Arrays.asList(beanToParams(dto, dtoReadMethods)));
         // Add ID params array to List
         list.addAll(Arrays.asList(beanToParams(id, idReadMethods)));
         dbDao.update(sql.getProperty("update"), list.toArray());
+    }
+    
+    /**
+     * Update records using named query and parameters.
+     *
+     * @param name Query name.
+     * @param params Query parameters,
+     */
+    @Override
+    public void updateBy(final String name, final Object[] params) {
+        dbDao.update(sql.getProperty(name), params);
     }
 }

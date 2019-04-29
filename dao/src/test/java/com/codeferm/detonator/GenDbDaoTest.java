@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -174,6 +176,43 @@ public class GenDbDaoTest {
     }
 
     /**
+     * Test DAO save method.
+     */
+    @Test
+    public void saveBatch() {
+        logger.debug("saveBatch");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Add named query for validation
+        sql.put("findByIdGreaterThan",
+                "select CUSTOMER_ID, ORDER_DATE, ORDER_ID, SALESMAN_ID, STATUS from ORDERS where ORDER_ID > ?");
+        // Add named query record clean up
+        sql.put("deleteByIdGreaterThan", "delete from ORDERS where ORDER_ID > ?");
+        // Create generic DAO
+        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
+        final var dto = new Orders();
+        dto.setCustomerId(BigDecimal.valueOf(1));
+        dto.setOrderDate(Date.valueOf(LocalDate.now()));
+        dto.setSalesmanId(BigDecimal.valueOf(1));
+        dto.setStatus("Pending");
+        List<Orders> list = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            list.add(dto);
+        }
+        // Save List of DTOs
+        dao.save(list);
+        // Select new records (ORDER_ID > 105)
+        final var newRecs = dao.findBy("findByIdGreaterThan", new Object[]{105});
+        // List should not be empty
+        assertFalse(newRecs.isEmpty());
+        // Verify exact count
+        assertEquals(newRecs.size(), 10);
+        // Delete records (ORDER_ID > 105)
+        dao.deleteBy("deleteByIdGreaterThan", new Object[]{105});
+    }
+
+    /**
      * Test DAO update method.
      */
     @Test
@@ -197,7 +236,7 @@ public class GenDbDaoTest {
         dto.setStatus("Pending");
         dao.update(dto, id);
     }
-    
+
     /**
      * Test DAO update method.
      */
@@ -219,5 +258,5 @@ public class GenDbDaoTest {
         assertNull(dto);
         // Save record back
         dao.save(saveDto);
-    }    
+    }
 }

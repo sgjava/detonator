@@ -227,6 +227,32 @@ public class DbDaoTest {
     }
     
     /**
+     * Test DbDao select method return one field without params.
+     */
+    @Test
+    void selectField() {
+        logger.debug("selectField");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var field = dbDao.select(sql.getProperty("findAll"), "ORDER_ID");
+        assertEquals(field, 1);
+    }
+
+    /**
+     * Test DbDao select method return one field with params.
+     */
+    @Test
+    void selectFieldParams() {
+        logger.debug("selectFieldParams");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var field = dbDao.select(sql.getProperty("findById"), new Object[]{1}, "ORDER_ID");
+        assertEquals(field, 1);
+    }
+    
+    /**
      * Test DbDao update method to insert record.
      */
     @Test

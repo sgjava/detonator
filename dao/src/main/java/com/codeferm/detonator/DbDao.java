@@ -153,7 +153,7 @@ public interface DbDao {
     }
 
     /**
-     * Return parameterized query results as a single typed Object.
+     * Return query results as a single typed Object.
      *
      * @param <T> Type of object that the handler returns.
      * @param sql SQL statement to execute.

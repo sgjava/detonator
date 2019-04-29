@@ -5,8 +5,9 @@ Everything should be made as simple as possible, but not simpler - Albert Einste
 DeTOnator is an easy to use code generator that explodes database schema into DTOs, IDs, SQL, etc. Being template driven you can
 easily modify the templates to generate code for a particular framework or even another language besides Java. Since no IDE plugins
 or GUIs are required it's ideal for headless environments like CI/CD, build servers, etc. About ten years ago a colleague and myself
-came up with something similar, but it was built for Spring and JdbcTamplate. At the time there was FireStorm DAO, but it was commercial
-and now it's a dead project from what I can tell. There are other products/projects out there that 
+came up with something similar, but it was built for Spring and JdbcTamplate. At the time there was FireStorm DAO, but it was
+commercial and now it's a dead project from what I can tell. There are other products/projects out there that do code generation,
+but typically you end up with on DAO per table. DeTOnator uses a truly generic DAO interface and implementation.
 * DeTOnator reads your database schema to build artifacts, so it can be used to detect changes in the schema that breaks your
 code. By using DTOs and Java's statically-typed nature you will see when field names are removed or changed. Adding nullable
 fields usually will not break your code. Typically with most Java data layers or dynamic languages your code will blow up at

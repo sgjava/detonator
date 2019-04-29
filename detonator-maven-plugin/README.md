@@ -4,7 +4,7 @@ While you can certainly use the code generation directly in your project it make
 your Maven based projects. The [DAO project](https://github.com/sgjava/detonator/tree/master/dao) uses this plugin to generate
 artifacts in the generated-test-sources and generated-test-resources directories for the unit tests. For instance to generate DTOs,
 IDs and SQL properties files you can use something like:
-'''
+```
 <plugin>
    <groupId>com.codeferm</groupId>
    <artifactId>detonator-maven-plugin</artifactId>
@@ -34,4 +34,4 @@ IDs and SQL properties files you can use something like:
               </goals>
        </execution>
    </executions>                
-</plugin>'''
+</plugin>```

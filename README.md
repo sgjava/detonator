@@ -22,5 +22,5 @@ add as well as optimized batch operations.
 * CQRS is supported out of the box since composite (i.e. more than one table in select) SQL is supported. You can generate a DTO that
 handles composite SQL (query) and use single table SQL (command) to generate DTOs and SQL for DML operations. This is also useful
 for legacy databases that were not forward engineered from an ORM type tool.
-*Based on OpenJDK 11 LTS, but can generate any target by modifying the templates. Currently the DTOs and IDs support Java 7+, H2 and
+* Based on OpenJDK 11 LTS, but can generate any target by modifying the templates. Currently the DTOs and IDs support Java 7+, H2 and
 Oracle databases.

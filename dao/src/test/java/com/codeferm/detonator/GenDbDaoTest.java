@@ -211,7 +211,31 @@ public class GenDbDaoTest {
         // Delete records (ORDER_ID > 105)
         dao.deleteBy("deleteByIdGreaterThan", new Object[]{105});
     }
-
+    
+    /**
+     * Test DAO save method.
+     */
+    @Test
+    public void saveReturnKey() {
+        logger.debug("saveReturnKey");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
+        final var dto = new Orders();
+        dto.setCustomerId(BigDecimal.valueOf(1));
+        dto.setOrderDate(Date.valueOf(LocalDate.now()));
+        dto.setSalesmanId(BigDecimal.valueOf(1));
+        dto.setStatus("Pending");
+        // Save DTO and return identity key
+        var id = dao.saveReturnKey(dto, "ORDER_ID");
+        // Verify returned key
+        assertEquals(id, 117);
+        // Delete saved record
+        dao.delete( new OrdersId(id));
+    }
+    
     /**
      * Test DAO update method.
      */

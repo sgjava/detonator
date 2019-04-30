@@ -174,6 +174,18 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     }
 
     /**
+     * Save the record and return identity key.
+     *
+     * @param dto Record to save.
+     * @param keyName Name of integer key to return.
+     * @return Identity key.
+     */
+    @Override
+    public int saveReturnKey(final T dto, final String keyName) {
+        return dbDao.updateReturnKey(sql.getProperty("save"), beanToParams(dto, dtoReadMethods), keyName);
+    }
+
+    /**
      * Delete the record by ID.
      *
      * @param id ID of record to delete.
@@ -208,7 +220,7 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
         list.addAll(Arrays.asList(beanToParams(id, idReadMethods)));
         dbDao.update(sql.getProperty("update"), list.toArray());
     }
-    
+
     /**
      * Update records using named query and parameters.
      *

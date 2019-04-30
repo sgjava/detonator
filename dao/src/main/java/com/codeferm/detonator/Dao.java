@@ -55,6 +55,15 @@ public interface Dao<T, ID> {
     void save(final List<T> list);
 
     /**
+     * Save the record and return identity key.
+     *
+     * @param dto Record to save.
+     * @param keyName Name of integer key to return.
+     * @return Identity key.
+     */
+    int saveReturnKey(final T dto, final String keyName);
+
+    /**
      * Delete the record by ID.
      *
      * @param id ID of record to delete.

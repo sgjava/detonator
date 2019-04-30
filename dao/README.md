@@ -1,14 +1,18 @@
 ![Title](images/title.png)
 
-DeTOnator DTO is an easy to use code generator that explodes database schema into DTOs, IDs, SQL, etc. Being template driven you can
-easily modify the templates to generate code for a particular framework or even another language besides Java. Since no IDE plugins
-or GUIs are required it's ideal for headless environments like CI/CD, build servers, etc.
-* DeTOnator reads your database schema to build artifacts, so it can be used to detect changes in the schema that breaks your
-code. By using DTOs and Java's statically-typed nature you will see when field names are removed or changed. Adding nullable
-fields usually will not break your code. Typically with most Java data layers or dynamic languages your code will blow up at
-run time. Just make sure to always use a field list for select instead of select *. select * is handy for generating DML SQL,
-but as the table schema is altered select * will pick up all changes.
-* Minimal dependencies are required, so you should not end up with a bunch of conflicts or exclusions adding DTO generation to your
-own projects.
-* Output is in the form of a Java Writer class thus making it easy to go between String, file, pipe, etc.
-* FreeMarker Java Template Engine is used to render the output.
+DeTOnator DAO is a truly generic DAO framework. Unfortunately I continue to see [blog posts](https://www.baeldung.com/java-dao-pattern)
+describing the DAO pattern where you create a DAO for each entity based on an interface. I have been using a single DAO for many years
+now inspired by [Don't repeat the DAO!](https://www.ibm.com/developerworks/library/j-genericdao/index.html). DeTOnator DAO goes back to
+basics without relying on DI, Spring or any other frameworks other than the persistence implementation. This however doesn't preclude
+you from using DI, AOP, etc. to declaratively add transactions, interceptors, etc. You may also want to inject a particular
+implementation in your business objects for a key value store instead of a RDBMS for instance.
+* Use the [DeTOnator Maven Plugin](https://github.com/sgjava/detonator/tree/master/detonator-maven-plugin) to generate DTOs, IDs and SQL
+for your project. DeTOnator DAO uses this plugin to generate entities and SQL for the unit tests.
+* Query result mapping is based on database field name being snakeCase (FIELD_NAME) and member variables being lower camelCase
+(fieldName). Some implementations such as
+DbUtils [GenerousBeanProcessor](https://commons.apache.org/proper/commons-dbutils/apidocs/org/apache/commons/dbutils/GenerousBeanProcessor.html)
+may allow a less rigid set of mapping rules. You can always use a field alias to fix column names that do not map properly.
+* Parameter mapping is ordinal based on a bean's accessor methods. DeTOnator DTO generates DTOs, IDs and SQL in the proper order
+(alphabetical) for mapping to work.
+* Queries are stored by name in a Properties object making it easy to modify the generated SQL or add named queries for instance.
+* See unit tests for example code.

@@ -1,9 +1,8 @@
 ![Title](images/title.png)
 
-While you can certainly use the code generation directly in your project it makes sense to generate common artifacts in Maven for
-your Maven based projects. The [DAO project](https://github.com/sgjava/detonator/tree/master/dao) uses this plugin to generate
-artifacts in the generated-test-sources and generated-test-resources directories for the unit tests. For instance to generate DTOs,
-IDs and SQL properties files you can use something like:
+While you can certainly use DeTOnator DTO directly in your project it makes sense to generate common artifacts in Maven for your
+Maven based projects. DeTOnator DAO uses this plugin to generate artifacts in the generated-test-sources and generated-test-resources
+directories for the unit tests. For instance to generate DTOs, IDs and SQL properties files you can use something like:
 ```
 <plugin>
    <groupId>com.codeferm</groupId>

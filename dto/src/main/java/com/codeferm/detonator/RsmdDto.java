@@ -6,7 +6,7 @@ package com.codeferm.detonator;
 import java.util.Objects;
 
 /**
- * JDBC ResultSetMetaData DTO.
+ * JDBC ResultSetMetaData DTO. Fields have been added to assist with code generation.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
@@ -48,7 +48,7 @@ public class RsmdDto {
         return catalogName;
     }
 
-    public void setCatalogName(String catalogName) {
+    public void setCatalogName(final String catalogName) {
         this.catalogName = catalogName;
     }
 
@@ -56,7 +56,7 @@ public class RsmdDto {
         return columnClassName;
     }
 
-    public void setColumnClassName(String columnClassName) {
+    public void setColumnClassName(final String columnClassName) {
         this.columnClassName = columnClassName;
     }
 
@@ -64,7 +64,7 @@ public class RsmdDto {
         return columnDisplaySize;
     }
 
-    public void setColumnDisplaySize(int columnDisplaySize) {
+    public void setColumnDisplaySize(final int columnDisplaySize) {
         this.columnDisplaySize = columnDisplaySize;
     }
 
@@ -72,7 +72,7 @@ public class RsmdDto {
         return columnLabel;
     }
 
-    public void setColumnLabel(String columnLabel) {
+    public void setColumnLabel(final String columnLabel) {
         this.columnLabel = columnLabel;
     }
 
@@ -80,7 +80,7 @@ public class RsmdDto {
         return columnName;
     }
 
-    public void setColumnName(String columnName) {
+    public void setColumnName(final String columnName) {
         this.columnName = columnName;
     }
 
@@ -88,7 +88,7 @@ public class RsmdDto {
         return columnType;
     }
 
-    public void setColumnType(int columnType) {
+    public void setColumnType(final int columnType) {
         this.columnType = columnType;
     }
 
@@ -96,7 +96,7 @@ public class RsmdDto {
         return columnTypeName;
     }
 
-    public void setColumnTypeName(String columnTypeName) {
+    public void setColumnTypeName(final String columnTypeName) {
         this.columnTypeName = columnTypeName;
     }
 
@@ -104,7 +104,7 @@ public class RsmdDto {
         return precision;
     }
 
-    public void setPrecision(int precision) {
+    public void setPrecision(final int precision) {
         this.precision = precision;
     }
 
@@ -112,7 +112,7 @@ public class RsmdDto {
         return keySeq;
     }
 
-    public void setKeySeq(Integer keySeq) {
+    public void setKeySeq(final Integer keySeq) {
         this.keySeq = keySeq;
     }
 
@@ -120,7 +120,7 @@ public class RsmdDto {
         return scale;
     }
 
-    public void setScale(int scale) {
+    public void setScale(final int scale) {
         this.scale = scale;
     }
 
@@ -128,7 +128,7 @@ public class RsmdDto {
         return schemaName;
     }
 
-    public void setSchemaName(String schemaName) {
+    public void setSchemaName(final String schemaName) {
         this.schemaName = schemaName;
     }
 
@@ -136,7 +136,7 @@ public class RsmdDto {
         return tableName;
     }
 
-    public void setTableName(String tableName) {
+    public void setTableName(final String tableName) {
         this.tableName = tableName;
     }
 
@@ -144,7 +144,7 @@ public class RsmdDto {
         return autoIncrement;
     }
 
-    public void setAutoIncrement(boolean autoIncrement) {
+    public void setAutoIncrement(final boolean autoIncrement) {
         this.autoIncrement = autoIncrement;
     }
 
@@ -152,7 +152,7 @@ public class RsmdDto {
         return caseSensitive;
     }
 
-    public void setCaseSensitive(boolean caseSensitive) {
+    public void setCaseSensitive(final boolean caseSensitive) {
         this.caseSensitive = caseSensitive;
     }
 
@@ -160,7 +160,7 @@ public class RsmdDto {
         return currency;
     }
 
-    public void setCurrency(boolean currency) {
+    public void setCurrency(final boolean currency) {
         this.currency = currency;
     }
 
@@ -168,7 +168,7 @@ public class RsmdDto {
         return definitelyWritable;
     }
 
-    public void setDefinitelyWritable(boolean definitelyWritable) {
+    public void setDefinitelyWritable(final boolean definitelyWritable) {
         this.definitelyWritable = definitelyWritable;
     }
 
@@ -176,7 +176,7 @@ public class RsmdDto {
         return methodName;
     }
 
-    public void setMethodName(String methodName) {
+    public void setMethodName(final String methodName) {
         this.methodName = methodName;
     }
 
@@ -184,7 +184,7 @@ public class RsmdDto {
         return nullable;
     }
 
-    public void setNullable(int nullable) {
+    public void setNullable(final int nullable) {
         this.nullable = nullable;
     }
 
@@ -192,7 +192,7 @@ public class RsmdDto {
         return readOnly;
     }
 
-    public void setReadOnly(boolean readOnly) {
+    public void setReadOnly(final boolean readOnly) {
         this.readOnly = readOnly;
     }
 
@@ -200,7 +200,7 @@ public class RsmdDto {
         return searchable;
     }
 
-    public void setSearchable(boolean searchable) {
+    public void setSearchable(final boolean searchable) {
         this.searchable = searchable;
     }
 
@@ -208,7 +208,7 @@ public class RsmdDto {
         return signed;
     }
 
-    public void setSigned(boolean signed) {
+    public void setSigned(final boolean signed) {
         this.signed = signed;
     }
 
@@ -216,7 +216,7 @@ public class RsmdDto {
         return varName;
     }
 
-    public void setVarName(String varName) {
+    public void setVarName(final String varName) {
         this.varName = varName;
     }
 
@@ -224,7 +224,7 @@ public class RsmdDto {
         return varType;
     }
 
-    public void setVarType(String varType) {
+    public void setVarType(final String varType) {
         this.varType = varType;
     }
 
@@ -232,7 +232,7 @@ public class RsmdDto {
         return writable;
     }
 
-    public void setWritable(boolean writable) {
+    public void setWritable(final boolean writable) {
         this.writable = writable;
     }
 

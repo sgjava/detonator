@@ -19,7 +19,7 @@ public interface DbDao {
     /**
      * Used when no parameters are passed.
      */
-    final Object[] NO_PARAMS = new Object[]{};
+    Object[] NO_PARAMS = new Object[]{};
 
     /**
      * Return parameterized query results as list of beans.
@@ -30,7 +30,7 @@ public interface DbDao {
      * @param clazz Class to map results to.
      * @return List of T typed objects.
      */
-    public abstract <T> List<T> selectList(final String sql, final Object[] params, final Class clazz);
+    <T> List<T> selectList(final String sql, final Object[] params, final Class clazz);
 
     /**
      * Return query results as list of beans.
@@ -40,7 +40,7 @@ public interface DbDao {
      * @param clazz Class to map results to.
      * @return List of T typed objects.
      */
-    default public <T> List<T> selectList(final String sql, final Class clazz) {
+    default <T> List<T> selectList(final String sql, final Class clazz) {
         return selectList(sql, NO_PARAMS, clazz);
     }
 
@@ -53,7 +53,7 @@ public interface DbDao {
      * @param clazz Class to map results to.
      * @return T typed object.
      */
-    default public <T> T select(final String sql, final Object[] params, final Class clazz) {
+    default <T> T select(final String sql, final Object[] params, final Class clazz) {
         final List<T> list = selectList(sql, params, clazz);
         T object = null;
         if (!list.isEmpty()) {
@@ -71,7 +71,7 @@ public interface DbDao {
      * @param clazz Class to map results to.
      * @return T typed object.
      */
-    default public <T> T select(final String sql, final Class clazz) {
+    default <T> T select(final String sql, final Class clazz) {
         final List<T> list = selectList(sql, NO_PARAMS, clazz);
         T object = null;
         if (!list.isEmpty()) {
@@ -88,7 +88,7 @@ public interface DbDao {
      * @param params Initialize the PreparedStatement's IN parameters.
      * @return List of Maps containing field name/value pair.
      */
-    public abstract List<Map<String, Object>> selectList(final String sql, final Object[] params);
+    List<Map<String, Object>> selectList(final String sql, final Object[] params);
 
     /**
      * Return query results as list of maps.
@@ -96,7 +96,7 @@ public interface DbDao {
      * @param sql SQL statement to execute.
      * @return List of Maps containing field name/value pair.
      */
-    default public List<Map<String, Object>> selectList(final String sql) {
+    default List<Map<String, Object>> selectList(final String sql) {
         return selectList(sql, NO_PARAMS);
     }
 
@@ -107,7 +107,7 @@ public interface DbDao {
      * @param params Initialize the PreparedStatement's IN parameters.
      * @return List of Maps containing field name/value pair.
      */
-    default public Map<String, Object> select(final String sql, final Object[] params) {
+    default Map<String, Object> select(final String sql, final Object[] params) {
         final List<Map<String, Object>> list = selectList(sql, params);
         Map<String, Object> map = null;
         if (!list.isEmpty()) {
@@ -123,7 +123,7 @@ public interface DbDao {
      * @param sql SQL statement to execute.
      * @return List of Maps containing field name/value pair.
      */
-    default public Map<String, Object> select(final String sql) {
+    default Map<String, Object> select(final String sql) {
         final List<Map<String, Object>> list = selectList(sql, NO_PARAMS);
         Map<String, Object> map = null;
         if (!list.isEmpty()) {
@@ -142,7 +142,7 @@ public interface DbDao {
      * @param fieldName Name of field to return.
      * @return Object by field name.
      */
-    default public <T> T select(final String sql, final Object[] params, final String fieldName) {
+    default <T> T select(final String sql, final Object[] params, final String fieldName) {
         T object = null;
         Map<String, Object> map = select(sql, params);
         if (map != null) {
@@ -160,7 +160,7 @@ public interface DbDao {
      * @param fieldName Name of field to return.
      * @return Object by field name.
      */
-    default public <T> T select(final String sql, final String fieldName) {
+    default <T> T select(final String sql, final String fieldName) {
         T object = null;
         Map<String, Object> map = select(sql, NO_PARAMS);
         if (map != null) {
@@ -177,7 +177,7 @@ public interface DbDao {
      * @param params Initialize the PreparedStatement's IN parameters.
      * @return Number of rows updated.
      */
-    public abstract int update(final String sql, final Object[] params);
+    int update(final String sql, final Object[] params);
 
     /**
      * Executes INSERT, UPDATE, or DELETE SQL statement.
@@ -185,7 +185,7 @@ public interface DbDao {
      * @param sql SQL statement to execute.
      * @return Number of rows updated.
      */
-    default public int update(final String sql) {
+    default int update(final String sql) {
         return update(sql, NO_PARAMS);
     }
 
@@ -196,7 +196,7 @@ public interface DbDao {
      * @param params Initialize the PreparedStatement's IN parameters.
      * @return Field name/value pairs of keys.
      */
-    public abstract Map<String, Object> updateReturnKeys(final String sql, final Object[] params);
+    Map<String, Object> updateReturnKeys(final String sql, final Object[] params);
 
     /**
      * Executes INSERT statement and returns auto generated keys. JDBC driver needs to support RETURN_GENERATED_KEYS.
@@ -204,7 +204,7 @@ public interface DbDao {
      * @param sql SQL statement to execute.
      * @return Field name/value pairs of keys.
      */
-    default public Map<String, Object> updateReturnKeys(final String sql) {
+    default Map<String, Object> updateReturnKeys(final String sql) {
         return updateReturnKeys(sql, NO_PARAMS);
     }
 
@@ -215,7 +215,7 @@ public interface DbDao {
      * @param keyName Key name to return as int.
      * @return key value of key.
      */
-    default public int updateReturnKey(final String sql, final String keyName) {
+    default int updateReturnKey(final String sql, final String keyName) {
         return Integer.parseInt(updateReturnKeys(sql, NO_PARAMS).get(keyName).toString());
     }
 
@@ -228,7 +228,7 @@ public interface DbDao {
      * @param keyName Key name to return as int.
      * @return key value of key.
      */
-    default public int updateReturnKey(final String sql, final Object[] params, final String keyName) {
+    default int updateReturnKey(final String sql, final Object[] params, final String keyName) {
         return Integer.parseInt(updateReturnKeys(sql, params).get(keyName).toString());
     }
 
@@ -239,5 +239,5 @@ public interface DbDao {
      * @param params Initialize the PreparedStatement's IN parameters.
      * @return Number of rows updated array.
      */
-    public abstract int[] batch(final String sql, final Object[][] params);
+    int[] batch(final String sql, final Object[][] params);
 }

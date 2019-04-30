@@ -64,8 +64,8 @@ public class MakeDto {
      */
     public Set<String> getClasses(final Map<String, RsmdDto> map, final boolean pkOnly) {
         final var classes = new TreeSet<String>();
-        map.entrySet().stream().map((entry) -> entry.getValue()).filter((value) -> (!value.getColumnClassName().startsWith(
-                "java.lang"))).forEachOrdered((final        var value) -> {
+        map.entrySet().stream().map(entry -> entry.getValue()).filter(value -> (!value.getColumnClassName().
+                startsWith("java.lang"))).forEachOrdered((final  var value) -> {
             // Only include PK columns?
             if (pkOnly) {
                 if (value.getKeySeq() != null) {

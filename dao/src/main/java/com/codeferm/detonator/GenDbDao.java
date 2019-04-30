@@ -40,10 +40,6 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
      */
     private final Properties sql;
     /**
-     * ID class type.
-     */
-    private final Class idClass;
-    /**
      * DTO class type.
      */
     private final Class dtoClass;
@@ -66,7 +62,6 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
      */
     public GenDbDao(final DataSource dataSource, final Properties properties, final Class idClass, final Class dtoClass) {
         this.dataSource = dataSource;
-        this.idClass = idClass;
         this.dtoClass = dtoClass;
         this.sql = properties;
         // Get DTO read methods

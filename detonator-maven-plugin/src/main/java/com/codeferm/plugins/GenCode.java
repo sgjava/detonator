@@ -6,9 +6,11 @@ package com.codeferm.plugins;
 import com.codeferm.detonator.MakeDto;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Locale;
 
@@ -199,20 +201,25 @@ public class GenCode {
         // Make dirs
         final var sourceDir = String.format("%s/java/%s", genSrcDir, packageName.replace('.', '/'));
         final var gsDir = new File(sourceDir);
-        gsDir.mkdirs();
+        if (!gsDir.mkdirs()) {
+            throw new RuntimeException(String.format("Failed to make directory %s", sourceDir));
+        }
         final var grDir = new File(genResDir);
-        grDir.mkdirs();
+        if (!grDir.mkdirs()) {
+            throw new RuntimeException(String.format("Failed to make directory %s", genResDir));
+        }
         final var makeDto = new MakeDto(dataSource, templatesDir);
         // Generate classes based on SQL Map
-        sqlMap.entrySet().forEach((entry) -> {
+        sqlMap.entrySet().forEach((var entry) -> {
             try {
-                // Use FileWriter for SQL properties output
-                try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%s.properties", genResDir, entry.getKey().
-                        toLowerCase(Locale.US))))) {
+                // Use FileOutputStream for SQL properties output
+                try (var out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(String.format("%s/%s.properties",
+                        genResDir, entry.getKey().toLowerCase(Locale.US))), false), StandardCharsets.UTF_8))) {
                     makeDto.sqlTemplate(sqlTemplate, entry.getValue(), out);
                 }
-                // Use FileWriter for DTO output
-                try (final var out = new BufferedWriter(new FileWriter(String.format("%s/%s.java", sourceDir, entry.getKey())))) {
+                // Use FileOutputStream for DTO output
+                try (var out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(String.format("%s/%s.java",
+                        sourceDir, entry.getKey())), false), StandardCharsets.UTF_8))) {
                     makeDto.dtoTemplate(dtoTemplate, entry.getValue(), packageName, entry.getKey(), out);
                 }
                 // Use StringWriter in case ID is empty (i.e. no PK or composite SQL)
@@ -221,8 +228,9 @@ public class GenCode {
                 final var idStr = out.toString();
                 // Check for empty result
                 if (!idStr.isEmpty()) {
-                    // Use FileWriter for ID output
-                    try (final var idOut = new BufferedWriter(new FileWriter(String.format("%s/%sId.java", sourceDir, entry.getKey())))) {
+                    // Use FileOutputStream for ID output
+                    try (var idOut = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(String.format(
+                            "%s/%sId.java", sourceDir, entry.getKey())), false), StandardCharsets.UTF_8))) {
                         idOut.write(idStr);
                     }
                 }

@@ -21,7 +21,7 @@ public interface Dao<T, ID> {
      *
      * @return List of all records.
      */
-    public abstract List<T> findAll();
+    List<T> findAll();
 
     /**
      * Return one record by ID.
@@ -29,7 +29,7 @@ public interface Dao<T, ID> {
      * @param id ID of record to return.
      * @return Single record.
      */
-    public abstract T findById(final ID id);
+    T findById(final ID id);
 
     /**
      * Return List of records using named query and parameters.
@@ -38,28 +38,28 @@ public interface Dao<T, ID> {
      * @param params Query parameters,
      * @return List of records.
      */
-    public abstract List<T> findBy(final String name, final Object[] params);
+    List<T> findBy(final String name, final Object[] params);
 
     /**
      * Save the record.
      *
      * @param dto Record to save.
      */
-    public abstract void save(final T dto);
+    void save(final T dto);
 
     /**
      * Save List of records.
      *
      * @param list Save List of records.
      */
-    public abstract void save(final List<T> list);
+    void save(final List<T> list);
 
     /**
      * Delete the record by ID.
      *
      * @param id ID of record to delete.
      */
-    public abstract void delete(final ID id);
+    void delete(final ID id);
 
     /**
      * Delete records using named query and parameters.
@@ -67,7 +67,7 @@ public interface Dao<T, ID> {
      * @param name Query name.
      * @param params Query parameters,
      */
-    public abstract void deleteBy(final String name, final Object[] params);
+    void deleteBy(final String name, final Object[] params);
 
     /**
      * Update the record.
@@ -75,7 +75,7 @@ public interface Dao<T, ID> {
      * @param dto Updated record.
      * @param id ID of record to update.
      */
-    public abstract void update(final T dto, final ID id);
+    void update(final T dto, final ID id);
 
     /**
      * Update records using named query and parameters.
@@ -83,5 +83,5 @@ public interface Dao<T, ID> {
      * @param name Query name.
      * @param params Query parameters,
      */
-    public abstract void updateBy(final String name, final Object[] params);
+    void updateBy(final String name, final Object[] params);
 }

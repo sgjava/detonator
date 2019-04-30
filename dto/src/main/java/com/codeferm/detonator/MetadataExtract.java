@@ -95,9 +95,9 @@ public class MetadataExtract {
      */
     public Map<Integer, String> getPrimaryKey(final DataSource dataSource, String tableName) {
         final Map<Integer, String> map = new TreeMap<>();
-        try (final Connection connection = dataSource.getConnection()) {
+        try (Connection connection = dataSource.getConnection()) {
             // Table name must be upper case
-            try (final ResultSet columns = connection.getMetaData().
+            try (ResultSet columns = connection.getMetaData().
                     getPrimaryKeys(null, null, tableName.toUpperCase(Locale.US))) {
                 while (columns.next()) {
                     map.put(columns.getInt("KEY_SEQ"), columns.getString("COLUMN_NAME").toUpperCase(Locale.US));
@@ -119,9 +119,9 @@ public class MetadataExtract {
      */
     public Map<String, RsmdDto> getResultSetMetaData(final DataSource dataSource, final String sql) {
         final Map<String, RsmdDto> map = new TreeMap<>();
-        try (final Connection connection = dataSource.getConnection()) {
+        try (Connection connection = dataSource.getConnection()) {
             final ResultSet resultSet;
-            try (final Statement statement = connection.createStatement()) {
+            try (Statement statement = connection.createStatement()) {
                 resultSet = statement.executeQuery(sql);
                 final ResultSetMetaData rsmd = resultSet.getMetaData();
                 final int cols = rsmd.getColumnCount();
@@ -193,17 +193,17 @@ public class MetadataExtract {
     public List<String> getTableNames(final DataSource dataSource, final String catalog, final String schemaPattern,
             final String tableNamePattern, final String[] types, final boolean isQuoted) {
         final List<String> list = new ArrayList<>();
-        try (final Connection connection = dataSource.getConnection()) {
+        try (Connection connection = dataSource.getConnection()) {
             final DatabaseMetaData databaseMetaData = connection.getMetaData();
             ResultSet resultSet;
             if (isQuoted && databaseMetaData.storesMixedCaseQuotedIdentifiers()) {
                 resultSet = databaseMetaData.getTables(catalog, schemaPattern, tableNamePattern, types);
-            } else if ((isQuoted && databaseMetaData.storesUpperCaseQuotedIdentifiers()) || (!isQuoted && databaseMetaData.
-                    storesUpperCaseIdentifiers())) {
+            } else if (isQuoted && databaseMetaData.storesUpperCaseQuotedIdentifiers() || !isQuoted && databaseMetaData.
+                    storesUpperCaseIdentifiers()) {
                 resultSet = databaseMetaData.getTables(toUpperCase(catalog), toUpperCase(schemaPattern), tableNamePattern.
                         toLowerCase(Locale.US), types);
-            } else if ((isQuoted && databaseMetaData.storesLowerCaseQuotedIdentifiers()) || (!isQuoted && databaseMetaData.
-                    storesLowerCaseIdentifiers())) {
+            } else if (isQuoted && databaseMetaData.storesLowerCaseQuotedIdentifiers() || !isQuoted && databaseMetaData.
+                    storesLowerCaseIdentifiers()) {
                 resultSet = databaseMetaData.getTables(toLowerCase(catalog), toLowerCase(schemaPattern), tableNamePattern.
                         toLowerCase(Locale.US), types);
             } else {

@@ -25,33 +25,8 @@ import org.apache.maven.project.MavenProject;
  */
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true, requiresDependencyResolution
         = ResolutionScope.COMPILE)
-public class GenMojo extends AbstractMojo {
+public class GenMojo extends BaseGenMojo {
 
-    /**
-     * Database driver.
-     */
-    @Parameter(property = "dbDriver", required = true)
-    private String dbDriver;
-    /**
-     * Database user.
-     */
-    @Parameter(property = "dbUser", required = true)
-    private String dbUser;
-    /**
-     * Database password. A value of empty will be converted to empty String.
-     */
-    @Parameter(defaultValue = "empty", property = "dbPassword", required = true)
-    private String dbPassword;
-    /**
-     * Database URL.
-     */
-    @Parameter(property = "dbUrl", required = true)
-    private String dbUrl;
-    /**
-     * DataSource pool size.
-     */
-    @Parameter(property = "dbPoolSize", required = true)
-    private int dbPoolSize;
     /**
      * Location of generated sources dir.
      */
@@ -62,36 +37,6 @@ public class GenMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "${project.build.directory}/generated-resources", property = "genResDir", required = true)
     private String genResDir;
-    /**
-     * FreeMarker templates path.
-     */
-    @Parameter(property = "templatesDir", required = true)
-    private String templatesDir;
-    /**
-     * DTO template.
-     */
-    @Parameter(property = "dtoTemplate", required = true)
-    private String dtoTemplate;
-    /**
-     * ID template.
-     */
-    @Parameter(property = "idTemplate", required = true)
-    private String idTemplate;
-    /**
-     * ID template.
-     */
-    @Parameter(property = "sqlTemplate", required = true)
-    private String sqlTemplate;
-    /**
-     * Map of class name (key) and SQL (value).
-     */
-    @Parameter(property = "sqlMap", required = true)
-    private Map<String, String> sqlMap;
-    /**
-     * Package name to use for generated classes.
-     */
-    @Parameter(property = "packageName", required = true)
-    private String packageName;
     /**
      * Maven project.
      */
@@ -109,22 +54,7 @@ public class GenMojo extends AbstractMojo {
      */
     @Override
     public void execute() throws MojoExecutionException {
-        // Maven doesn't allow empty parameters
-        if (dbPassword.toLowerCase(Locale.US).equals("empty")) {
-            dbPassword = "";
-        }
-        final var genCode = new GenCode();
-        genCode.setDbDriver(dbDriver);
-        genCode.setDbUrl(dbUrl);
-        genCode.setDbUser(dbUser);
-        genCode.setDbPassword(dbPassword);
-        genCode.setDbPoolSize(dbPoolSize);
-        genCode.setTemplatesDir(templatesDir);
-        genCode.setDtoTemplate(dtoTemplate);
-        genCode.setIdTemplate(idTemplate);
-        genCode.setSqlTemplate(sqlTemplate);
-        genCode.setPackageName(packageName);
-        genCode.setSqlMap(sqlMap);
+        final var genCode = getGenCode();
         genCode.setGenResDir(genResDir);
         genCode.setGenSrcDir(genSrcDir);
         genCode.execute();

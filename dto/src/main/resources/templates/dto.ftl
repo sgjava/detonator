@@ -3,10 +3,10 @@
  */
 package ${packageName};
 
+<#assign imports = imports + [ "java.util.Objects" ] />
 <#list imports as import>
 import ${import};
 </#list>
-import java.util.Objects;
 
 /**
  * Created by DeTOnator on ${now}.

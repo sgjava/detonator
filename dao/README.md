@@ -15,4 +15,7 @@ may allow a less rigid set of mapping rules. You can always use a field alias to
 * Parameter mapping is ordinal based on a bean's accessor methods. DeTOnator DTO generates DTOs, IDs and SQL in the proper order
 (alphabetical) for mapping to work.
 * Queries are stored by name in a Properties object making it easy to modify the generated SQL or add named queries for instance.
+* CQRS is supported out of the box since composite (i.e. more than one table in select) SQL is supported. You can generate a DTO that
+handles composite SQL (query) and use single table SQL (command) to generate DTOs and SQL for DML operations. This is also useful
+for legacy databases that were not forward engineered from an ORM type tool.
 * See unit tests for example code.

@@ -166,11 +166,11 @@ public class GenDbDaoTest {
         dto.setStatus("Pending");
         // Save DTO
         dao.save(dto);
-        // Create ID to find (should be 106 based on last orderId)
-        final var id = new OrdersId(106);
+        // Create ID to find (should be 107 based on last orderId)
+        final var id = new OrdersId(107);
         final var findDto = dao.findById(id);
         // Verify ID matches
-        assertEquals(findDto.getOrderId(), 106);
+        assertEquals(findDto.getOrderId(), 107);
         // Delete saved record
         dao.delete(id);
     }
@@ -202,13 +202,13 @@ public class GenDbDaoTest {
         }
         // Save List of DTOs
         dao.save(list);
-        // Select new records (ORDER_ID > 105)
+        // Select new records (ORDER_ID > 106)
         final var newRecs = dao.findBy("findByIdGreaterThan", new Object[]{105});
         // List should not be empty
         assertFalse(newRecs.isEmpty());
         // Verify exact count
         assertEquals(newRecs.size(), 10);
-        // Delete records (ORDER_ID > 105)
+        // Delete records (ORDER_ID > 106)
         dao.deleteBy("deleteByIdGreaterThan", new Object[]{105});
     }
     
@@ -216,8 +216,8 @@ public class GenDbDaoTest {
      * Test DAO save method.
      */
     @Test
-    public void saveReturnKey() {
-        logger.debug("saveReturnKey");
+    public void saveReturnId() {
+        logger.debug("saveReturnId");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
@@ -229,11 +229,12 @@ public class GenDbDaoTest {
         dto.setSalesmanId(BigDecimal.valueOf(1));
         dto.setStatus("Pending");
         // Save DTO and return identity key
-        var id = dao.saveReturnKey(dto, "ORDER_ID");
+        final var id = dao.saveReturnId(dto);
+        logger.debug("{}", id);
         // Verify returned key
-        assertEquals(id, 117);
+        assertEquals(id.getOrderId(), 106);
         // Delete saved record
-        dao.delete( new OrdersId(id));
+        dao.delete(id);
     }
     
     /**

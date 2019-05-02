@@ -10,8 +10,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 import javax.sql.DataSource;
 
 /**
@@ -44,13 +47,21 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
      */
     private final Class dtoClass;
     /**
-     * ID read methods.
+     * DTO class type.
+     */
+    private final Class idClass;
+    /**
+     * DTO read methods.
      */
     private final List<Method> dtoReadMethods;
     /**
      * ID read methods.
      */
     private final List<Method> idReadMethods;
+    /**
+     * ID read methods.
+     */
+    private final List<Method> idWriteMethods;
 
     /**
      * Constructor to initialize DataSource and cache DTO and ID methods.
@@ -62,12 +73,15 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
      */
     public GenDbDao(final DataSource dataSource, final Properties properties, final Class idClass, final Class dtoClass) {
         this.dataSource = dataSource;
+        this.idClass = idClass;
         this.dtoClass = dtoClass;
         this.sql = properties;
         // Get DTO read methods
         dtoReadMethods = getReadMethods(dtoClass.getDeclaredFields(), dtoClass);
         // Get ID read methods
         idReadMethods = getReadMethods(idClass.getDeclaredFields(), idClass);
+        // Get ID write methods
+        idWriteMethods = getWriteMethods(idClass.getDeclaredFields(), idClass);
         dbDao = new DbUtilsDsDao(this.dataSource);
     }
 
@@ -90,6 +104,30 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
                     throw new RuntimeException(e);
                 }
                 list.add(propertyDescriptor.getReadMethod());
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Get write method of each property.
+     *
+     * @param fields {@code Array} containing bean field names.
+     * @param clazz {@code Class} of bean.
+     * @return {@code Map} of bean write methods.
+     */
+    public final List<Method> getWriteMethods(final Field[] fields, final Class clazz) {
+        final List<Method> list = new ArrayList<>();
+        for (Field field : fields) {
+            // Ignore synthetic classes or dynamic proxies.
+            if (!field.isSynthetic()) {
+                PropertyDescriptor propertyDescriptor;
+                try {
+                    propertyDescriptor = new PropertyDescriptor(field.getName(), clazz);
+                } catch (IntrospectionException e) {
+                    throw new RuntimeException(e);
+                }
+                list.add(propertyDescriptor.getWriteMethod());
             }
         }
         return list;
@@ -177,12 +215,32 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
      * Save the record and return identity key.
      *
      * @param dto Record to save.
-     * @param keyName Name of integer key to return.
-     * @return Identity key.
+     * @return Generated ID.
      */
     @Override
-    public int saveReturnKey(final T dto, final String keyName) {
-        return dbDao.updateReturnKey(sql.getProperty("save"), beanToParams(dto, dtoReadMethods), keyName);
+    public ID saveReturnId(final T dto) {
+        // Create sorted Map of returned ID keys
+        final var map = new TreeMap<String, Object>(dbDao.updateReturnKeys(sql.getProperty("save"), beanToParams(dto,
+                dtoReadMethods)));
+        // Create new ID instabnce
+        try {
+            final ID id = (ID) idClass.getDeclaredConstructor().newInstance();
+            // Write off returned key fields to bean
+            final var it = map.entrySet().iterator();
+            idWriteMethods.forEach((final var writeMethod) -> {
+                try {
+                    // Get returned value from Map
+                    final var pair = it.next();
+                    writeMethod.invoke(id, pair.getValue());
+                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            return id;
+        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
+                | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException("Error creating ID class", e);
+        }
     }
 
     /**

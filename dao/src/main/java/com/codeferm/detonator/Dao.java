@@ -4,6 +4,7 @@
 package com.codeferm.detonator;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * DAO interface that simplifies common operations.
@@ -76,6 +77,13 @@ public interface Dao<T, ID> {
      * @param params Query parameters,
      */
     void deleteBy(final String name, final Object[] params);
+    
+    /**
+     * Delete list of records.
+     *
+     * @param list List of IDs to delete.
+     */
+    void delete(final List<ID> list);
 
     /**
      * Update the record.
@@ -92,4 +100,11 @@ public interface Dao<T, ID> {
      * @param params Query parameters,
      */
     void updateBy(final String name, final Object[] params);
+    
+    /**
+     * Update map of records.
+     *
+     * @param map Map of IDs and DTOs to update.
+     */
+    void update(final Map<ID, T> map);
 }

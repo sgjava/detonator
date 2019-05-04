@@ -11,7 +11,9 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -121,7 +123,7 @@ public class GenDbDaoTest {
         // List should not be empty
         assertFalse(list.isEmpty());
         // Verify exact count
-        assertEquals(list.size(), 105);
+        assertEquals(list.size(), 101);
     }
 
     /**
@@ -135,12 +137,12 @@ public class GenDbDaoTest {
         // Create generic DAO
         final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create ID to find
-        final var id = new OrdersId(1);
+        final var id = new OrdersId(4);
         final var dto = dao.findById(id);
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
-        assertEquals(dto.getOrderId(), 1);
+        assertEquals(dto.getOrderId(), 4);
         // Create ID that doesn't exist
         final var badId = new OrdersId(0);
         final var badDto = dao.findById(badId);
@@ -171,8 +173,6 @@ public class GenDbDaoTest {
         final var findDto = dao.findById(id);
         // Verify ID matches
         assertEquals(findDto.getOrderId(), 107);
-        // Delete saved record
-        dao.delete(id);
     }
 
     /**
@@ -186,8 +186,6 @@ public class GenDbDaoTest {
         // Add named query for validation
         sql.put("findByIdGreaterThan",
                 "select CUSTOMER_ID, ORDER_DATE, ORDER_ID, SALESMAN_ID, STATUS from ORDERS where ORDER_ID > ?");
-        // Add named query record clean up
-        sql.put("deleteByIdGreaterThan", "delete from ORDERS where ORDER_ID > ?");
         // Create generic DAO
         final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
@@ -202,16 +200,14 @@ public class GenDbDaoTest {
         }
         // Save List of DTOs
         dao.save(list);
-        // Select new records (ORDER_ID > 106)
-        final var newRecs = dao.findBy("findByIdGreaterThan", new Object[]{105});
+        // Select new records (ORDER_ID > 107)
+        final var newRecs = dao.findBy("findByIdGreaterThan", new Object[]{107});
         // List should not be empty
         assertFalse(newRecs.isEmpty());
         // Verify exact count
         assertEquals(newRecs.size(), 10);
-        // Delete records (ORDER_ID > 106)
-        dao.deleteBy("deleteByIdGreaterThan", new Object[]{105});
     }
-    
+
     /**
      * Test DAO save method.
      */
@@ -230,13 +226,10 @@ public class GenDbDaoTest {
         dto.setStatus("Pending");
         // Save DTO and return identity key
         final var id = dao.saveReturnId(dto);
-        logger.debug("{}", id);
         // Verify returned key
         assertEquals(id.getOrderId(), 106);
-        // Delete saved record
-        dao.delete(id);
     }
-    
+
     /**
      * Test DAO update method.
      */
@@ -248,7 +241,7 @@ public class GenDbDaoTest {
         // Create generic DAO
         final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create ID to find
-        final var id = new OrdersId(1);
+        final var id = new OrdersId(4);
         final var dto = dao.findById(id);
         dto.setStatus("Shipped");
         // Uopdate record
@@ -257,9 +250,28 @@ public class GenDbDaoTest {
         final var updateDto = dao.findById(id);
         // Verify status matches
         assertEquals(updateDto.getStatus(), "Shipped");
-        // Set status back
-        dto.setStatus("Pending");
-        dao.update(dto, id);
+    }
+
+    /**
+     * Test DAO update method.
+     */
+    @Test
+    public void updateBatch() {
+        logger.debug("updateBatch");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Add named query for validation
+        sql.put("findByIdLessThan",
+                "select CUSTOMER_ID, ORDER_DATE, ORDER_ID, SALESMAN_ID, STATUS from ORDERS where ORDER_ID < ?");
+        // Create generic DAO
+        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        // Select records to update
+        final var list = dao.findBy("findByIdLessThan", new Object[]{10});
+        // Preserve insertion order
+        final Map<OrdersId, Orders> map = new LinkedHashMap<>();
+        list.forEach((record) -> {
+            map.put(new OrdersId(record.getOrderId()), record);
+        });
     }
 
     /**
@@ -274,14 +286,32 @@ public class GenDbDaoTest {
         final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create ID to delete
         final var id = new OrdersId(1);
-        // Save record
-        final var saveDto = dao.findById(id);
         // Delete record
         dao.delete(id);
         final var dto = dao.findById(id);
         // Verify record was deleted
         assertNull(dto);
-        // Save record back
-        dao.save(saveDto);
+    }
+
+    /**
+     * Test DAO update method.
+     */
+    @Test
+    public void deleteBatch() {
+        logger.debug("deleteBatch");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        // Get all records
+        final var countList = dao.findAll();
+        List<OrdersId> list = new ArrayList<>();
+        // Build list of orders to delete
+        for (int i = 0; i < 3; i++) {
+            list.add(new OrdersId(i + 6));
+        }
+        // Delete List of records
+        dao.delete(list);
+        assertEquals(dao.findAll().size(), countList.size() - 3);
     }
 }

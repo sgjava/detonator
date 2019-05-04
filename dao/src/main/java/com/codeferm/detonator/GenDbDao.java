@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import javax.sql.DataSource;
@@ -225,7 +226,7 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
             final ID id = (ID) idClass.getDeclaredConstructor().newInstance();
             // Write off returned key fields to bean
             final var it = map.entrySet().iterator();
-            idWriteMethods.forEach((final var writeMethod) -> {
+            idWriteMethods.forEach((final  var writeMethod) -> {
                 try {
                     // Get returned value from Map
                     final var pair = it.next();
@@ -263,6 +264,21 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     }
 
     /**
+     * Delete the record by ID.
+     *
+     * @param list List of IDs to delete.
+     */
+    @Override
+    public void delete(final List<ID> list) {
+        final var params = new Object[list.size()][];
+        var i = 0;
+        for (final ID id : list) {
+            params[i++] = beanToParams(id, idReadMethods);
+        }
+        dbDao.batch(sql.getProperty("delete"), params);
+    }
+
+    /**
      * Update the record.
      *
      * @param dto Updated record.
@@ -286,5 +302,24 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     @Override
     public void updateBy(final String name, final Object[] params) {
         dbDao.update(sql.getProperty(name), params);
+    }
+
+    /**
+     * Update map of records.
+     *
+     * @param map Map of DTOs and IDs to update.
+     */
+    @Override
+    public void update(final Map<ID, T> map) {
+        final var params = new Object[map.size()][];
+        var i = 0;
+        for (final var entry : map.entrySet()) {
+            // DTO params array as List
+            final var list = new ArrayList(Arrays.asList(beanToParams(entry.getValue(), dtoReadMethods)));
+            // Add ID params array to List
+            list.addAll(Arrays.asList(beanToParams(entry.getKey(), idReadMethods)));
+            params[i++] = list.toArray();
+        }
+        dbDao.batch(sql.getProperty("update"), params);
     }
 }

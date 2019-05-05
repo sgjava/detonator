@@ -30,8 +30,8 @@
                     <dbPoolSize>5</dbPoolSize>
                     <mapTypes>true</mapTypes>
                     <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
-                    <dtoTemplate>dto.ftl</dtoTemplate>
-                    <idTemplate>id.ftl</idTemplate>
+                    <dtoTemplate>dtoser.ftl</dtoTemplate>
+                    <idTemplate>idser.ftl</idTemplate>
                     <sqlTemplate>sql.ftl</sqlTemplate>
                     <packageName>com.codeferm.dto</packageName>
                     <sqlMap>
@@ -83,6 +83,11 @@
             <artifactId>commons-dbutils</artifactId>
             <version>1.7</version>
         </dependency>
+        <dependency>
+            <groupId>org.mapdb</groupId>
+            <artifactId>mapdb</artifactId>
+            <version>3.0.7</version>
+        </dependency>        
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

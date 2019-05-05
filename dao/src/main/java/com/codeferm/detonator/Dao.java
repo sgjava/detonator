@@ -12,10 +12,10 @@ import java.util.Map;
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
- * @param <T> DTO type.
  * @param <ID> ID type.
+ * @param <T> DTO type.
  */
-public interface Dao<T, ID> {
+public interface Dao<ID, T> {
 
     /**
      * Return all records.
@@ -44,16 +44,17 @@ public interface Dao<T, ID> {
     /**
      * Save the record.
      *
+     * @param id ID of record to update.
      * @param dto Record to save.
      */
-    void save(final T dto);
+    void save(final ID id, final T dto);
 
     /**
      * Save List of records.
      *
-     * @param list Save List of records.
+     * @param map Map of IDs and DTOs to save.
      */
-    void save(final List<T> list);
+    void save(final Map<ID, T> map);
 
     /**
      * Save the record and return identity key.
@@ -88,10 +89,10 @@ public interface Dao<T, ID> {
     /**
      * Update the record.
      *
-     * @param dto Updated record.
      * @param id ID of record to update.
+     * @param dto Updated record.
      */
-    void update(final T dto, final ID id);
+    void update(final ID id, final T dto);
 
     /**
      * Update records using named query and parameters.

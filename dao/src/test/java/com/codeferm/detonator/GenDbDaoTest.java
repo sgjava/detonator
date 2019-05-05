@@ -6,7 +6,6 @@ package com.codeferm.detonator;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersId;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -78,6 +77,9 @@ public class GenDbDaoTest {
         return props;
     }
 
+    /**
+     * Set up DataSource and initialize database.
+     */
     @BeforeAll
     public static void beforeAll() {
         properties = new Properties();
@@ -99,7 +101,7 @@ public class GenDbDaoTest {
     }
 
     /**
-     * Shut down datasource.
+     * Shut down DataSource.
      *
      * @throws SQLException Possible exception.
      */
@@ -117,16 +119,13 @@ public class GenDbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
-        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Get all records
         final var list = dao.findAll();
         // List should not be empty
         assertFalse(list.isEmpty());
         // Verify exact count
         assertEquals(list.size(), 101);
-        for (var orders : list) {
-            logger.debug(orders);
-        }
     }
 
     /**
@@ -138,7 +137,7 @@ public class GenDbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
-        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create ID to find
         final var id = new OrdersId(4);
         final var dto = dao.findById(id);
@@ -162,15 +161,15 @@ public class GenDbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
-        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
         dto.setCustomerId(1);
         dto.setOrderDate(Date.valueOf(LocalDate.now()));
         dto.setSalesmanId(1);
         dto.setStatus("Pending");
-        // Save DTO
-        dao.save(dto);
+        // Save DTO (note ID is not required for REBMS implementation)
+        dao.save(null, dto);
         // Create ID to find (should be 107 based on last orderId)
         final var id = new OrdersId(107);
         final var findDto = dao.findById(id);
@@ -190,19 +189,21 @@ public class GenDbDaoTest {
         sql.put("findByIdGreaterThan",
                 "select CUSTOMER_ID, ORDER_DATE, ORDER_ID, SALESMAN_ID, STATUS from ORDERS where ORDER_ID > ?");
         // Create generic DAO
-        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
         dto.setCustomerId(1);
         dto.setOrderDate(Date.valueOf(LocalDate.now()));
         dto.setSalesmanId(1);
         dto.setStatus("Pending");
-        List<Orders> list = new ArrayList<>();
+        // Preserve insertion order
+        final Map<OrdersId, Orders> map = new LinkedHashMap<>();
+        // For RDBMS ID is ignored
         for (int i = 0; i < 10; i++) {
-            list.add(dto);
+            map.put(new OrdersId(i), dto);
         }
-        // Save List of DTOs
-        dao.save(list);
+        // Save Map of DTOs
+        dao.save(map);
         // Select new records (ORDER_ID > 107)
         final var newRecs = dao.findBy("findByIdGreaterThan", new Object[]{107});
         // List should not be empty
@@ -220,7 +221,7 @@ public class GenDbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
-        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
         dto.setCustomerId(1);
@@ -242,13 +243,13 @@ public class GenDbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
-        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create ID to find
         final var id = new OrdersId(4);
         final var dto = dao.findById(id);
         dto.setStatus("Shipped");
         // Uopdate record
-        dao.update(dto, id);
+        dao.update(id, dto);
         // Verify update
         final var updateDto = dao.findById(id);
         // Verify status matches
@@ -267,13 +268,13 @@ public class GenDbDaoTest {
         sql.put("findByIdLessThan",
                 "select CUSTOMER_ID, ORDER_DATE, ORDER_ID, SALESMAN_ID, STATUS from ORDERS where ORDER_ID < ?");
         // Create generic DAO
-        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Select records to update
         final var list = dao.findBy("findByIdLessThan", new Object[]{10});
         // Preserve insertion order
         final Map<OrdersId, Orders> map = new LinkedHashMap<>();
-        list.forEach((record) -> {
-            map.put(new OrdersId(record.getOrderId()), record);
+        list.forEach(dto -> {
+            map.put(new OrdersId(dto.getOrderId()), dto);
         });
     }
 
@@ -286,7 +287,7 @@ public class GenDbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
-        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create ID to delete
         final var id = new OrdersId(1);
         // Delete record
@@ -305,7 +306,7 @@ public class GenDbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
-        final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
+        final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Get all records
         final var countList = dao.findAll();
         List<OrdersId> list = new ArrayList<>();

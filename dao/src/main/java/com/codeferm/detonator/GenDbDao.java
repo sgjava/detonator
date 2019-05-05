@@ -24,10 +24,10 @@ import javax.sql.DataSource;
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
- * @param <T> Identity Object.
  * @param <ID> Data Transfer Object.
+ * @param <T> Identity Object.
  */
-public class GenDbDao<T, ID> implements Dao<T, ID> {
+public class GenDbDao<ID, T> implements Dao<ID, T> {
 
     /**
      * DataSource.
@@ -188,24 +188,25 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     /**
      * Save the record.
      *
+     * @param id ID of record to update which is ignored for RDBMS implementation.
      * @param dto Record to save.
      */
     @Override
-    public void save(final T dto) {
+    public void save(final ID id, final T dto) {
         dbDao.update(sql.getProperty("save"), beanToParams(dto, dtoReadMethods));
     }
 
     /**
-     * Save List of records using batch operation.
+     * Save Map of records using batch operation. Note for RDBMS implementation ID is not used.
      *
-     * @param list Save List of records.
+     * @param map Map of IDs and DTOs to save.
      */
     @Override
-    public void save(final List<T> list) {
-        final var params = new Object[list.size()][];
+    public void save(final Map<ID, T> map) {
+        final var params = new Object[map.size()][];
         var i = 0;
-        for (final T t : list) {
-            params[i++] = beanToParams(t, dtoReadMethods);
+        for (final var entry : map.entrySet()) {
+            params[i++] = beanToParams(entry.getValue(), dtoReadMethods);
         }
         dbDao.batch(sql.getProperty("save"), params);
     }
@@ -281,11 +282,11 @@ public class GenDbDao<T, ID> implements Dao<T, ID> {
     /**
      * Update the record.
      *
-     * @param dto Updated record.
      * @param id ID of record to update.
+     * @param dto Updated record.
      */
     @Override
-    public void update(final T dto, final ID id) {
+    public void update(final ID id, final T dto) {
         // DTO params array as List
         final var list = new ArrayList(Arrays.asList(beanToParams(dto, dtoReadMethods)));
         // Add ID params array to List

@@ -17,6 +17,8 @@ may allow a less rigid set of mapping rules. You can always use a field alias to
 * Queries are stored by name in a Properties object making it easy to modify the generated SQL or add named queries for instance.
 * DeTOnator DTO allows optional Java type mapping. This means your DAO implementations must support mapping BigDecimal to Integer for
 instance. GenerousBeanProcessor in DbUtils handles this mapping automatically.
+* Multiple DML operations are optimized for JDBC by using batch. Thus, you can save, update and delete lists of records with the back
+end being optimized.
 * CQRS is supported out of the box since composite (i.e. more than one table in select) SQL is supported. You can generate a DTO that
 handles composite SQL (query) and use single table SQL (command) to generate DTOs and SQL for DML operations. This is also useful
 for legacy databases that were not forward engineered from an ORM type tool.

@@ -85,13 +85,14 @@ public class MakeDto {
      * @param sql SQL used to generate metadata.
      * @param packageName Java package name.
      * @param className Java class name.
+     * @param mapTypes Map Java types to optimize.
      * @param writer Template output.
      */
     public void dtoTemplate(final String template, final String sql, final String packageName, final String className,
-            final Writer writer) {
+            final boolean mapTypes, final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
-        final var map = metadataExtract.getResultSetMetaData(dataSource, sql);
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sql, mapTypes);
         // Template model
         final Map<String, Object> model = new HashMap<>();
         model.put("imports", getClasses(map, false));
@@ -117,13 +118,14 @@ public class MakeDto {
      * @param sql SQL used to generate metadata.
      * @param packageName Java package name.
      * @param className Java class name.
+     * @param mapTypes Map Java types to optimize.
      * @param writer Template output.
      */
     public void idTemplate(final String template, final String sql, final String packageName, final String className,
-            final Writer writer) {
+            final boolean mapTypes, final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
-        final var map = metadataExtract.getResultSetMetaData(dataSource, sql);
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sql, mapTypes);
         // Create new map with just PK columns
         final Map<String, RsmdDto> pkMap = new TreeMap<>();
         map.entrySet().forEach((entry) -> {
@@ -159,12 +161,13 @@ public class MakeDto {
      *
      * @param template Template to use.
      * @param sql SQL used to generate metadata.
+     * @param mapTypes Map Java types to optimize.
      * @param writer Template output.
      */
-    public void sqlTemplate(final String template, final String sql, final Writer writer) {
+    public void sqlTemplate(final String template, final String sql, final boolean mapTypes, final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
-        final var map = metadataExtract.getResultSetMetaData(dataSource, sql);
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sql, mapTypes);
         final var tables = metadataExtract.uniqueTableNames(sql);
         final var tableName = tables.iterator().next();
         // Get PK fields

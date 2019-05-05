@@ -28,6 +28,7 @@
                     <dbPassword></dbPassword>
                     <dbUrl>jdbc:h2:~/test</dbUrl>
                     <dbPoolSize>5</dbPoolSize>
+                    <mapTypes>true</mapTypes>
                     <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
                     <dtoTemplate>dto.ftl</dtoTemplate>
                     <idTemplate>id.ftl</idTemplate>

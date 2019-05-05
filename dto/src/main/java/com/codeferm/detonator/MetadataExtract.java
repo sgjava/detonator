@@ -27,6 +27,11 @@ import javax.sql.DataSource;
  */
 public class MetadataExtract {
 
+    static final int LONG_PRECISION = String.valueOf(Long.MAX_VALUE).length();
+    static final int INTEGER_PRECISION = String.valueOf(Integer.MAX_VALUE).length();
+    static final int SHORT_PRECISION = String.valueOf(Short.MAX_VALUE).length();
+    static final int BYTE_PRECISION = String.valueOf(Byte.MAX_VALUE).length();
+
     /**
      * Default constructor.
      */
@@ -110,14 +115,41 @@ public class MetadataExtract {
     }
 
     /**
+     * Map Java types to optimize BigDecimal with scale 0.
+     *
+     * @param rsmdDto Metadata DTO.
+     * @return Type String.
+     */
+    public String mapType(final RsmdDto rsmdDto) {
+        var type = rsmdDto.getColumnClassName();
+        // Handle BigDecimal mapping.
+        if (type.equals("java.math.BigDecimal") && rsmdDto.getScale() == 0) {
+            final var precision = rsmdDto.getPrecision();
+            if (precision < BYTE_PRECISION) {
+                type = "java.lang.Byte";
+            } else if (precision < SHORT_PRECISION) {
+                type = "java.lang.Short";
+            } else if (precision < INTEGER_PRECISION) {
+                type = "java.lang.Integer";
+            } else if (precision < LONG_PRECISION) {
+                type = "java.lang.Long";
+            } else {
+                type = "java.math.BigInteger";
+            }
+        }
+        return type;
+    }
+
+    /**
      * Return a Map of ResultSetMetaData DTOs keyed by column name. Extra fields have been added to make it easier to convert to a
      * DTO class.
      *
      * @param dataSource DataSoure to run queries against.
      * @param sql SQL statement used to get metadata.
+     * @param mapTypes Map Java types to optimize.
      * @return Result set metadata.
      */
-    public Map<String, RsmdDto> getResultSetMetaData(final DataSource dataSource, final String sql) {
+    public Map<String, RsmdDto> getResultSetMetaData(final DataSource dataSource, final String sql, final boolean mapTypes) {
         final Map<String, RsmdDto> map = new TreeMap<>();
         try (Connection connection = dataSource.getConnection()) {
             final ResultSet resultSet;
@@ -152,8 +184,12 @@ public class MetadataExtract {
                     dto.setMethodName(camelCase);
                     // Set first character to lower case
                     dto.setVarName(camelCase.substring(0, 1).toLowerCase(Locale.US) + camelCase.substring(1));
+                    // Map Java types?
+                    if (mapTypes) {
+                        dto.setColumnClassName(mapType(dto));
+                    }
                     // Split by period
-                    final var array = rsmd.getColumnClassName(col).split("\\.");
+                    final var array = dto.getColumnClassName().split("\\.");
                     // Save only the class without the package
                     dto.setVarType(array[array.length - 1]);
                     map.put(dto.getColumnName(), dto);
@@ -166,7 +202,7 @@ public class MetadataExtract {
             if (tables.size() == 1) {
                 final var pkMap = getPrimaryKey(dataSource, tables.get(0));
                 // Set PK sequence in DTO
-                pkMap.entrySet().forEach((final  var entry) -> {
+                pkMap.entrySet().forEach((final            var entry) -> {
                     map.get(entry.getValue()).setKeySeq(entry.getKey());
                 });
             }

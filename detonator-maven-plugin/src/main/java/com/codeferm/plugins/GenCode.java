@@ -47,6 +47,10 @@ public class GenCode {
      */
     private int dbPoolSize;
     /**
+     * Map Java types.
+     */
+    private boolean mapTypes;
+    /**
      * Location of generated sources dir.
      */
     private String genSrcDir;
@@ -87,7 +91,7 @@ public class GenCode {
         return dbDriver;
     }
 
-    public void setDbDriver(String dbDriver) {
+    public void setDbDriver(final String dbDriver) {
         this.dbDriver = dbDriver;
     }
 
@@ -95,7 +99,7 @@ public class GenCode {
         return dbUser;
     }
 
-    public void setDbUser(String dbUser) {
+    public void setDbUser(final String dbUser) {
         this.dbUser = dbUser;
     }
 
@@ -103,7 +107,7 @@ public class GenCode {
         return dbPassword;
     }
 
-    public void setDbPassword(String dbPassword) {
+    public void setDbPassword(final String dbPassword) {
         this.dbPassword = dbPassword;
     }
 
@@ -111,7 +115,7 @@ public class GenCode {
         return dbUrl;
     }
 
-    public void setDbUrl(String dbUrl) {
+    public void setDbUrl(final String dbUrl) {
         this.dbUrl = dbUrl;
     }
 
@@ -119,15 +123,23 @@ public class GenCode {
         return dbPoolSize;
     }
 
-    public void setDbPoolSize(int dbPoolSize) {
+    public void setDbPoolSize(final int dbPoolSize) {
         this.dbPoolSize = dbPoolSize;
+    }
+
+    public boolean isMapTypes() {
+        return mapTypes;
+    }
+
+    public void setMapTypes(final boolean mapTypes) {
+        this.mapTypes = mapTypes;
     }
 
     public String getGenSrcDir() {
         return genSrcDir;
     }
 
-    public void setGenSrcDir(String genSrcDir) {
+    public void setGenSrcDir(final String genSrcDir) {
         this.genSrcDir = genSrcDir;
     }
 
@@ -135,7 +147,7 @@ public class GenCode {
         return genResDir;
     }
 
-    public void setGenResDir(String genResDir) {
+    public void setGenResDir(final String genResDir) {
         this.genResDir = genResDir;
     }
 
@@ -143,7 +155,7 @@ public class GenCode {
         return templatesDir;
     }
 
-    public void setTemplatesDir(String templatesDir) {
+    public void setTemplatesDir(final String templatesDir) {
         this.templatesDir = templatesDir;
     }
 
@@ -151,7 +163,7 @@ public class GenCode {
         return dtoTemplate;
     }
 
-    public void setDtoTemplate(String dtoTemplate) {
+    public void setDtoTemplate(final String dtoTemplate) {
         this.dtoTemplate = dtoTemplate;
     }
 
@@ -159,7 +171,7 @@ public class GenCode {
         return idTemplate;
     }
 
-    public void setIdTemplate(String idTemplate) {
+    public void setIdTemplate(final String idTemplate) {
         this.idTemplate = idTemplate;
     }
 
@@ -167,7 +179,7 @@ public class GenCode {
         return sqlTemplate;
     }
 
-    public void setSqlTemplate(String sqlTemplate) {
+    public void setSqlTemplate(final String sqlTemplate) {
         this.sqlTemplate = sqlTemplate;
     }
 
@@ -175,7 +187,7 @@ public class GenCode {
         return sqlMap;
     }
 
-    public void setSqlMap(Map<String, String> sqlMap) {
+    public void setSqlMap(final Map<String, String> sqlMap) {
         this.sqlMap = sqlMap;
     }
 
@@ -183,7 +195,7 @@ public class GenCode {
         return packageName;
     }
 
-    public void setPackageName(String packageName) {
+    public void setPackageName(final String packageName) {
         this.packageName = packageName;
     }
 
@@ -215,16 +227,16 @@ public class GenCode {
                 // Use FileOutputStream for SQL properties output
                 try (var out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(String.format("%s/%s.properties",
                         genResDir, entry.getKey().toLowerCase(Locale.US))), false), StandardCharsets.UTF_8))) {
-                    makeDto.sqlTemplate(sqlTemplate, entry.getValue(), out);
+                    makeDto.sqlTemplate(sqlTemplate, entry.getValue(), mapTypes, out);
                 }
                 // Use FileOutputStream for DTO output
                 try (var out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(String.format("%s/%s.java",
                         sourceDir, entry.getKey())), false), StandardCharsets.UTF_8))) {
-                    makeDto.dtoTemplate(dtoTemplate, entry.getValue(), packageName, entry.getKey(), out);
+                    makeDto.dtoTemplate(dtoTemplate, entry.getValue(), packageName, entry.getKey(), mapTypes, out);
                 }
                 // Use StringWriter in case ID is empty (i.e. no PK or composite SQL)
                 final var out = new StringWriter();
-                makeDto.idTemplate(idTemplate, entry.getValue(), packageName, String.format("%sId", entry.getKey()), out);
+                makeDto.idTemplate(idTemplate, entry.getValue(), packageName, String.format("%sId", entry.getKey()), mapTypes, out);
                 final var idStr = out.toString();
                 // Check for empty result
                 if (!idStr.isEmpty()) {

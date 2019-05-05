@@ -159,7 +159,7 @@ public class MetadataExtractTest {
     public void getResultSetMetaData() throws SQLException {
         logger.debug("getResultSetMetaData");
         final var metadataExtract = new MetadataExtract();
-        final var map = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_orders"));
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_orders"), true);
         // List should not be empty
         assertFalse(map.isEmpty());
         // List should contain 5 items

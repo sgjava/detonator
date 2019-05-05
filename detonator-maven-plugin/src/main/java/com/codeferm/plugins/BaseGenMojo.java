@@ -45,6 +45,11 @@ public abstract class BaseGenMojo extends AbstractMojo {
     @Parameter(property = "dbPoolSize", required = true)
     private int dbPoolSize;
     /**
+     * Map Java types.
+     */
+    @Parameter(property = "mapTypes", required = true)
+    private boolean mapTypes;
+    /**
      * FreeMarker templates path.
      */
     @Parameter(property = "templatesDir", required = true)
@@ -94,6 +99,7 @@ public abstract class BaseGenMojo extends AbstractMojo {
         genCode.setDbUser(dbUser);
         genCode.setDbPassword(dbPassword);
         genCode.setDbPoolSize(dbPoolSize);
+        genCode.setMapTypes(mapTypes);
         genCode.setTemplatesDir(templatesDir);
         genCode.setDtoTemplate(dtoTemplate);
         genCode.setIdTemplate(idTemplate);

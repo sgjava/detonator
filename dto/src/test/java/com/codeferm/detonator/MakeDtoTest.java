@@ -88,16 +88,16 @@ public class MakeDtoTest {
                     getProperty("db.remove.delimiter")));
         }
     }
-    
+
     /**
      * Shut down datasource.
-     * 
+     *
      * @throws SQLException Possible exception.
      */
     @AfterAll
-    public static void afterAll() throws SQLException{
-        ((BasicDataSource)dataSource).close();
-    }    
+    public static void afterAll() throws SQLException {
+        ((BasicDataSource) dataSource).close();
+    }
 
     /**
      * Test getClasses.
@@ -107,13 +107,13 @@ public class MakeDtoTest {
         logger.debug("getClasses");
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
         final var metadataExtract = new MetadataExtract();
-        final var map = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_orders"));
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_orders"), true);
         // Test all columns
         var classes = makeDto.getClasses(map, false);
         // Set should not be empty
         assertFalse(classes.isEmpty());
-        // Set should contain two items
-        assertEquals(classes.size(), 2);
+        // Set should contain one item
+        assertEquals(classes.size(), 1);
         for (final var className : classes) {
             logger.debug(className);
         }
@@ -136,7 +136,7 @@ public class MakeDtoTest {
         final var className = metadataExtract.toCamelCase(tables.get(0));
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, out);
+        makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
         logger.debug(out.toString());
     }
 
@@ -153,11 +153,10 @@ public class MakeDtoTest {
         final var className = metadataExtract.toCamelCase(tables.get(0));
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.dtoTemplate("dtobv.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, out);
+        makeDto.dtoTemplate("dtobv.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
         logger.debug(out.toString());
     }
-    
-    
+
     /**
      * Test idTemplate.
      */
@@ -168,13 +167,13 @@ public class MakeDtoTest {
         final var metadataExtract = new MetadataExtract();
         final var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_orders"));
         // Use camelCase of table name
-        final var className = metadataExtract.toCamelCase(tables.get(0))+"Pk";
+        final var className = metadataExtract.toCamelCase(tables.get(0)) + "Pk";
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.idTemplate("id.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, out);
+        makeDto.idTemplate("id.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
         logger.debug(out.toString());
     }
-    
+
     /**
      * Test sqlTemplate.
      */
@@ -184,7 +183,7 @@ public class MakeDtoTest {
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.sqlTemplate("sql.ftl", sqlMap.get("md_order_items"), out);
+        makeDto.sqlTemplate("sql.ftl", sqlMap.get("md_order_items"), true, out);
         logger.debug(out.toString());
     }
 }

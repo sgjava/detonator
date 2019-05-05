@@ -124,6 +124,9 @@ public class GenDbDaoTest {
         assertFalse(list.isEmpty());
         // Verify exact count
         assertEquals(list.size(), 101);
+        for (var orders : list) {
+            logger.debug(orders);
+        }
     }
 
     /**
@@ -162,9 +165,9 @@ public class GenDbDaoTest {
         final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
-        dto.setCustomerId(BigDecimal.valueOf(1));
+        dto.setCustomerId(1);
         dto.setOrderDate(Date.valueOf(LocalDate.now()));
-        dto.setSalesmanId(BigDecimal.valueOf(1));
+        dto.setSalesmanId(1);
         dto.setStatus("Pending");
         // Save DTO
         dao.save(dto);
@@ -190,9 +193,9 @@ public class GenDbDaoTest {
         final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
-        dto.setCustomerId(BigDecimal.valueOf(1));
+        dto.setCustomerId(1);
         dto.setOrderDate(Date.valueOf(LocalDate.now()));
-        dto.setSalesmanId(BigDecimal.valueOf(1));
+        dto.setSalesmanId(1);
         dto.setStatus("Pending");
         List<Orders> list = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -220,9 +223,9 @@ public class GenDbDaoTest {
         final Dao<Orders, OrdersId> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
-        dto.setCustomerId(BigDecimal.valueOf(1));
+        dto.setCustomerId(1);
         dto.setOrderDate(Date.valueOf(LocalDate.now()));
-        dto.setSalesmanId(BigDecimal.valueOf(1));
+        dto.setSalesmanId(1);
         dto.setStatus("Pending");
         // Save DTO and return identity key
         final var id = dao.saveReturnId(dto);

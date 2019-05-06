@@ -151,6 +151,27 @@ public class GenDbDaoTest {
         // DTO should be null if not found
         assertNull(badDto);
     }
+    
+    /**
+     * Test DAO findById method using simple type instead of ID bean.
+     */
+    @Test
+    public void findByIdSimpleType() {
+        logger.debug("findByIdSimpleType");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<Integer, Orders> dao = new GenDbDao<>(dataSource, sql, Integer.class, Orders.class);
+        final var dto = dao.findById(4);
+        // Verify record exists
+        assertNotNull(dto);
+        // Verify ID matches
+        assertEquals(dto.getOrderId(), 4);
+        // Find ID that doesn't exist
+        final var badDto = dao.findById(0);
+        // DTO should be null if not found
+        assertNull(badDto);
+    }
 
     /**
      * Test DAO save method.

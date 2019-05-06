@@ -8,6 +8,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import static java.lang.reflect.Modifier.PUBLIC;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -85,6 +86,17 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
     }
 
     /**
+     * See if simple type or bean.
+     *
+     * @param type Class type.
+     * @return True if simple type.
+     */
+    public boolean isPrimitiveWrapperOrString(final Class<?> type) {
+        return type == Double.class || type == Float.class || type == Long.class || type == Integer.class || type == Short.class
+                || type == Character.class || type == Byte.class || type == Boolean.class || type == String.class;
+    }
+
+    /**
      * Get read method of each property.
      *
      * @param fields {@code Array} containing bean field names.
@@ -92,17 +104,21 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
      * @return {@code Map} of bean write methods.
      */
     public final List<Method> getReadMethods(final Field[] fields, final Class clazz) {
-        final List<Method> list = new ArrayList<>();
-        for (Field field : fields) {
-            // Ignore synthetic classes or dynamic proxies.
-            if (!field.isSynthetic()) {
-                PropertyDescriptor propertyDescriptor;
-                try {
-                    propertyDescriptor = new PropertyDescriptor(field.getName(), clazz);
-                } catch (IntrospectionException e) {
-                    throw new RuntimeException(e);
+        List<Method> list = null;
+        // Only get read methods for beans
+        if (!isPrimitiveWrapperOrString(clazz)) {
+            list = new ArrayList<>();
+            for (Field field : fields) {
+                // Ignore synthetic classes or dynamic proxies
+                if (!field.isSynthetic()) {
+                    PropertyDescriptor propertyDescriptor;
+                    try {
+                        propertyDescriptor = new PropertyDescriptor(field.getName(), clazz);
+                    } catch (IntrospectionException e) {
+                        throw new RuntimeException(e);
+                    }
+                    list.add(propertyDescriptor.getReadMethod());
                 }
-                list.add(propertyDescriptor.getReadMethod());
             }
         }
         return list;
@@ -116,38 +132,49 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
      * @return {@code Map} of bean write methods.
      */
     public final List<Method> getWriteMethods(final Field[] fields, final Class clazz) {
-        final List<Method> list = new ArrayList<>();
-        for (Field field : fields) {
-            // Ignore synthetic classes or dynamic proxies.
-            if (!field.isSynthetic()) {
-                PropertyDescriptor propertyDescriptor;
-                try {
-                    propertyDescriptor = new PropertyDescriptor(field.getName(), clazz);
-                } catch (IntrospectionException e) {
-                    throw new RuntimeException(e);
+        List<Method> list = null;
+        // Only get write methods for beans
+        if (!isPrimitiveWrapperOrString(clazz)) {
+            list = new ArrayList<>();
+            for (Field field : fields) {
+                // Ignore synthetic classes or dynamic proxies.
+                if (!field.isSynthetic()) {
+                    PropertyDescriptor propertyDescriptor;
+                    try {
+                        propertyDescriptor = new PropertyDescriptor(field.getName(), clazz);
+                    } catch (IntrospectionException e) {
+                        throw new RuntimeException(e);
+                    }
+                    list.add(propertyDescriptor.getWriteMethod());
                 }
-                list.add(propertyDescriptor.getWriteMethod());
             }
         }
         return list;
     }
 
     /**
-     * Return Object array with values in order of then bean's accessor methods.
+     * Return Object array with values in order of then bean's accessor methods. If no read methods then it is considered a simple
+     * type.
      *
      * @param bean Bean object.
      * @param readMethods Bean's read methods.
      * @return Array of parameters.
      */
     public Object[] beanToParams(final Object bean, final List<Method> readMethods) {
-        final var params = new Object[readMethods.size()];
-        int i = 0;
-        for (final var readMethod : readMethods) {
-            try {
-                params[i++] = readMethod.invoke(bean, (Object[]) null);
-            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                throw new RuntimeException(e);
+        Object[] params;
+        // If read methods then it's a bean
+        if (readMethods != null) {
+            params = new Object[readMethods.size()];
+            int i = 0;
+            for (final var readMethod : readMethods) {
+                try {
+                    params[i++] = readMethod.invoke(bean, (Object[]) null);
+                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
             }
+        } else {
+            params = new Object[]{bean};
         }
         return params;
     }
@@ -227,7 +254,7 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
             final ID id = (ID) idClass.getDeclaredConstructor().newInstance();
             // Write off returned key fields to bean
             final var it = map.entrySet().iterator();
-            idWriteMethods.forEach((final  var writeMethod) -> {
+            idWriteMethods.forEach((final          var writeMethod) -> {
                 try {
                     // Get returned value from Map
                     final var pair = it.next();

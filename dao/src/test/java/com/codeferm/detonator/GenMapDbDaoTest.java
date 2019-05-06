@@ -65,6 +65,7 @@ public class GenMapDbDaoTest {
         for (final var orders : list) {
             map.put(new OrdersId(orders.getOrderId()), orders);
         }
+        db.commit();
     }
 
     /**

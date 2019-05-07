@@ -5,9 +5,10 @@ package com.codeferm.detonator;
 
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 import org.mapdb.DB;
-import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 
 /**
  * Generic MapDB DAO.
@@ -24,21 +25,35 @@ public class GenMapDbDao<ID, T> implements Dao<ID, T> {
      * MapDB database.
      */
     private final DB db;
-    private final NavigableSet treeSet;
+    /**
+     * MapDB ConcurrentMap to hold keys and values.
+     */
+    private final ConcurrentMap<ID, T> map;
 
-    public GenMapDbDao(final String fileName, final String collectionName) {
-        db = DBMaker.fileDB(fileName).make();
-        treeSet = db.treeSet(collectionName).createOrOpen();
+    public GenMapDbDao(final DB db, final String collectionName) {
+        this.db = db;
+        this.map = db.hashMap(collectionName, Serializer.JAVA, Serializer.JAVA).createOrOpen();
     }
 
+    /**
+     * Return all records.
+     *
+     * @return List of all records.
+     */
     @Override
     public List<T> findAll() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return map.values().stream().collect(Collectors.toList());
     }
 
+    /**
+     * Return one record by ID.
+     *
+     * @param id ID of record to return.
+     * @return Single record.
+     */
     @Override
     public T findById(ID id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return map.get(id);
     }
 
     @Override
@@ -90,7 +105,5 @@ public class GenMapDbDao<ID, T> implements Dao<ID, T> {
     public void update(Map<ID, T> map) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
-
 
 }

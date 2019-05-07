@@ -14,10 +14,15 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 
 /**
  * Test MapDB DAO.
@@ -56,15 +61,15 @@ public class GenMapDbDaoTest {
         final var dataLoader = new DataLoader(dataSource);
         dataLoader.execScript(fileName, delimiter, removeDelimiter);
         db = DBMaker.fileDB(properties.getProperty("map.file")).make();
-        final ConcurrentMap map = db.hashMap("Orders").createOrOpen();
+        final ConcurrentMap<OrdersId, Orders> map = db.hashMap("orders", Serializer.JAVA, Serializer.JAVA).createOrOpen();
         final var sql = loadProperties("orders.properties");
         // Create generic RDBMS DAO
         final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Get all records
         final var list = dao.findAll();
-        for (final var orders : list) {
+        list.forEach((orders) -> {
             map.put(new OrdersId(orders.getOrderId()), orders);
-        }
+        });
         db.commit();
     }
 
@@ -120,10 +125,44 @@ public class GenMapDbDaoTest {
     }
 
     /**
-     * Test DAO save method.
+     * Test DAO findAll method.
      */
     @Test
-    public void save() {
-        logger.debug("save");
+    public void findAll() {
+        logger.debug("findAll");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        // Get all records
+        final var list = dao.findAll();
+        // List should not be empty
+        assertFalse(list.isEmpty());
+        // Verify exact count
+        assertEquals(list.size(), 105);
     }
+    
+    /**
+     * Test DAO findById method.
+     */
+    @Test
+    public void findById() {
+        logger.debug("findById");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        // Create ID to find
+        final var id = new OrdersId(4);
+        final var dto = dao.findById(id);
+        // Verify record exists
+        assertNotNull(dto);
+        // Verify ID matches
+        assertEquals(dto.getOrderId(), 4);
+        // Create ID that doesn't exist
+        final var badId = new OrdersId(0);
+        final var badDto = dao.findById(badId);
+        // DTO should be null if not found
+        assertNull(badDto);
+    }    
 }

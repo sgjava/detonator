@@ -292,7 +292,7 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
     }
 
     /**
-     * Delete the record by ID.
+     * Delete list of records.
      *
      * @param list List of IDs to delete.
      */

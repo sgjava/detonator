@@ -278,7 +278,7 @@ public class GenDbDaoTest {
     }
 
     /**
-     * Test DAO update method.
+     * Test DAO batch update method.
      */
     @Test
     public void updateBatch() {
@@ -300,7 +300,7 @@ public class GenDbDaoTest {
     }
 
     /**
-     * Test DAO update method.
+     * Test DAO delete method.
      */
     @Test
     public void delete() {
@@ -319,7 +319,7 @@ public class GenDbDaoTest {
     }
 
     /**
-     * Test DAO update method.
+     * Test DAO batch delete method.
      */
     @Test
     public void deleteBatch() {

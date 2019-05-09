@@ -6,7 +6,13 @@ package com.codeferm.detonator;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersId;
 import java.io.IOException;
+import java.sql.Date;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 import javax.sql.DataSource;
@@ -62,6 +68,7 @@ public class GenMapDbDaoTest {
         dataLoader.execScript(fileName, delimiter, removeDelimiter);
         db = DBMaker.fileDB(properties.getProperty("map.file")).make();
         final ConcurrentMap<OrdersId, Orders> map = db.hashMap("orders", Serializer.JAVA, Serializer.JAVA).createOrOpen();
+        map.clear();
         final var sql = loadProperties("orders.properties");
         // Create generic RDBMS DAO
         final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
@@ -130,8 +137,6 @@ public class GenMapDbDaoTest {
     @Test
     public void findAll() {
         logger.debug("findAll");
-        // Get generated SQL
-        final var sql = loadProperties("orders.properties");
         // Create generic DAO
         final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
         // Get all records
@@ -139,17 +144,15 @@ public class GenMapDbDaoTest {
         // List should not be empty
         assertFalse(list.isEmpty());
         // Verify exact count
-        assertEquals(list.size(), 105);
+        assertEquals(list.size(), 101);
     }
-    
+
     /**
      * Test DAO findById method.
      */
     @Test
     public void findById() {
         logger.debug("findById");
-        // Get generated SQL
-        final var sql = loadProperties("orders.properties");
         // Create generic DAO
         final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
         // Create ID to find
@@ -164,5 +167,129 @@ public class GenMapDbDaoTest {
         final var badDto = dao.findById(badId);
         // DTO should be null if not found
         assertNull(badDto);
-    }    
+    }
+
+    /**
+     * Test DAO save method.
+     */
+    @Test
+    public void save() {
+        logger.debug("save");
+        // Create generic DAO
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        final var id = new OrdersId(107);
+        // Create DTO to save
+        final var dto = new Orders();
+        dto.setOrderId(id.getOrderId());
+        dto.setCustomerId(1);
+        dto.setOrderDate(Date.valueOf(LocalDate.now()));
+        dto.setSalesmanId(1);
+        dto.setStatus("Pending");
+        // Save DTO
+        dao.save(id, dto);
+        final var findDto = dao.findById(id);
+        // Verify ID matches
+        assertEquals(findDto.getOrderId(), 107);
+    }
+
+    /**
+     * Test DAO save method.
+     */
+    @Test
+    public void saveBatch() {
+        logger.debug("saveBatch");
+        // Create generic DAO
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        // Preserve insertion order
+        final Map<OrdersId, Orders> map = new LinkedHashMap<>();
+        // For RDBMS ID is ignored
+        for (int i = 0; i < 10; i++) {
+            // Create DTO to save
+            final var dto = new Orders();
+            dto.setOrderId(i + 108);
+            dto.setCustomerId(1);
+            dto.setOrderDate(Date.valueOf(LocalDate.now()));
+            dto.setSalesmanId(1);
+            dto.setStatus("Pending");
+            map.put(new OrdersId(i + 108), dto);
+        }
+        // Save Map of DTOs
+        dao.save(map);
+    }
+
+    /**
+     * Test DAO update method.
+     */
+    @Test
+    public void update() {
+        logger.debug("update");
+        // Create generic DAO
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        // Create ID to find
+        final var id = new OrdersId(4);
+        final var dto = dao.findById(id);
+        dto.setStatus("Shipped");
+        // Uopdate record
+        dao.update(id, dto);
+        // Verify update
+        final var updateDto = dao.findById(id);
+        // Verify status matches
+        assertEquals(updateDto.getStatus(), "Shipped");
+    }
+
+    /**
+     * Test DAO batch update method.
+     */
+    @Test
+    public void updateBatch() {
+        logger.debug("updateBatch");
+        // Create generic DAO
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        // Preserve insertion order
+        final Map<OrdersId, Orders> map = new LinkedHashMap<>();
+        for (int i = 0; i < 10; i++) {
+            final var id = new OrdersId(i + 10);
+            final var dto = dao.findById(id);
+            dto.setStatus("Pending");
+            map.put(id, dto);
+        }
+        dao.update(map);
+    }
+
+    /**
+     * Test DAO delete method.
+     */
+    @Test
+    public void delete() {
+        // Get generated SQL
+        // Create generic DAO
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        // Create ID to delete
+        final var id = new OrdersId(1);
+        // Delete record
+        dao.delete(id);
+        final var dto = dao.findById(id);
+        // Verify record was deleted
+        assertNull(dto);
+    }
+
+    /**
+     * Test DAO batch delete method.
+     */
+    @Test
+    public void deleteBatch() {
+        // Get generated SQL
+        // Create generic DAO
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        // Get all records
+        final var countList = dao.findAll();
+        List<OrdersId> list = new ArrayList<>();
+        // Build list of orders to delete
+        for (int i = 0; i < 3; i++) {
+            list.add(new OrdersId(i + 6));
+        }
+        // Delete List of records
+        dao.delete(list);
+        assertEquals(dao.findAll().size(), countList.size() - 3);
+    }
 }

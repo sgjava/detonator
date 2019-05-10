@@ -3,6 +3,10 @@
  */
 package com.codeferm.detonator;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
@@ -29,10 +33,53 @@ public class GenMapDbDao<ID, T> implements Dao<ID, T> {
      * MapDB ConcurrentMap to hold keys and values.
      */
     private final ConcurrentMap<ID, T> map;
+    /**
+     * getKey method.
+     */
+    private Method keyMethod;
 
-    public GenMapDbDao(final DB db, final String collectionName) {
+    /**
+     * Constructor.
+     *
+     * @param db MapDB DB.
+     * @param collectionName Name of collection.
+     * @param dtoClass DTO class type.
+     */
+    public GenMapDbDao(final DB db, final String collectionName, final Class dtoClass) {
         this.db = db;
         this.map = db.hashMap(collectionName, Serializer.JAVA, Serializer.JAVA).createOrOpen();
+        // Get DTO fields
+        final var fields = dtoClass.getDeclaredFields();
+        // Get last field
+        final var field = fields[fields.length - 1];
+        // Last field should be key if it exists
+        if (field.getName().equals("key")) {
+            try {
+                keyMethod = new PropertyDescriptor(field.getName(), dtoClass).getReadMethod();
+            } catch (IntrospectionException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            keyMethod = null;
+        }
+    }
+
+    /**
+     * Get ID or null;
+     *
+     * @param dto DTO to get ID from.
+     * @return ID;
+     */
+    public ID getId(T dto) {
+        ID id = null;
+        if (keyMethod != null) {
+            try {
+                id = (ID) keyMethod.invoke(dto, (Object[]) null);
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return id;
     }
 
     /**
@@ -71,11 +118,11 @@ public class GenMapDbDao<ID, T> implements Dao<ID, T> {
     /**
      * Save the record.
      *
-     * @param id ID of record to save.
      * @param dto Record to save.
      */
     @Override
-    public void save(ID id, T dto) {
+    public void save(T dto) {
+        final ID id = getId(dto);
         // Treat this like SQL and throw key violation if key exists
         if (!map.containsKey(id)) {
             map.put(id, dto);
@@ -92,7 +139,7 @@ public class GenMapDbDao<ID, T> implements Dao<ID, T> {
     @Override
     public void save(Map<ID, T> map) {
         map.entrySet().forEach(entry -> {
-            save(entry.getKey(), entry.getValue());
+            save(entry.getValue());
         });
     }
 

@@ -30,7 +30,7 @@
                     <dbPoolSize>5</dbPoolSize>
                     <mapTypes>true</mapTypes>
                     <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
-                    <dtoTemplate>dtoser.ftl</dtoTemplate>
+                    <dtoTemplate>dtopk.ftl</dtoTemplate>
                     <idTemplate>idser.ftl</idTemplate>
                     <sqlTemplate>sql.ftl</sqlTemplate>
                     <packageName>com.codeferm.dto</packageName>

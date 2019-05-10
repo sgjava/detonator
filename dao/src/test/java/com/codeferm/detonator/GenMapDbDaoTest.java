@@ -138,7 +138,7 @@ public class GenMapDbDaoTest {
     public void findAll() {
         logger.debug("findAll");
         // Create generic DAO
-        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Get all records
         final var list = dao.findAll();
         // List should not be empty
@@ -154,7 +154,7 @@ public class GenMapDbDaoTest {
     public void findById() {
         logger.debug("findById");
         // Create generic DAO
-        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Create ID to find
         final var id = new OrdersId(4);
         final var dto = dao.findById(id);
@@ -176,7 +176,7 @@ public class GenMapDbDaoTest {
     public void save() {
         logger.debug("save");
         // Create generic DAO
-        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         final var id = new OrdersId(107);
         // Create DTO to save
         final var dto = new Orders();
@@ -186,7 +186,7 @@ public class GenMapDbDaoTest {
         dto.setSalesmanId(1);
         dto.setStatus("Pending");
         // Save DTO
-        dao.save(id, dto);
+        dao.save(dto);
         final var findDto = dao.findById(id);
         // Verify ID matches
         assertEquals(findDto.getOrderId(), 107);
@@ -199,7 +199,7 @@ public class GenMapDbDaoTest {
     public void saveBatch() {
         logger.debug("saveBatch");
         // Create generic DAO
-        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Preserve insertion order
         final Map<OrdersId, Orders> map = new LinkedHashMap<>();
         // For RDBMS ID is ignored
@@ -224,7 +224,7 @@ public class GenMapDbDaoTest {
     public void update() {
         logger.debug("update");
         // Create generic DAO
-        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Create ID to find
         final var id = new OrdersId(4);
         final var dto = dao.findById(id);
@@ -244,7 +244,7 @@ public class GenMapDbDaoTest {
     public void updateBatch() {
         logger.debug("updateBatch");
         // Create generic DAO
-        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Preserve insertion order
         final Map<OrdersId, Orders> map = new LinkedHashMap<>();
         for (int i = 0; i < 10; i++) {
@@ -263,7 +263,7 @@ public class GenMapDbDaoTest {
     public void delete() {
         // Get generated SQL
         // Create generic DAO
-        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Create ID to delete
         final var id = new OrdersId(1);
         // Delete record
@@ -280,7 +280,7 @@ public class GenMapDbDaoTest {
     public void deleteBatch() {
         // Get generated SQL
         // Create generic DAO
-        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders");
+        final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Get all records
         final var countList = dao.findAll();
         List<OrdersId> list = new ArrayList<>();

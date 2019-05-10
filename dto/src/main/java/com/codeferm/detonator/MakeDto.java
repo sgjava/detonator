@@ -65,7 +65,7 @@ public class MakeDto {
     public Set<String> getClasses(final Map<String, RsmdDto> map, final boolean pkOnly) {
         final var classes = new TreeSet<String>();
         map.entrySet().stream().map(entry -> entry.getValue()).filter(value -> !value.getColumnClassName().
-                startsWith("java.lang")).forEachOrdered((final  var value) -> {
+                startsWith("java.lang")).forEachOrdered((final   var value) -> {
             // Only include PK columns?
             if (pkOnly) {
                 if (value.getKeySeq() != null) {
@@ -76,6 +76,24 @@ public class MakeDto {
             }
         });
         return classes;
+    }
+
+    /**
+     * Return Map of PK fields or empty Map if none.
+     *
+     * @param map Metadata Map.
+     * @return PK columns Map.
+     */
+    public Map<String, RsmdDto> getPkMap(final Map<String, RsmdDto> map) {
+        // Create new map with just PK columns
+        final Map<String, RsmdDto> pkMap = new TreeMap<>();
+        map.entrySet().forEach((entry) -> {
+            final var value = entry.getValue();
+            if (value.getKeySeq() != null) {
+                pkMap.put(entry.getKey(), value);
+            }
+        });
+        return pkMap;
     }
 
     /**
@@ -102,6 +120,7 @@ public class MakeDto {
         model.put("sql", sql.replaceAll("\\R", " "));
         model.put("className", className);
         model.put("map", map);
+        model.put("pkMap", getPkMap(map));
         // Process DTO template
         try {
             final var temp = configuration.getTemplate(template);
@@ -126,14 +145,8 @@ public class MakeDto {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sql, mapTypes);
-        // Create new map with just PK columns
-        final Map<String, RsmdDto> pkMap = new TreeMap<>();
-        map.entrySet().forEach((entry) -> {
-            final var value = entry.getValue();
-            if (value.getKeySeq() != null) {
-                pkMap.put(entry.getKey(), value);
-            }
-        });
+        // Map with just PK columns
+        final var pkMap = getPkMap(map);
         // Skip generation if no PK columns
         if (!pkMap.isEmpty()) {
             // Template model

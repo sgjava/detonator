@@ -44,10 +44,9 @@ public interface Dao<ID, T> {
     /**
      * Save the record.
      *
-     * @param id ID of record to update.
      * @param dto Record to save.
      */
-    void save(final ID id, final T dto);
+    void save(final T dto);
 
     /**
      * Save List of records.

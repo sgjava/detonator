@@ -8,7 +8,6 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import static java.lang.reflect.Modifier.PUBLIC;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -97,7 +96,7 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
     }
 
     /**
-     * Get read method of each property.
+     * Get read method of each property. BUilt in key field is ignored.
      *
      * @param fields {@code Array} containing bean field names.
      * @param clazz {@code Class} of bean.
@@ -109,8 +108,8 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
         if (!isPrimitiveWrapperOrString(clazz)) {
             list = new ArrayList<>();
             for (Field field : fields) {
-                // Ignore synthetic classes or dynamic proxies
-                if (!field.isSynthetic()) {
+                // Ignore synthetic classes, dynamic proxies and key field
+                if (!field.isSynthetic() && !field.getName().equals("key")) {
                     PropertyDescriptor propertyDescriptor;
                     try {
                         propertyDescriptor = new PropertyDescriptor(field.getName(), clazz);
@@ -215,11 +214,10 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
     /**
      * Save the record.
      *
-     * @param id ID of record to update which is ignored for RDBMS implementation.
      * @param dto Record to save.
      */
     @Override
-    public void save(final ID id, final T dto) {
+    public void save(final T dto) {
         dbDao.update(sql.getProperty("save"), beanToParams(dto, dtoReadMethods));
     }
 
@@ -254,7 +252,7 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
             final ID id = (ID) idClass.getDeclaredConstructor().newInstance();
             // Write off returned key fields to bean
             final var it = map.entrySet().iterator();
-            idWriteMethods.forEach((final          var writeMethod) -> {
+            idWriteMethods.forEach((final  var writeMethod) -> {
                 try {
                     // Get returned value from Map
                     final var pair = it.next();

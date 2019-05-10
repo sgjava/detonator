@@ -136,24 +136,7 @@ public class MakeDtoTest {
         final var className = metadataExtract.toCamelCase(tables.get(0));
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
-        logger.debug(out.toString());
-    }
-
-    /**
-     * Test dtoTemplate.
-     */
-    @Test
-    public void dtoTemplateBv() {
-        logger.debug("dtoTemplate");
-        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
-        final var metadataExtract = new MetadataExtract();
-        final var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_orders"));
-        // Use camelCase of table name
-        final var className = metadataExtract.toCamelCase(tables.get(0));
-        // Use StringWriter for template
-        final var out = new StringWriter();
-        makeDto.dtoTemplate("dtobv.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
+        makeDto.dtoTemplate("dtopk.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
         logger.debug(out.toString());
     }
 

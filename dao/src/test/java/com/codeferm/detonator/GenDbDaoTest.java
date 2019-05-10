@@ -190,7 +190,7 @@ public class GenDbDaoTest {
         dto.setSalesmanId(1);
         dto.setStatus("Pending");
         // Save DTO (note ID is not required for REBMS implementation)
-        dao.save(null, dto);
+        dao.save(dto);
         // Create ID to find (should be 107 based on last orderId)
         final var id = new OrdersId(107);
         final var findDto = dao.findById(id);

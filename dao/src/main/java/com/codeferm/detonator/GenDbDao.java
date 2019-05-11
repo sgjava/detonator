@@ -340,7 +340,7 @@ public class GenDbDao<K, V> implements Dao<K, V> {
         final var params = new Object[map.size()][];
         var i = 0;
         for (final var entry : map.entrySet()) {
-            // DTO params array as List
+            // Value params array as List
             final var list = new ArrayList(Arrays.asList(beanToParams(entry.getValue(), vReadMethods)));
             // Add ID params array to List
             list.addAll(Arrays.asList(beanToParams(entry.getKey(), kReadMethods)));

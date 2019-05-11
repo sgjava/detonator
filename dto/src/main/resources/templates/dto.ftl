@@ -26,7 +26,7 @@ public class ${className} implements Serializable {
     /**
      * Primary key.
      */
-    private ${className}Id key;
+    private ${className}Key key;
 </#if>
 
     /**
@@ -34,7 +34,7 @@ public class ${className} implements Serializable {
      */
     public ${className}() {
 <#if pkMap?has_content>
-        key = new ${className}Id();
+        key = new ${className}Key();
 </#if>
     }
 
@@ -67,7 +67,7 @@ public class ${className} implements Serializable {
      *
      * @return key Get key.
      */
-    public ${className}Id getKey() {
+    public ${className}Key getKey() {
         return key;
     }
 
@@ -76,7 +76,7 @@ public class ${className} implements Serializable {
      *
      * @param key Set key.
      */
-    public void setKey(final ${className}Id key) {
+    public void setKey(final ${className}Key key) {
         this.key = key;
     }
 </#if>

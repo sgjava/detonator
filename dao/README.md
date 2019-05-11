@@ -5,7 +5,7 @@ describing the DAO pattern where you create a DAO for each entity based on an in
 now inspired by [Don't repeat the DAO!](https://www.ibm.com/developerworks/library/j-genericdao/index.html). DeTOnator DAO goes back to
 basics without relying on DI, Spring or any other frameworks other than the persistence implementation. This however doesn't preclude
 you from using DI, AOP, etc. to declaratively add transactions, interceptors, etc. You may also want to inject a particular
-implementation in your business objects for a key value store instead of a RDBMS for instance.
+implementation in your business objects for a key/value store instead of a RDBMS for instance.
 * Use the [DeTOnator Maven Plugin](https://github.com/sgjava/detonator/tree/master/detonator-maven-plugin) to generate DTOs, IDs and SQL
 for your project. DeTOnator DAO uses this plugin to generate entities and SQL for the unit tests.
 * Query result mapping is based on database field name being snakeCase (FIELD_NAME) and member variables being lower camelCase

@@ -153,7 +153,7 @@ public class MakeDtoTest {
         final var className = metadataExtract.toCamelCase(tables.get(0)) + "Pk";
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.idTemplate("id.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
+        makeDto.idTemplate("key.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
         logger.debug(out.toString());
     }
 

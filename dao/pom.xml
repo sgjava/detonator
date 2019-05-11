@@ -27,11 +27,11 @@
                     <dbUser>sa</dbUser>
                     <dbPassword></dbPassword>
                     <dbUrl>jdbc:h2:~/test</dbUrl>
-                    <dbPoolSize>3</dbPoolSize>
+                    <dbPoolSize>10</dbPoolSize>
                     <mapTypes>true</mapTypes>
                     <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
                     <dtoTemplate>dto.ftl</dtoTemplate>
-                    <idTemplate>id.ftl</idTemplate>
+                    <idTemplate>key.ftl</idTemplate>
                     <sqlTemplate>sql.ftl</sqlTemplate>
                     <packageName>com.codeferm.dto</packageName>
                     <!-- Generate composite DTO -->

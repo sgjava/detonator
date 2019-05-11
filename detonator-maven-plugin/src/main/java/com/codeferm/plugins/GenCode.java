@@ -242,13 +242,13 @@ public class GenCode {
             }
             // Use StringWriter in case ID is empty (i.e. no PK or composite SQL)
             final var out = new StringWriter();
-            makeDto.idTemplate(idTemplate, sql, packageName, String.format("%sId", className), mapTypes, out);
+            makeDto.idTemplate(idTemplate, sql, packageName, String.format("%sKey", className), mapTypes, out);
             final var idStr = out.toString();
             // Check for empty result
             if (!idStr.isEmpty()) {
                 // Use FileOutputStream for ID output
                 try (var idOut = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(String.format(
-                        "%s/%sId.java", sourceDir, className)), false), StandardCharsets.UTF_8))) {
+                        "%s/%sKey.java", sourceDir, className)), false), StandardCharsets.UTF_8))) {
                     idOut.write(idStr);
                 }
             }
@@ -281,7 +281,7 @@ public class GenCode {
         final var makeDto = new MakeDto(dataSource, templatesDir);
         // Executor service can run up to size of database connection pool - 1
         final var executor = Executors.newFixedThreadPool(dbPoolSize -1);
-        log.info("Generating artifacts from SQL Map");
+        log.info("Submitting artifacts from SQL Map");
         // Generate classes based on SQL Map
         sqlMap.entrySet().forEach((var entry) -> {
             // Create Runnable for each table to generate
@@ -292,7 +292,7 @@ public class GenCode {
         });
         // If there's a table name pattern then process schema
         if (schema.getTableNamePattern() != null) {
-        log.info("Generating artifacts from schema");
+        log.info("Submitting artifacts from schema");
             final var metadataExtract = new MetadataExtract();
             final var list = metadataExtract.getTableNames(dataSource, schema.getCatalog(), schema.getSchemaPattern(), schema.
                     getTableNamePattern(), new String[]{"TABLE", "VIEW"}, false);
@@ -314,7 +314,7 @@ public class GenCode {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        log.info("Finished");
+        log.info("Code generation complete");
         // Close DataSource
         try {
             ((BasicDataSource) dataSource).close();

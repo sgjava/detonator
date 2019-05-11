@@ -48,7 +48,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
     public GenMapDbDao(final DB db, final String collectionName, final Class vClass) {
         this.db = db;
         this.map = db.hashMap(collectionName, Serializer.JAVA, Serializer.JAVA).createOrOpen();
-        // Get DTO fields
+        // Get value fields
         final var fields = vClass.getDeclaredFields();
         // Get last field
         final var field = fields[fields.length - 1];
@@ -70,7 +70,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      * @param value Value to get key from.
      * @return ID;
      */
-    public K getId(V value) {
+    public K getKey(V value) {
         K key = null;
         if (keyMethod != null) {
             try {
@@ -122,7 +122,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      */
     @Override
     public void save(V value) {
-        final K key = getId(value);
+        final K key = getKey(value);
         // Treat this like SQL and throw key violation if key exists
         if (!map.containsKey(key)) {
             map.put(key, value);

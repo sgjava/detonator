@@ -113,13 +113,13 @@ public class DbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         final var dbDao = new DbUtilsDsDao(dataSource);
-        final Orders dto = dbDao.select(sql.getProperty("findById"), new Object[]{1}, Orders.class);
+        final Orders dto = dbDao.select(sql.getProperty("find"), new Object[]{1}, Orders.class);
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
         assertEquals(dto.getOrderId(), 1);
         // Select record that doesn't exist
-        final Orders badDto = dbDao.select(sql.getProperty("findById"), new Object[]{0}, Orders.class);
+        final Orders badDto = dbDao.select(sql.getProperty("find"), new Object[]{0}, Orders.class);
         // DTO should be null if not found
         assertNull(badDto);
     }
@@ -184,7 +184,7 @@ public class DbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         final var dbDao = new DbUtilsDsDao(dataSource);
-        final var map = dbDao.select(sql.getProperty("findById"), new Object[]{1});
+        final var map = dbDao.select(sql.getProperty("find"), new Object[]{1});
         // Verify record exists
         assertNotNull(map);
         // Verify size is 5fields
@@ -248,7 +248,7 @@ public class DbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         final var dbDao = new DbUtilsDsDao(dataSource);
-        final var field = dbDao.select(sql.getProperty("findById"), new Object[]{1}, "ORDER_ID");
+        final var field = dbDao.select(sql.getProperty("find"), new Object[]{1}, "ORDER_ID");
         assertEquals(field, 1);
     }
     
@@ -267,7 +267,7 @@ public class DbDaoTest {
         // Verify 1 record affected
         assertEquals(recs, 1);
         // New record order_id should be 106
-        final Orders dto = dbDao.select(sql.getProperty("findById"), new Object[]{106}, Orders.class);
+        final Orders dto = dbDao.select(sql.getProperty("find"), new Object[]{106}, Orders.class);
         // Verify ID matches
         assertEquals(dto.getOrderId(), 106);
         // Delete inserted record
@@ -291,7 +291,7 @@ public class DbDaoTest {
         // Verify 1 record affected
         assertEquals(recs, 1);
         // Get updated record
-        final Orders dto = dbDao.select(sql.getProperty("findById"), new Object[]{1}, Orders.class);
+        final Orders dto = dbDao.select(sql.getProperty("find"), new Object[]{1}, Orders.class);
         // Verify status matches
         assertEquals(dto.getStatus(), "Shipped");
     }
@@ -306,7 +306,7 @@ public class DbDaoTest {
         final var sql = loadProperties("orders.properties");
         final var dbDao = new DbUtilsDsDao(dataSource);
         // Get updated record
-        final Orders saveDto = dbDao.select(sql.getProperty("findById"), new Object[]{1}, Orders.class);
+        final Orders saveDto = dbDao.select(sql.getProperty("find"), new Object[]{1}, Orders.class);
         // Delete inserted record
         var recs = dbDao.update(sql.getProperty("delete"), new Object[]{1});
         // Verify 1 record affected

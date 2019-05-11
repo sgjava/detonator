@@ -17,17 +17,17 @@ import java.util.TreeMap;
 import javax.sql.DataSource;
 
 /**
- * Generic Database DAO. The SQL parameter markers must match the order of the DTO and ID fields for mapping to work correctly.
- * Currently DTO, ID and SQL generation put fields is in alpha order. DTO and ID methods are cached on construction to improve
+ * Generic Database DAO. The SQL parameter markers must match the order of the value and key fields for mapping to work correctly.
+ * Currently value, key and SQL generation put fields is in alpha order. Value and key methods are cached on construction to improve
  * mapping performance.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
- * @param <ID> Data Transfer Object.
- * @param <T> Identity Object.
+ * @param <K> Key type.
+ * @param <V> Value type.
  */
-public class GenDbDao<ID, T> implements Dao<ID, T> {
+public class GenDbDao<K, V> implements Dao<K, V> {
 
     /**
      * DataSource.
@@ -42,45 +42,45 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
      */
     private final Properties sql;
     /**
-     * DTO class type.
+     * Value class type.
      */
-    private final Class dtoClass;
+    private final Class vClass;
     /**
-     * DTO class type.
+     * Key class type.
      */
-    private final Class idClass;
+    private final Class kClass;
     /**
-     * DTO read methods.
+     * Value read methods.
      */
-    private final List<Method> dtoReadMethods;
+    private final List<Method> vReadMethods;
     /**
-     * ID read methods.
+     * Key read methods.
      */
-    private final List<Method> idReadMethods;
+    private final List<Method> kReadMethods;
     /**
-     * ID read methods.
+     * Key write methods.
      */
-    private final List<Method> idWriteMethods;
+    private final List<Method> kWriteMethods;
 
     /**
-     * Constructor to initialize DataSource and cache DTO and ID methods.
+     * Constructor to initialize DataSource and cache value and key methods.
      *
      * @param dataSource DataSource to use for connections.
      * @param properties SQL statements as properties.
-     * @param idClass ID class type.
-     * @param dtoClass DTO class type.
+     * @param kClass Key class type.
+     * @param vClass Value class type.
      */
-    public GenDbDao(final DataSource dataSource, final Properties properties, final Class idClass, final Class dtoClass) {
+    public GenDbDao(final DataSource dataSource, final Properties properties, final Class kClass, final Class vClass) {
         this.dataSource = dataSource;
-        this.idClass = idClass;
-        this.dtoClass = dtoClass;
+        this.kClass = kClass;
+        this.vClass = vClass;
         this.sql = properties;
-        // Get DTO read methods
-        dtoReadMethods = getReadMethods(dtoClass.getDeclaredFields(), dtoClass);
-        // Get ID read methods
-        idReadMethods = getReadMethods(idClass.getDeclaredFields(), idClass);
-        // Get ID write methods
-        idWriteMethods = getWriteMethods(idClass.getDeclaredFields(), idClass);
+        // Get value read methods
+        vReadMethods = getReadMethods(vClass.getDeclaredFields(), vClass);
+        // Get key read methods
+        kReadMethods = getReadMethods(kClass.getDeclaredFields(), kClass);
+        // Get key write methods
+        kWriteMethods = getWriteMethods(kClass.getDeclaredFields(), kClass);
         dbDao = new DbUtilsDsDao(this.dataSource);
     }
 
@@ -96,7 +96,7 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
     }
 
     /**
-     * Get read method of each property. BUilt in key field is ignored.
+     * Get read method of each property. Built in key field is ignored if present.
      *
      * @param fields {@code Array} containing bean field names.
      * @param clazz {@code Class} of bean.
@@ -179,107 +179,107 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
     }
 
     /**
-     * Return all records.
+     * Return all values.
      *
-     * @return List of all records.
+     * @return List of all values.
      */
     @Override
-    public List<T> findAll() {
-        return dbDao.selectList(sql.getProperty("findAll"), dtoClass);
+    public List<V> findAll() {
+        return dbDao.selectList(sql.getProperty("findAll"), vClass);
     }
 
     /**
-     * Return one record by ID.
+     * Return one value by key.
      *
-     * @param id ID of record to return.
+     * @param key Key of record to return.
      * @return Single record.
      */
     @Override
-    public T findById(final ID id) {
-        return dbDao.select(sql.getProperty("findById"), beanToParams(id, idReadMethods), dtoClass);
+    public V find(final K key) {
+        return dbDao.select(sql.getProperty("find"), beanToParams(key, kReadMethods), vClass);
     }
 
     /**
-     * Return List of records using named query parameters.
+     * Return List of values using named query and parameters.
      *
      * @param name Query name.
      * @param params Query parameters,
-     * @return List of records.
+     * @return List of values.
      */
     @Override
-    public List<T> findBy(final String name, final Object[] params) {
-        return dbDao.selectList(sql.getProperty(name), params, dtoClass);
+    public List<V> findBy(final String name, final Object[] params) {
+        return dbDao.selectList(sql.getProperty(name), params, vClass);
     }
 
     /**
-     * Save the record.
+     * Save the value.
      *
-     * @param dto Record to save.
+     * @param value Value to save.
      */
     @Override
-    public void save(final T dto) {
-        dbDao.update(sql.getProperty("save"), beanToParams(dto, dtoReadMethods));
+    public void save(final V value) {
+        dbDao.update(sql.getProperty("save"), beanToParams(value, vReadMethods));
     }
 
     /**
-     * Save Map of records using batch operation. Note for RDBMS implementation ID is not used.
+     * Save Map of value using batch operation. Note for RDBMS implementation ID is not used.
      *
-     * @param map Map of IDs and DTOs to save.
+     * @param map Map of keys and values to save.
      */
     @Override
-    public void save(final Map<ID, T> map) {
+    public void save(final Map<K, V> map) {
         final var params = new Object[map.size()][];
         var i = 0;
         for (final var entry : map.entrySet()) {
-            params[i++] = beanToParams(entry.getValue(), dtoReadMethods);
+            params[i++] = beanToParams(entry.getValue(), vReadMethods);
         }
         dbDao.batch(sql.getProperty("save"), params);
     }
 
     /**
-     * Save the record and return identity key.
+     * Save the value and return generated key.
      *
-     * @param dto Record to save.
-     * @return Generated ID.
+     * @param value Value to save.
+     * @return Generated key.
      */
     @Override
-    public ID saveReturnId(final T dto) {
+    public K saveReturnKey(final V value) {
         // Create sorted Map of returned ID keys
-        final var map = new TreeMap<String, Object>(dbDao.updateReturnKeys(sql.getProperty("save"), beanToParams(dto,
-                dtoReadMethods)));
+        final var map = new TreeMap<String, Object>(dbDao.updateReturnKeys(sql.getProperty("save"), beanToParams(value,
+                vReadMethods)));
         // Create new ID instabnce
         try {
-            final ID id = (ID) idClass.getDeclaredConstructor().newInstance();
+            final K key = (K) kClass.getDeclaredConstructor().newInstance();
             // Write off returned key fields to bean
             final var it = map.entrySet().iterator();
-            idWriteMethods.forEach((final  var writeMethod) -> {
+            kWriteMethods.forEach((final var writeMethod) -> {
                 try {
                     // Get returned value from Map
                     final var pair = it.next();
-                    writeMethod.invoke(id, pair.getValue());
+                    writeMethod.invoke(key, pair.getValue());
                 } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
             });
-            return id;
+            return key;
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
                 | IllegalArgumentException | InvocationTargetException e) {
-            throw new RuntimeException("Error creating ID class", e);
+            throw new RuntimeException("Error creating key class", e);
         }
     }
 
     /**
-     * Delete the record by ID.
+     * Delete the value by key.
      *
-     * @param id ID of record to delete.
+     * @param key Key of value to delete.
      */
     @Override
-    public void delete(final ID id) {
-        dbDao.update(sql.getProperty("delete"), beanToParams(id, idReadMethods));
+    public void delete(final K key) {
+        dbDao.update(sql.getProperty("delete"), beanToParams(key, kReadMethods));
     }
 
     /**
-     * Delete records using named query and parameters.
+     * Delete values using named query and parameters.
      *
      * @param name Query name.
      * @param params Query parameters,
@@ -290,37 +290,37 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
     }
 
     /**
-     * Delete list of records.
+     * Delete list of values by key.
      *
-     * @param list List of IDs to delete.
+     * @param list List of keys to delete.
      */
     @Override
-    public void delete(final List<ID> list) {
+    public void delete(final List<K> list) {
         final var params = new Object[list.size()][];
         var i = 0;
-        for (final ID id : list) {
-            params[i++] = beanToParams(id, idReadMethods);
+        for (final K id : list) {
+            params[i++] = beanToParams(id, kReadMethods);
         }
         dbDao.batch(sql.getProperty("delete"), params);
     }
 
     /**
-     * Update the record.
+     * Update value by key.
      *
-     * @param id ID of record to update.
-     * @param dto Updated record.
+     * @param key Key of value to update.
+     * @param value Updated value.
      */
     @Override
-    public void update(final ID id, final T dto) {
-        // DTO params array as List
-        final var list = new ArrayList(Arrays.asList(beanToParams(dto, dtoReadMethods)));
+    public void update(final K key, final V value) {
+        // Value params array as List
+        final var list = new ArrayList(Arrays.asList(beanToParams(value, vReadMethods)));
         // Add ID params array to List
-        list.addAll(Arrays.asList(beanToParams(id, idReadMethods)));
+        list.addAll(Arrays.asList(beanToParams(key, kReadMethods)));
         dbDao.update(sql.getProperty("update"), list.toArray());
     }
 
     /**
-     * Update records using named query and parameters.
+     * Update value using named query and parameters.
      *
      * @param name Query name.
      * @param params Query parameters,
@@ -331,19 +331,19 @@ public class GenDbDao<ID, T> implements Dao<ID, T> {
     }
 
     /**
-     * Update map of records.
+     * Update map of values.
      *
-     * @param map Map of DTOs and IDs to update.
+     * @param map Map of keys and values to update.
      */
     @Override
-    public void update(final Map<ID, T> map) {
+    public void update(final Map<K, V> map) {
         final var params = new Object[map.size()][];
         var i = 0;
         for (final var entry : map.entrySet()) {
             // DTO params array as List
-            final var list = new ArrayList(Arrays.asList(beanToParams(entry.getValue(), dtoReadMethods)));
+            final var list = new ArrayList(Arrays.asList(beanToParams(entry.getValue(), vReadMethods)));
             // Add ID params array to List
-            list.addAll(Arrays.asList(beanToParams(entry.getKey(), idReadMethods)));
+            list.addAll(Arrays.asList(beanToParams(entry.getKey(), kReadMethods)));
             params[i++] = list.toArray();
         }
         dbDao.batch(sql.getProperty("update"), params);

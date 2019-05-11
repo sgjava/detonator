@@ -15,15 +15,15 @@ import org.mapdb.DB;
 import org.mapdb.Serializer;
 
 /**
- * Generic MapDB DAO.
+ * Generic MapDB DAO. Some methods cannot be implemented as you would with a RDBMS.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
- * @param <T> Identity Object.
- * @param <ID> Data Transfer Object.
+ * @param <K> Key type.
+ * @param <V> Value type.
  */
-public class GenMapDbDao<ID, T> implements Dao<ID, T> {
+public class GenMapDbDao<K, V> implements Dao<K, V> {
 
     /**
      * MapDB database.
@@ -32,9 +32,9 @@ public class GenMapDbDao<ID, T> implements Dao<ID, T> {
     /**
      * MapDB ConcurrentMap to hold keys and values.
      */
-    private final ConcurrentMap<ID, T> map;
+    private final ConcurrentMap<K, V> map;
     /**
-     * getKey method.
+     * getKey method of value object.
      */
     private Method keyMethod;
 
@@ -43,19 +43,19 @@ public class GenMapDbDao<ID, T> implements Dao<ID, T> {
      *
      * @param db MapDB DB.
      * @param collectionName Name of collection.
-     * @param dtoClass DTO class type.
+     * @param vClass Value class type.
      */
-    public GenMapDbDao(final DB db, final String collectionName, final Class dtoClass) {
+    public GenMapDbDao(final DB db, final String collectionName, final Class vClass) {
         this.db = db;
         this.map = db.hashMap(collectionName, Serializer.JAVA, Serializer.JAVA).createOrOpen();
         // Get DTO fields
-        final var fields = dtoClass.getDeclaredFields();
+        final var fields = vClass.getDeclaredFields();
         // Get last field
         final var field = fields[fields.length - 1];
         // Last field should be key if it exists
         if (field.getName().equals("key")) {
             try {
-                keyMethod = new PropertyDescriptor(field.getName(), dtoClass).getReadMethod();
+                keyMethod = new PropertyDescriptor(field.getName(), vClass).getReadMethod();
             } catch (IntrospectionException e) {
                 throw new RuntimeException(e);
             }
@@ -65,107 +65,107 @@ public class GenMapDbDao<ID, T> implements Dao<ID, T> {
     }
 
     /**
-     * Get ID or null;
+     * Get key or null;
      *
-     * @param dto DTO to get ID from.
+     * @param value Value to get key from.
      * @return ID;
      */
-    public ID getId(T dto) {
-        ID id = null;
+    public K getId(V value) {
+        K key = null;
         if (keyMethod != null) {
             try {
-                id = (ID) keyMethod.invoke(dto, (Object[]) null);
+                key = (K) keyMethod.invoke(value, (Object[]) null);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
         }
-        return id;
+        return key;
     }
 
-    /**
-     * Return all records.
+   /**
+     * Return all values.
      *
-     * @return List of all records.
+     * @return List of all values.
      */
     @Override
-    public List<T> findAll() {
+    public List<V> findAll() {
         return map.values().stream().collect(Collectors.toList());
     }
 
     /**
-     * Return one record by ID.
+     * Return one value by key.
      *
-     * @param id ID of record to return.
+     * @param key Key of record to return.
      * @return Single record.
      */
     @Override
-    public T findById(ID id) {
-        return map.get(id);
+    public V find(K key) {
+        return map.get(key);
     }
 
     /**
-     * Return List of records using named query parameters.
+     * Return List of values using named query and parameters.
      *
      * @param name Query name.
      * @param params Query parameters,
-     * @return List of records.
+     * @return List of values.
      */
     @Override
-    public List<T> findBy(String name, Object[] params) {
+    public List<V> findBy(String name, Object[] params) {
         throw new UnsupportedOperationException("Not supported yet");
     }
 
     /**
-     * Save the record.
+     * Save the value.
      *
-     * @param dto Record to save.
+     * @param value Value to save.
      */
     @Override
-    public void save(T dto) {
-        final ID id = getId(dto);
+    public void save(V value) {
+        final K key = getId(value);
         // Treat this like SQL and throw key violation if key exists
-        if (!map.containsKey(id)) {
-            map.put(id, dto);
+        if (!map.containsKey(key)) {
+            map.put(key, value);
         } else {
-            throw new RuntimeException(String.format("ID already exists: %s", id));
+            throw new RuntimeException(String.format("Key already exists: %s", key));
         }
     }
 
     /**
-     * Save Map of records using batch operation. Note for RDBMS implementation ID is not used.
+     * Save List of values.
      *
-     * @param map Map of IDs and DTOs to save.
+     * @param map Map of keys and values to save.
      */
     @Override
-    public void save(Map<ID, T> map) {
+    public void save(Map<K, V> map) {
         map.entrySet().forEach(entry -> {
             save(entry.getValue());
         });
     }
 
     /**
-     * Save the record and return identity key.
+     * Save the value and return generated key.
      *
-     * @param dto Record to save.
-     * @return Generated ID.
+     * @param value Value to save.
+     * @return Generated key.
      */
     @Override
-    public ID saveReturnId(T dto) {
+    public K saveReturnKey(V value) {
         throw new UnsupportedOperationException("Not supported yet");
     }
 
     /**
-     * Delete the record by ID.
+     * Delete the value by key.
      *
-     * @param id ID of record to delete.
+     * @param key Key of value to delete.
      */
     @Override
-    public void delete(ID id) {
-        map.remove(id);
+    public void delete(K key) {
+        map.remove(key);
     }
 
     /**
-     * Delete records using named query and parameters.
+     * Delete values using named query and parameters.
      *
      * @param name Query name.
      * @param params Query parameters,
@@ -176,30 +176,30 @@ public class GenMapDbDao<ID, T> implements Dao<ID, T> {
     }
 
     /**
-     * Delete list of records.
+     * Delete list of values by key.
      *
-     * @param list List of IDs to delete.
+     * @param list List of keys to delete.
      */
     @Override
-    public void delete(List<ID> list) {
+    public void delete(List<K> list) {
         list.forEach(id -> {
             delete(id);
         });
     }
 
     /**
-     * Update the record.
+     * Update value by key.
      *
-     * @param id ID of record to update.
-     * @param dto Updated record.
+     * @param key Key of value to update.
+     * @param value Updated value.
      */
     @Override
-    public void update(ID id, T dto) {
-        map.put(id, dto);
+    public void update(K key, V value) {
+        map.put(key, value);
     }
 
     /**
-     * Update records using named query and parameters.
+     * Update value using named query and parameters.
      *
      * @param name Query name.
      * @param params Query parameters,
@@ -210,15 +210,14 @@ public class GenMapDbDao<ID, T> implements Dao<ID, T> {
     }
 
     /**
-     * Update map of records.
+     * Update map of values.
      *
-     * @param map Map of DTOs and IDs to update.
+     * @param map Map of keys and values to update.
      */
     @Override
-    public void update(Map<ID, T> map) {
+    public void update(Map<K, V> map) {
         map.entrySet().forEach(entry -> {
             update(entry.getKey(), entry.getValue());
         });
     }
-
 }

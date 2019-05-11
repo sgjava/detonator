@@ -157,14 +157,14 @@ public class GenMapDbDaoTest {
         final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Create ID to find
         final var id = new OrdersId(4);
-        final var dto = dao.findById(id);
+        final var dto = dao.find(id);
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
         assertEquals(dto.getOrderId(), 4);
         // Create ID that doesn't exist
         final var badId = new OrdersId(0);
-        final var badDto = dao.findById(badId);
+        final var badDto = dao.find(badId);
         // DTO should be null if not found
         assertNull(badDto);
     }
@@ -187,7 +187,7 @@ public class GenMapDbDaoTest {
         dto.setStatus("Pending");
         // Save DTO
         dao.save(dto);
-        final var findDto = dao.findById(id);
+        final var findDto = dao.find(id);
         // Verify ID matches
         assertEquals(findDto.getOrderId(), 107);
     }
@@ -227,12 +227,12 @@ public class GenMapDbDaoTest {
         final Dao<OrdersId, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Create ID to find
         final var id = new OrdersId(4);
-        final var dto = dao.findById(id);
+        final var dto = dao.find(id);
         dto.setStatus("Shipped");
         // Uopdate record
         dao.update(id, dto);
         // Verify update
-        final var updateDto = dao.findById(id);
+        final var updateDto = dao.find(id);
         // Verify status matches
         assertEquals(updateDto.getStatus(), "Shipped");
     }
@@ -249,7 +249,7 @@ public class GenMapDbDaoTest {
         final Map<OrdersId, Orders> map = new LinkedHashMap<>();
         for (int i = 0; i < 10; i++) {
             final var id = new OrdersId(i + 10);
-            final var dto = dao.findById(id);
+            final var dto = dao.find(id);
             dto.setStatus("Pending");
             map.put(id, dto);
         }
@@ -268,7 +268,7 @@ public class GenMapDbDaoTest {
         final var id = new OrdersId(1);
         // Delete record
         dao.delete(id);
-        final var dto = dao.findById(id);
+        final var dto = dao.find(id);
         // Verify record was deleted
         assertNull(dto);
     }

@@ -7,71 +7,71 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * DAO interface that simplifies common operations.
+ * DAO interface that simplifies common operations using key and value paradigm.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
- * @param <ID> ID type.
- * @param <T> DTO type.
+ * @param <K> Key type.
+ * @param <V> Value type.
  */
-public interface Dao<ID, T> {
+public interface Dao<K, V> {
 
     /**
-     * Return all records.
+     * Return all values.
      *
-     * @return List of all records.
+     * @return List of all values.
      */
-    List<T> findAll();
+    List<V> findAll();
 
     /**
-     * Return one record by ID.
+     * Return one value by key.
      *
-     * @param id ID of record to return.
+     * @param key Key of record to return.
      * @return Single record.
      */
-    T findById(final ID id);
+    V find(final K key);
 
     /**
-     * Return List of records using named query and parameters.
+     * Return List of values using named query and parameters.
      *
      * @param name Query name.
      * @param params Query parameters,
-     * @return List of records.
+     * @return List of values.
      */
-    List<T> findBy(final String name, final Object[] params);
+    List<V> findBy(final String name, final Object[] params);
 
     /**
-     * Save the record.
+     * Save the value.
      *
-     * @param dto Record to save.
+     * @param value Value to save.
      */
-    void save(final T dto);
+    void save(final V value);
 
     /**
-     * Save List of records.
+     * Save List of values.
      *
-     * @param map Map of IDs and DTOs to save.
+     * @param map Map of keys and values to save.
      */
-    void save(final Map<ID, T> map);
+    void save(final Map<K, V> map);
 
     /**
-     * Save the record and return identity key.
+     * Save the value and return generated key.
      *
-     * @param dto Record to save.
-     * @return Generated ID.
+     * @param value Value to save.
+     * @return Generated key.
      */
-    ID saveReturnId(final T dto);
+    K saveReturnKey(final V value);
 
     /**
-     * Delete the record by ID.
+     * Delete the value by key.
      *
-     * @param id ID of record to delete.
+     * @param key Key of value to delete.
      */
-    void delete(final ID id);
+    void delete(final K key);
 
     /**
-     * Delete records using named query and parameters.
+     * Delete values using named query and parameters.
      *
      * @param name Query name.
      * @param params Query parameters,
@@ -79,22 +79,22 @@ public interface Dao<ID, T> {
     void deleteBy(final String name, final Object[] params);
     
     /**
-     * Delete list of records.
+     * Delete list of values by key.
      *
-     * @param list List of IDs to delete.
+     * @param list List of keys to delete.
      */
-    void delete(final List<ID> list);
+    void delete(final List<K> list);
 
     /**
-     * Update the record.
+     * Update value by key.
      *
-     * @param id ID of record to update.
-     * @param dto Updated record.
+     * @param key Key of value to update.
+     * @param value Updated value.
      */
-    void update(final ID id, final T dto);
+    void update(final K key, final V value);
 
     /**
-     * Update records using named query and parameters.
+     * Update value using named query and parameters.
      *
      * @param name Query name.
      * @param params Query parameters,
@@ -102,9 +102,9 @@ public interface Dao<ID, T> {
     void updateBy(final String name, final Object[] params);
     
     /**
-     * Update map of records.
+     * Update map of values.
      *
-     * @param map Map of IDs and DTOs to update.
+     * @param map Map of keys and values to update.
      */
-    void update(final Map<ID, T> map);
+    void update(final Map<K, V> map);
 }

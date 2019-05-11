@@ -140,14 +140,14 @@ public class GenDbDaoTest {
         final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create ID to find
         final var id = new OrdersId(4);
-        final var dto = dao.findById(id);
+        final var dto = dao.find(id);
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
         assertEquals(dto.getOrderId(), 4);
         // Create ID that doesn't exist
         final var badId = new OrdersId(0);
-        final var badDto = dao.findById(badId);
+        final var badDto = dao.find(badId);
         // DTO should be null if not found
         assertNull(badDto);
     }
@@ -162,13 +162,13 @@ public class GenDbDaoTest {
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
         final Dao<Integer, Orders> dao = new GenDbDao<>(dataSource, sql, Integer.class, Orders.class);
-        final var dto = dao.findById(4);
+        final var dto = dao.find(4);
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
         assertEquals(dto.getOrderId(), 4);
         // Find ID that doesn't exist
-        final var badDto = dao.findById(0);
+        final var badDto = dao.find(0);
         // DTO should be null if not found
         assertNull(badDto);
     }
@@ -193,7 +193,7 @@ public class GenDbDaoTest {
         dao.save(dto);
         // Create ID to find (should be 107 based on last orderId)
         final var id = new OrdersId(107);
-        final var findDto = dao.findById(id);
+        final var findDto = dao.find(id);
         // Verify ID matches
         assertEquals(findDto.getOrderId(), 107);
     }
@@ -250,7 +250,7 @@ public class GenDbDaoTest {
         dto.setSalesmanId(1);
         dto.setStatus("Pending");
         // Save DTO and return identity key
-        final var id = dao.saveReturnId(dto);
+        final var id = dao.saveReturnKey(dto);
         // Verify returned key
         assertEquals(id.getOrderId(), 106);
     }
@@ -267,12 +267,12 @@ public class GenDbDaoTest {
         final Dao<OrdersId, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersId.class, Orders.class);
         // Create ID to find
         final var id = new OrdersId(4);
-        final var dto = dao.findById(id);
+        final var dto = dao.find(id);
         dto.setStatus("Shipped");
         // Uopdate record
         dao.update(id, dto);
         // Verify update
-        final var updateDto = dao.findById(id);
+        final var updateDto = dao.find(id);
         // Verify status matches
         assertEquals(updateDto.getStatus(), "Shipped");
     }
@@ -313,7 +313,7 @@ public class GenDbDaoTest {
         final var id = new OrdersId(1);
         // Delete record
         dao.delete(id);
-        final var dto = dao.findById(id);
+        final var dto = dao.find(id);
         // Verify record was deleted
         assertNull(dto);
     }

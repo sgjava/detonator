@@ -19,7 +19,7 @@ import java.util.TreeSet;
 import javax.sql.DataSource;
 
 /**
- * Make DTO from database metadata and templates.
+ * Make DTO from database metadata and templates. This class should be considered thread safe and only one instance is required.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0

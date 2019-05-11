@@ -214,7 +214,7 @@ public class MetadataExtractTest {
         logger.debug("getTableNames");
         final var metadataExtract = new MetadataExtract();
         final var list = metadataExtract.getTableNames(dataSource, properties.getProperty("db.catalog"), properties.getProperty(
-                "db.schema.pattern"), "%", new String[]{"TABLE"}, false);
+                "db.schema.pattern"), properties.getProperty("db.table.name.pattern"), new String[]{"TABLE"}, false);
         // Map should not be empty
         assertFalse(list.isEmpty());
         // List should contain 12 items

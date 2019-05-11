@@ -27,18 +27,23 @@
                     <dbUser>sa</dbUser>
                     <dbPassword></dbPassword>
                     <dbUrl>jdbc:h2:~/test</dbUrl>
-                    <dbPoolSize>5</dbPoolSize>
+                    <dbPoolSize>3</dbPoolSize>
                     <mapTypes>true</mapTypes>
                     <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
                     <dtoTemplate>dto.ftl</dtoTemplate>
                     <idTemplate>id.ftl</idTemplate>
                     <sqlTemplate>sql.ftl</sqlTemplate>
                     <packageName>com.codeferm.dto</packageName>
+                    <!-- Generate composite DTO -->
                     <sqlMap>
-                        <Orders>select * from orders</Orders>
-                        <OrderItems>select * from order_items</OrderItems>
                         <RegionscCountries>select * from regions r, countries c where r.region_id = c.region_id</RegionscCountries>
-                    </sqlMap>                    
+                    </sqlMap>
+                    <!-- Generate using all tables and views in schema -->
+                    <schema>
+                        <catalog></catalog>
+                        <schemaPattern></schemaPattern>
+                        <tableNamePattern>%</tableNamePattern>
+                    </schema>                  
                 </configuration>
                 <executions>
                     <execution>

@@ -1,36 +1,12 @@
 ![Title](images/title.png)
 
-While you can certainly use DeTOnator DTO directly in your project it makes sense to generate common artifacts in Maven for your
+While you can certainly use DeTOnator DTO directly in your projects it makes sense to generate common artifacts in Maven for your
 Maven based projects. DeTOnator DAO uses this plugin to generate artifacts in the generated-test-sources and generated-test-resources
-directories for the unit tests. For instance to generate DTOs, IDs and SQL properties files you can use something like:
-```
-<plugin>
-   <groupId>com.codeferm</groupId>
-   <artifactId>detonator-maven-plugin</artifactId>
-   <version>1.0.0-SNAPSHOT</version>
-   <configuration>
-       <dbDriver>org.h2.Driver</dbDriver>
-       <dbUser>sa</dbUser>
-       <dbPassword></dbPassword>
-       <dbUrl>jdbc:h2:~/test</dbUrl>
-       <dbPoolSize>5</dbPoolSize>
-       <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
-       <dtoTemplate>dto.ftl</dtoTemplate>
-       <idTemplate>id.ftl</idTemplate>
-       <sqlTemplate>sql.ftl</sqlTemplate>
-       <packageName>com.codeferm.dto</packageName>
-       <sqlMap>
-           <Orders>select * from orders</Orders>
-           <OrderItems>select * from order_items</OrderItems>
-           <RegionscCountries>select * from regions r, countries c where r.region_id = c.region_id</RegionscCountries>
-       </sqlMap>                    
-   </configuration>
-   <executions>
-       <execution>
-           <phase>generate-test-sources</phase>
-              <goals>
-                   <goal>testGenerate</goal>
-              </goals>
-       </execution>
-   </executions>                
-</plugin>```
+directories for the unit tests. For instance to generate DTOs, IDs and SQL properties files you can use something like
+[this](https://github.com/sgjava/detonator/blob/7432039fbb8d1e623734b751d8a8a9cd920e7368/dao/pom.xml#L21).
+* You can use an SQL MAP for standard and custom composite code generation.
+* You can use entire or partial database schema for code generation.
+* Database pooling and multi threading are used for maximum performance. This allows you to efficiently generate code for databases
+with hundreds or thousands of tables.
+
+

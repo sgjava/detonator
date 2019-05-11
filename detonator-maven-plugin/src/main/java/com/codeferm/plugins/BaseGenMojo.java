@@ -3,7 +3,6 @@
  */
 package com.codeferm.plugins;
 
-import java.util.Locale;
 import org.apache.maven.plugin.AbstractMojo;
 
 import org.apache.maven.plugins.annotations.Parameter;
@@ -30,9 +29,9 @@ public abstract class BaseGenMojo extends AbstractMojo {
     @Parameter(property = "dbUser", required = true)
     private String dbUser;
     /**
-     * Database password. A value of empty will be converted to empty String.
+     * Database password.
      */
-    @Parameter(defaultValue = "empty", property = "dbPassword", required = true)
+    @Parameter(property = "dbPassword", required = false)
     private String dbPassword;
     /**
      * Database URL.
@@ -75,6 +74,11 @@ public abstract class BaseGenMojo extends AbstractMojo {
     @Parameter(property = "sqlMap", required = true)
     private Map<String, String> sqlMap;
     /**
+     * Use database schema to generate code.
+     */
+    @Parameter(property = "schema", required = false)
+    private Schema schema;
+    /**
      * Package name to use for generated classes.
      */
     @Parameter(property = "packageName", required = true)
@@ -89,11 +93,7 @@ public abstract class BaseGenMojo extends AbstractMojo {
      * @return Code generator.
      */
     public GenCode getGenCode() {
-        final var genCode = new GenCode();
-        // Maven doesn't allow empty parameters
-        if (dbPassword.toLowerCase(Locale.US).equals("empty")) {
-            dbPassword = "";
-        }
+        final var genCode = new GenCode(getLog());
         genCode.setDbDriver(dbDriver);
         genCode.setDbUrl(dbUrl);
         genCode.setDbUser(dbUser);
@@ -106,6 +106,7 @@ public abstract class BaseGenMojo extends AbstractMojo {
         genCode.setSqlTemplate(sqlTemplate);
         genCode.setPackageName(packageName);
         genCode.setSqlMap(sqlMap);
+        genCode.setSchema(schema);
         return genCode;
     }
 }

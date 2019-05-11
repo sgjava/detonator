@@ -3,6 +3,7 @@
  */
 package ${packageName};
 
+<#assign imports = imports + [ "java.io.Serializable" ] />
 <#assign imports = imports + [ "java.util.Objects" ] />
 <#list imports as import>
 import ${import};
@@ -13,7 +14,7 @@ import ${import};
  *
  * ${sql}
  */
-public class ${className} {
+public class ${className} implements Serializable {
 <#list map?values as rsmdDto>
 
     /**
@@ -74,8 +75,8 @@ public class ${className} {
             return false;
         }
         ${className} obj = (${className}) o;
-        return <#list map?values as rsmdDto><#if !rsmdDto?is_first>                </#if>Objects.equals(${rsmdDto.getVarName()}, obj.${rsmdDto.getVarName()})<#if rsmdDto?has_next> && </#if>
-</#list>;
+        return <#list map?values as rsmdDto><#if !rsmdDto?is_first>                </#if>Objects.equals(${rsmdDto.getVarName()}, obj.${rsmdDto.getVarName()})<#if rsmdDto?has_next> && </#if><#if rsmdDto?is_last>;</#if>
+</#list>
     }
 
     /**
@@ -86,8 +87,8 @@ public class ${className} {
     @Override
     public int hashCode() {
         return Objects.hash(
-<#list map?values as rsmdDto>                ${rsmdDto.getVarName()}<#if rsmdDto?has_next>, </#if>
-</#list>                );
+<#list map?values as rsmdDto>                ${rsmdDto.getVarName()}<#if rsmdDto?has_next>, </#if><#if rsmdDto?is_last>);</#if>
+</#list>
     }
 
     /**
@@ -98,7 +99,7 @@ public class ${className} {
     @Override
     public String toString() {
         return "${className}{" +
-<#list map?values as rsmdDto>                <#if rsmdDto?is_first>"${rsmdDto.getVarName()}="<#else>", ${rsmdDto.getVarName()}="</#if> + ${rsmdDto.getVarName()} +
-</#list>                "}";
+<#list map?values as rsmdDto>                <#if rsmdDto?is_first>"${rsmdDto.getVarName()}="<#else>", ${rsmdDto.getVarName()}="</#if> + ${rsmdDto.getVarName()} + <#if rsmdDto?is_last>"}";</#if>
+</#list>
     }
 }

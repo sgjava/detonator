@@ -3,6 +3,7 @@
  */
 package ${packageName};
 
+<#assign imports = imports + [ "java.io.Serializable" ] />
 <#assign imports = imports + [ "java.util.Objects" ] />
 <#list imports as import>
 import ${import};
@@ -13,7 +14,7 @@ import ${import};
  *
  * ${sql}
  */
-public class ${className} {
+public class ${className} implements Serializable {
 <#list map?values as rsmdDto>
 
     /**
@@ -21,11 +22,20 @@ public class ${className} {
      */
     private ${rsmdDto.getVarType()} ${rsmdDto.getVarName()};
 </#list>
+<#if pkMap?has_content>
+    /**
+     * Primary key.
+     */
+    private ${className}Id key;
+</#if>
 
     /**
      * Default constructor.
      */
     public ${className}() {
+<#if pkMap?has_content>
+        key = new ${className}Id();
+</#if>
     }
 
 <#list map?values as rsmdDto>
@@ -45,24 +55,47 @@ public class ${className} {
      */
     public void set${rsmdDto.getMethodName()}(final ${rsmdDto.getVarType()} ${rsmdDto.getVarName()}) {
         this.${rsmdDto.getVarName()} = ${rsmdDto.getVarName()};
+<#if rsmdDto.getKeySeq()??>
+        key.set${rsmdDto.getMethodName()}(${rsmdDto.getVarName()});
+</#if>
     }
 
 </#list>
+<#if pkMap?has_content>
+    /**
+     * Accessor for field key.
+     *
+     * @return key Get key.
+     */
+    public ${className}Id getKey() {
+        return key;
+    }
+
+    /**
+     * Mutator for field key.
+     *
+     * @param key Set key.
+     */
+    public void setKey(final ${className}Id key) {
+        this.key = key;
+    }
+</#if>
+
     /**
      * Equals method.
      *
      * @param o Object to check for equality.
-     * @return True if objects equal.
+     * @return True if all objects equal.
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (o == this) return true;
         if (!(o instanceof ${className})) {
             return false;
         }
         ${className} obj = (${className}) o;
-        return <#list map?values as rsmdDto><#if !rsmdDto?is_first>                </#if>Objects.equals(${rsmdDto.getVarName()}, obj.${rsmdDto.getVarName()})<#if rsmdDto?has_next> && </#if>
-</#list>;
+        return <#list map?values as rsmdDto><#if !rsmdDto?is_first>                </#if>Objects.equals(${rsmdDto.getVarName()}, obj.${rsmdDto.getVarName()})<#if rsmdDto?has_next || pkMap?has_content> &&</#if><#if rsmdDto?is_last && !pkMap?has_content>;</#if>
+</#list><#if pkMap?has_content>                Objects.equals(key, obj.key);</#if>
     }
 
     /**
@@ -73,19 +106,19 @@ public class ${className} {
     @Override
     public int hashCode() {
         return Objects.hash(
-<#list map?values as rsmdDto>                ${rsmdDto.getVarName()}<#if rsmdDto?has_next>, </#if>
-</#list>                );
+<#list map?values as rsmdDto>                ${rsmdDto.getVarName()}<#if rsmdDto?has_next || pkMap?has_content>, </#if><#if rsmdDto?is_last && !pkMap?has_content>);</#if>
+</#list><#if pkMap?has_content>                key);</#if>
     }
 
     /**
-     * Generated toString method.
+     * toString method.
      *
      * @return String representation of object.
      */
     @Override
     public String toString() {
         return "${className}{" +
-<#list map?values as rsmdDto>                <#if rsmdDto?is_first>"${rsmdDto.getVarName()}="<#else>", ${rsmdDto.getVarName()}="</#if> + ${rsmdDto.getVarName()} +
-</#list>                "}";
+<#list map?values as rsmdDto>                <#if rsmdDto?is_first>"${rsmdDto.getVarName()}="<#else>", ${rsmdDto.getVarName()}="</#if> + ${rsmdDto.getVarName()} + <#if rsmdDto?is_last && !pkMap?has_content>"}";</#if>
+</#list><#if pkMap?has_content>                ", key=" + key + "}";</#if>
     }
 }

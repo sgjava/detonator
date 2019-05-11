@@ -136,7 +136,7 @@ public class MakeDtoTest {
         final var className = metadataExtract.toCamelCase(tables.get(0));
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.dtoTemplate("dtopk.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
+        makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
         logger.debug(out.toString());
     }
 

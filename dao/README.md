@@ -20,8 +20,8 @@ instance. GenerousBeanProcessor in DbUtils handles this mapping automatically.
 end being optimized.
 * No annotations are required for DTOs to work. The interface allows keys to be used where required and can be ignored for various
 implementations.
-* Method level transactions can be added with a simple @Transaction annotation. This includes thread based transactions using a
-DataSource or Connection and XA data sources.
+* Use [DeTOnator Guice](https://github.com/sgjava/detonator/tree/master/guice) for Method level transactions using a simple @Transaction
+annotation.
 * CQRS is supported out of the box since composite (i.e. more than one table in select) SQL is supported. You can generate a DTO that
 handles composite SQL (query) and use single table SQL (command) to generate DTOs and SQL for DML operations. This is also useful
 for legacy databases that were not forward engineered from an ORM type tool.

@@ -9,6 +9,9 @@
         <Logger name="com.codeferm.detonator.DataLoader" level="info">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="com.atomikos" level="error">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <Root level="debug">
             <AppenderRef ref="Console"/>
         </Root>

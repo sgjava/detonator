@@ -1,0 +1,5 @@
+{"id":"127.0.1.1.tm155768999138300001","wasCommitted":true,"participants":[{"uri":"127.0.1.1.tm1","state":"COMMITTING","expires":1557690001312,"resourceName":"BaseAtomikosTest"}]}
+{"id":"127.0.1.1.tm155768999138300001","wasCommitted":true,"participants":[{"uri":"127.0.1.1.tm1","state":"TERMINATED","expires":1557690001315,"resourceName":"BaseAtomikosTest"}]}
+{"id":"127.0.1.1.tm155768999141700002","wasCommitted":true,"participants":[{"uri":"127.0.1.1.tm2","state":"COMMITTING","expires":1557690001319,"resourceName":"BaseAtomikosTest"}]}
+{"id":"127.0.1.1.tm155768999141700002","wasCommitted":true,"participants":[{"uri":"127.0.1.1.tm2","state":"TERMINATED","expires":1557690001320,"resourceName":"BaseAtomikosTest"}]}
+{"id":"127.0.1.1.tm155768999142700003","wasCommitted":false,"participants":[{"uri":"127.0.1.1.tm3","state":"TERMINATED","expires":1557690001330,"resourceName":"BaseAtomikosTest"}]}

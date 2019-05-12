@@ -13,4 +13,5 @@ other artifact types and languages.
 * [DeTOnator Maven Plugin](https://github.com/sgjava/detonator/tree/master/detonator-maven-plugin) leverages DeTOnator DTO to add
 high performance code generation to your Maven based projects.
 * [DeTOnator DAO](https://github.com/sgjava/detonator/tree/master/dao) is a generic Java SE DAO layer.
+* [DeTOnator Guice](https://github.com/sgjava/detonator/tree/master/dto) JTA transactions in Java SE.
 * Based on OpenJDK 11 LTS.

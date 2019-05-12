@@ -64,4 +64,24 @@ public class OrdersBo {
         // Save DTO and return identity key
         return dao.saveReturnKey(dto);
     }
+
+    /**
+     * Update status.
+     *
+     * @param ordersId Key to look up.
+     * @param status New status value.
+     */
+    @Transaction
+    public void updateStatus(final int ordersId, final String status) {
+        // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
+        final var dto = dao.find(new OrdersKey(ordersId));
+        if (dto == null) {
+            throw new RuntimeException(String.format("ordersId %d not found", ordersId));
+        } else {
+            // Set status
+            dto.setStatus(status);
+            // Update record
+            dao.update(dto.getKey(), dto);
+        }
+    }
 }

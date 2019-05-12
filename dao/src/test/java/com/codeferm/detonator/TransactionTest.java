@@ -13,6 +13,8 @@ import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -104,7 +106,7 @@ public class TransactionTest {
     }
 
     /**
-     * Test DAO findAll method.
+     * Test JTA commit.
      */
     @Test
     @Transaction
@@ -118,5 +120,28 @@ public class TransactionTest {
         OrdersBo bo = TransactionFactory.createObject(OrdersBo.class, AtomikosTransModule.class);
         bo.setDao(dao);
         final var key = bo.createOrder(1, 1);
+        // Verify record was commited
+        assertNotNull(dao.find(key));
+        bo.updateStatus(1, "Shipped");
+    }
+
+    /**
+     * Test JTA rollback.
+     */
+    @Test
+    @Transaction
+    public void rollback() {
+        logger.debug("rollback");
+        // Get generated SQL
+        final var sql = loadProperties("orders.properties");
+        // Create generic DAO
+        final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
+        // Create transactional business object
+        OrdersBo bo = TransactionFactory.createObject(OrdersBo.class, AtomikosTransModule.class);
+        bo.setDao(dao);
+        // Record doesn't exist and should rollback
+        Assertions.assertThrows(RuntimeException.class, () -> {
+            bo.updateStatus(0, "Shipped");
+        });
     }
 }

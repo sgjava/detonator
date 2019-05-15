@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -109,7 +110,6 @@ public class TransactionTest {
      * Test JTA commit.
      */
     @Test
-    @Transaction
     public void commit() {
         logger.debug("commit");
         // Get generated SQL
@@ -121,14 +121,22 @@ public class TransactionTest {
         bo.setDao(dao);
         final var key = bo.createOrder(1, 1);
         // Verify record was commited
-        assertNotNull(dao.find(key));
+        var dto = dao.find(key);
+        assertNotNull(dto);
+        // Status should be pending
+        assertEquals(dto.getStatus(), "Pending");
+        // Update status
+        bo.updateStatus(key.getOrderId(), "Shipped");
+        dto = dao.find(key);
+        // Verify status update was commited
+        assertNotNull(dto);
+        assertEquals(dto.getStatus(), "Shipped");
     }
 
     /**
      * Test JTA rollback.
      */
     @Test
-    @Transaction
     public void rollback() {
         logger.debug("rollback");
         // Get generated SQL

@@ -38,16 +38,10 @@
                     <idTemplate>key.ftl</idTemplate>
                     <sqlTemplate>sql.ftl</sqlTemplate>
                     <packageName>com.codeferm.dto</packageName>
-                    <!-- Generate composite DTO -->
+                    <!-- Generate orders DTO -->
                     <sqlMap>
-                        <RegionscCountries>select * from regions r, countries c where r.region_id = c.region_id</RegionscCountries>
+                        <Orders>select * from orders</Orders>
                     </sqlMap>
-                    <!-- Generate using all tables and views in schema -->
-                    <schema>
-                        <catalog></catalog>
-                        <schemaPattern></schemaPattern>
-                        <tableNamePattern>%</tableNamePattern>
-                    </schema>                  
                 </configuration>
                 <executions>
                     <execution>
@@ -126,12 +120,6 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.4.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-dbcp2</artifactId>
-            <version>2.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -122,7 +122,6 @@ public class TransactionTest {
         final var key = bo.createOrder(1, 1);
         // Verify record was commited
         assertNotNull(dao.find(key));
-        bo.updateStatus(1, "Shipped");
     }
 
     /**

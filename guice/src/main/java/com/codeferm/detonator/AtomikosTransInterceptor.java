@@ -1,8 +1,5 @@
 /*
  * Copyright (c) Steven P. Goldsmith. All rights reserved.
- *
- * Created by Steven P. Goldsmith on December 24, 2011
- * sgoldsmith@com.codeferm
  */
 package com.codeferm.detonator;
 
@@ -51,7 +48,7 @@ public class AtomikosTransInterceptor implements MethodInterceptor {
     /**
      * Logger.
      */
-    private static final Logger logger = LogManager.getLogger(TransactionFactory.class);
+    private static final Logger logger = LogManager.getLogger(AtomikosTransInterceptor.class);
 
     /**
      * Invoke method wrapped in a transaction.
@@ -87,7 +84,6 @@ public class AtomikosTransInterceptor implements MethodInterceptor {
                 if (logger.isDebugEnabled()) {
                     logger.debug(String.format("Rollback transaction for method %s", invocation.getMethod().getName()));
                 }
-                // Rollback on error
                 userTransaction.rollback();
                 throw e;
             }

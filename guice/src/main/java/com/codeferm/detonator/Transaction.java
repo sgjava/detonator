@@ -4,9 +4,9 @@
 package com.codeferm.detonator;
 
 import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
+import static java.lang.annotation.ElementType.METHOD;
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 
 /**
@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
  * @since 1.0.0
  */
 @Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Retention(RUNTIME)
+@Target(METHOD)
 public @interface Transaction {
 }

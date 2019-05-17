@@ -3,10 +3,14 @@
  */
 package com.codeferm.detonator;
 
+
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import java.sql.Date;
 import java.time.LocalDate;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 /**
  * Orders business object with transactions.
@@ -15,11 +19,14 @@ import java.time.LocalDate;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Transactional
+@ApplicationScoped
 public class OrdersBo {
 
     /**
      * Generic DAO.
      */
+    @Inject
     private Dao<OrdersKey, Orders> dao;
 
     /**
@@ -29,31 +36,12 @@ public class OrdersBo {
     }
 
     /**
-     * Get DAO.
-     *
-     * @return DAO.
-     */
-    public Dao<OrdersKey, Orders> getDao() {
-        return dao;
-    }
-
-    /**
-     * Set DAO.
-     *
-     * @param dao DAO.
-     */
-    public void setDao(final Dao<OrdersKey, Orders> dao) {
-        this.dao = dao;
-    }
-
-    /**
      * Create new order.
      *
      * @param customerId Customer ID.
      * @param salesmanId Salesman ID.
      * @return Generated key.
      */
-    @Transaction
     public OrdersKey createOrder(final int customerId, final int salesmanId) {
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
@@ -71,7 +59,6 @@ public class OrdersBo {
      * @param ordersId Key to look up.
      * @param status New status value.
      */
-    @Transaction
     public void updateStatus(final int ordersId, final String status) {
         // Make sure order exists 
         final var dto = dao.find(new OrdersKey(ordersId));

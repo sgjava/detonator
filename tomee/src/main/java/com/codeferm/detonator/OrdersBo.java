@@ -121,7 +121,7 @@ public class OrdersBo {
         final var orderItemsList = orderItems.findBy("findByOrderId", new Object[]{ordersId});
         logger.debug("Order items {}", orderItemsList);
         // Show product for each order, note the Long to int is required because products.productId was auto increment
-        orderItemsList.stream().map((dto) -> products.find(new ProductsKey(dto.getProductId().intValue()))).forEachOrdered(
+        orderItemsList.stream().map(dto -> products.find(new ProductsKey(dto.getProductId()))).forEachOrdered(
                 productsDto -> {
             logger.debug("Product {}", productsDto);
         });

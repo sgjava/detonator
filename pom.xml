@@ -9,12 +9,12 @@
     <name>DeTOnator</name>
     <url>https://github.com/sgjava/detonator</url>
     
-    
     <modules>
         <module>dto</module>
         <module>detonator-maven-plugin</module>
         <module>dao</module>
         <module>guice</module>
+        <module>tomee</module>
     </modules>
     
     <properties>

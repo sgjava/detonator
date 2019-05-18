@@ -11,7 +11,6 @@ DROP TABLE products IF EXISTS;
 DROP TABLE customers IF EXISTS;
 DROP TABLE contacts IF EXISTS;
 DROP TABLE orders IF EXISTS;
-DROP TABLE contacts IF EXISTS;
 DROP TABLE order_items IF EXISTS;
 DROP TABLE inventories IF EXISTS;
 
@@ -26,7 +25,7 @@ CREATE TABLE countries
   (
     country_id   CHAR( 2 ) primary key,
     country_name VARCHAR2( 40 ) NOT NULL,
-    region_id    NUMBER                 , -- fk
+    region_id    int                 , -- fk
     CONSTRAINT fk_countries_regions FOREIGN KEY( region_id )
       REFERENCES regions( region_id ) 
       ON DELETE CASCADE
@@ -51,7 +50,7 @@ CREATE TABLE warehouses
   (
     warehouse_id int auto_increment primary key,
     warehouse_name VARCHAR( 255 ) ,
-    location_id    NUMBER( 12, 0 ), -- fk
+    location_id    int, -- fk
     CONSTRAINT fk_warehouses_locations 
       FOREIGN KEY( location_id )
       REFERENCES locations( location_id ) 
@@ -66,7 +65,7 @@ CREATE TABLE employees
     email      VARCHAR( 255 ) NOT NULL,
     phone      VARCHAR( 50 ) NOT NULL ,
     hire_date  DATE NOT NULL          ,
-    manager_id NUMBER( 12, 0 )        , -- fk
+    manager_id int        , -- fk
     job_title  VARCHAR( 255 ) NOT NULL,
     CONSTRAINT fk_employees_manager 
         FOREIGN KEY( manager_id )
@@ -88,7 +87,7 @@ CREATE TABLE products
     description   VARCHAR2( 2000 )        ,
     standard_cost NUMBER( 9, 2 )          ,
     list_price    NUMBER( 9, 2 )          ,
-    category_id   NUMBER NOT NULL         ,
+    category_id   int NOT NULL         ,
     CONSTRAINT fk_products_categories 
       FOREIGN KEY( category_id )
       REFERENCES product_categories( category_id ) 
@@ -111,7 +110,7 @@ CREATE TABLE contacts
     last_name   VARCHAR2( 255 ) NOT NULL,
     email       VARCHAR2( 255 ) NOT NULL,
     phone       VARCHAR2( 20 )          ,
-    customer_id NUMBER                  ,
+    customer_id int                  ,
     CONSTRAINT fk_contacts_customers 
       FOREIGN KEY( customer_id )
       REFERENCES customers( customer_id ) 
@@ -121,9 +120,9 @@ CREATE TABLE contacts
 CREATE TABLE orders
   (
     order_id int auto_increment primary key,
-    customer_id NUMBER( 6, 0 ) NOT NULL, -- fk
+    customer_id int NOT NULL, -- fk
     status      VARCHAR( 20 ) NOT NULL ,
-    salesman_id NUMBER( 6, 0 )         , -- fk
+    salesman_id int         , -- fk
     order_date  DATE NOT NULL          ,
     CONSTRAINT fk_orders_customers 
       FOREIGN KEY( customer_id )
@@ -137,9 +136,9 @@ CREATE TABLE orders
 -- order items
 CREATE TABLE order_items
   (
-    order_id   NUMBER( 12, 0 )                                , -- fk
-    item_id    NUMBER( 12, 0 )                                ,
-    product_id NUMBER( 12, 0 ) NOT NULL                       , -- fk
+    order_id   int                                , -- fk
+    item_id    int                                ,
+    product_id int NOT NULL                       , -- fk
     quantity   NUMBER( 8, 2 ) NOT NULL                        ,
     unit_price NUMBER( 8, 2 ) NOT NULL                        ,
     CONSTRAINT pk_order_items 
@@ -156,8 +155,8 @@ CREATE TABLE order_items
 -- inventories
 CREATE TABLE inventories
   (
-    product_id   NUMBER( 12, 0 )        , -- fk
-    warehouse_id NUMBER( 12, 0 )        , -- fk
+    product_id   int        , -- fk
+    warehouse_id int        , -- fk
     quantity     NUMBER( 8, 0 ) NOT NULL,
     CONSTRAINT pk_inventories 
       PRIMARY KEY( product_id, warehouse_id ),

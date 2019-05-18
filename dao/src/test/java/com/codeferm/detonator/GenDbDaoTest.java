@@ -5,6 +5,8 @@ package com.codeferm.detonator;
 
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
+import com.codeferm.dto.RegionscCountries;
+import com.codeferm.dto.RegionscCountriesKey;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -129,7 +131,7 @@ public class GenDbDaoTest {
     }
 
     /**
-     * Test DAO findById method.
+     * Test DAO find method.
      */
     @Test
     public void find() {
@@ -144,16 +146,16 @@ public class GenDbDaoTest {
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
-        assertEquals(dto.getOrderId(), 4);
+        assertEquals(dto.getOrderId(), key.getOrderId());
         // Create ID that doesn't exist
         final var badId = new OrdersKey(0);
         final var badDto = dao.find(badId);
         // DTO should be null if not found
         assertNull(badDto);
     }
-    
+
     /**
-     * Test DAO findById method using simple type instead of ID bean.
+     * Test DAO find method using simple type instead of ID bean.
      */
     @Test
     public void findSimpleType() {
@@ -171,6 +173,30 @@ public class GenDbDaoTest {
         final var badDto = dao.find(0);
         // DTO should be null if not found
         assertNull(badDto);
+    }
+
+    /**
+     * Test DAO find method using composite DTO and custom SQL.
+     */
+    @Test
+    public void findComposite() {
+        logger.debug("findComposite");
+        // Get generated SQL
+        final var sql = loadProperties("regionsccountries.properties");
+        // Merge custom SQL
+        sql.putAll(loadProperties("regionsccountries-custom.properties"));
+        // Create generic DAO
+        final Dao<RegionscCountriesKey, RegionscCountries> dao = new GenDbDao<>(dataSource, sql, RegionscCountriesKey.class,
+                RegionscCountries.class);
+        // Create ID to find
+        final var key = new RegionscCountriesKey("DE", 1);
+        final var dto = dao.find(key);
+        // Verify record exists
+        assertNotNull(dto);
+        // Verify Country ID matches
+        assertEquals(dto.getCountryId(), key.getCountryId());
+        // Verify Regiot ID matches
+        assertEquals(dto.getRegionId(), key.getRegionId());
     }
 
     /**

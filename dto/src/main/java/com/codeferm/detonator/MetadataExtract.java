@@ -82,7 +82,7 @@ public class MetadataExtract {
     }
 
     /**
-     * Use ResultSetMetaData DTOs to get List of table names.
+     * Parse table names out of SQL.
      *
      * @param sql SQL statement to parse.
      * @return Table names as List.
@@ -166,7 +166,7 @@ public class MetadataExtract {
                     dto.setColumnClassName(rsmd.getColumnClassName(col));
                     dto.setColumnDisplaySize(rsmd.getColumnDisplaySize(col));
                     dto.setColumnLabel(rsmd.getColumnLabel(col));
-                    dto.setColumnName(rsmd.getColumnName(col));
+                    dto.setColumnName(rsmd.getColumnName(col).toUpperCase());
                     dto.setColumnType(rsmd.getColumnType(col));
                     dto.setColumnTypeName(rsmd.getColumnTypeName(col));
                     dto.setCurrency(rsmd.isCurrency(col));
@@ -192,7 +192,8 @@ public class MetadataExtract {
                     final var array = dto.getColumnClassName().split("\\.");
                     // Save only the class without the package
                     dto.setVarType(array[array.length - 1]);
-                    map.put(dto.getColumnName(), dto);
+                    // Make sure Map key is always upper case, so not dependent on metadata result
+                    map.put(dto.getColumnName().toUpperCase(Locale.US), dto);
                 }
             }
             resultSet.close();
@@ -202,7 +203,7 @@ public class MetadataExtract {
             if (tables.size() == 1) {
                 final var pkMap = getPrimaryKey(dataSource, tables.get(0));
                 // Set PK sequence in DTO
-                pkMap.entrySet().forEach((final            var entry) -> {
+                pkMap.entrySet().forEach((final                 var entry) -> {
                     map.get(entry.getValue()).setKeySeq(entry.getKey());
                 });
             }
@@ -210,6 +211,29 @@ public class MetadataExtract {
             throw new RuntimeException(String.format("getResultSetMetaData: sql=%s", sql), e);
         }
         return map;
+    }
+
+    /**
+     * Override key columns based on column name. Can be used to give tables and composites the ability to generate a key. List
+     * order determines key sequence.
+     *
+     * @param map Map of ResultSetMetaData DTOs
+     * @param list List of column names.
+     */
+    public void overridePrimaryKey(final Map<String, RsmdDto> map, final List<String> list) {
+        // Set all key sequences to null
+        map.entrySet().forEach(entry -> {
+            entry.getValue().setKeySeq(null);
+        });
+        // Key sequence starts with 1.
+        int i = 1;
+        // Set new key sequences and skip missing column names
+        for (final var columnName : list) {
+            final var dto = map.get(columnName);
+            if (dto != null) {
+                dto.setKeySeq(i++);
+            }
+        }
     }
 
     /**

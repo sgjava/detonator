@@ -72,7 +72,7 @@ public abstract class BaseGenMojo extends AbstractMojo {
      * Map of class name (key) and SQL (value).
      */
     @Parameter(property = "sqlMap", required = true)
-    private Map<String, String> sqlMap;
+    private Map<String, SqlStatement> sqlMap;
     /**
      * Use database schema to generate code.
      */

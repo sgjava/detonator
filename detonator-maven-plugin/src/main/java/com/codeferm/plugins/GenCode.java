@@ -83,9 +83,9 @@ public class GenCode {
      */
     private String sqlTemplate;
     /**
-     * Map of class name (key) and SQL (value).
+     * Map of class name (key) and SQL statement (value).
      */
-    private Map<String, String> sqlMap;
+    private Map<String, SqlStatement> sqlMap;
     /**
      * Use schema to generate code.
      */
@@ -196,11 +196,11 @@ public class GenCode {
         this.sqlTemplate = sqlTemplate;
     }
 
-    public Map<String, String> getSqlMap() {
+    public Map<String, SqlStatement> getSqlMap() {
         return sqlMap;
     }
 
-    public void setSqlMap(final Map<String, String> sqlMap) {
+    public void setSqlMap(final Map<String, SqlStatement> sqlMap) {
         this.sqlMap = sqlMap;
     }
 
@@ -225,24 +225,24 @@ public class GenCode {
      *
      * @param makeDto DTO generator.
      * @param sourceDir Source target dir.
-     * @param sql SQL used to generate DTO.
+     * @param sql SQL statement used to generate DTO.
      * @param className CLass name for DTO.
      */
-    public void generate(final MakeDto makeDto, final String sourceDir, final String sql, final String className) {
+    public void generate(final MakeDto makeDto, final String sourceDir, final SqlStatement sql, final String className) {
         try {
             // Use FileOutputStream for SQL properties output
             try (var out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(String.format("%s/%s.properties",
                     genResDir, className.toLowerCase(Locale.US))), false), StandardCharsets.UTF_8))) {
-                makeDto.sqlTemplate(sqlTemplate, sql, mapTypes, out);
+                makeDto.sqlTemplate(sqlTemplate, sql.getSql(), sql.getKeyColumns(), out);
             }
             // Use FileOutputStream for DTO output
             try (var out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(String.format("%s/%s.java",
                     sourceDir, className)), false), StandardCharsets.UTF_8))) {
-                makeDto.dtoTemplate(dtoTemplate, sql, packageName, className, mapTypes, out);
+                makeDto.dtoTemplate(dtoTemplate, sql.getSql(), sql.getKeyColumns(), packageName, className, out);
             }
             // Use StringWriter in case ID is empty (i.e. no PK or composite SQL)
             final var out = new StringWriter();
-            makeDto.idTemplate(idTemplate, sql, packageName, String.format("%sKey", className), mapTypes, out);
+            makeDto.idTemplate(idTemplate, sql.getSql(), sql.getKeyColumns(), packageName, String.format("%sKey", className), out);
             final var idStr = out.toString();
             // Check for empty result
             if (!idStr.isEmpty()) {
@@ -278,9 +278,9 @@ public class GenCode {
         if (!grDir.mkdirs()) {
             throw new RuntimeException(String.format("Failed to make directory %s", genResDir));
         }
-        final var makeDto = new MakeDto(dataSource, templatesDir);
+        final var makeDto = new MakeDto(dataSource, templatesDir, mapTypes);
         // Executor service can run up to size of database connection pool - 1
-        final var executor = Executors.newFixedThreadPool(dbPoolSize -1);
+        final var executor = Executors.newFixedThreadPool(dbPoolSize - 1);
         log.info("Submitting artifacts from SQL Map");
         // Generate classes based on SQL Map
         sqlMap.entrySet().forEach((var entry) -> {
@@ -292,15 +292,15 @@ public class GenCode {
         });
         // If there's a table name pattern then process schema
         if (schema.getTableNamePattern() != null) {
-        log.info("Submitting artifacts from schema");
+            log.info("Submitting artifacts from schema");
             final var metadataExtract = new MetadataExtract();
             final var list = metadataExtract.getTableNames(dataSource, schema.getCatalog(), schema.getSchemaPattern(), schema.
                     getTableNamePattern(), new String[]{"TABLE", "VIEW"}, false);
             list.forEach((tableName) -> {
                 // Create Runnable for each table to generate
                 final Runnable task = () -> {
-                    generate(makeDto, sourceDir, String.format("select * from %s", tableName), metadataExtract.
-                            toCamelCase(tableName));
+                    generate(makeDto, sourceDir, new SqlStatement(String.format("select * from %s", tableName), null),
+                            metadataExtract.toCamelCase(tableName));
                 };
                 executor.execute(task);
             });

@@ -5,6 +5,8 @@ package com.codeferm.detonator;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
@@ -57,6 +59,9 @@ public class MetadataExtractTest {
         dataLoader.execScript(fileName, delimiter, removeDelimiter);
     }
 
+    /**
+     * Get properties, SQL Map and configure DataSource.
+     */
     @BeforeAll
     public static void beforeAll() {
         properties = new Properties();
@@ -86,16 +91,16 @@ public class MetadataExtractTest {
                     getProperty("db.remove.delimiter")));
         }
     }
-    
+
     /**
-     * Shut down datasource.
-     * 
+     * Shut down DataSource.
+     *
      * @throws SQLException Possible exception.
      */
     @AfterAll
-    public static void afterAll() throws SQLException{
-        ((BasicDataSource)dataSource).close();
-    }    
+    public static void afterAll() throws SQLException {
+        ((BasicDataSource) dataSource).close();
+    }
 
     /**
      * Test getTableNames.
@@ -160,12 +165,12 @@ public class MetadataExtractTest {
         logger.debug("getResultSetMetaData");
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_orders"), true);
-        // List should not be empty
+        // Map should not be empty
         assertFalse(map.isEmpty());
-        // List should contain 5 items
+        // Map should contain 5 items
         assertEquals(map.size(), 5);
         // Show DTOs
-        map.entrySet().forEach((final  var entry) -> {
+        map.entrySet().forEach((final     var entry) -> {
             logger.debug(entry.getValue());
         });
     }
@@ -204,11 +209,35 @@ public class MetadataExtractTest {
         // Map should contain two items
         assertEquals(map.size(), 2);
         // Show PK fields
-        map.entrySet().forEach((final  var entry) -> {
+        map.entrySet().forEach((final     var entry) -> {
             logger.debug("{} : {}", entry.getKey(), entry.getValue());
         });
     }
 
+    /**
+     * Override primary key columns in composite.
+     */
+    @Test
+    public void overridePrimaryKey() {
+        logger.debug("overridePrimaryKey");
+        final var metadataExtract = new MetadataExtract();
+        // Return metadata from composite with no key columns
+        final var map = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_two_tables"), true);
+        // Map should not be empty
+        assertFalse(map.isEmpty());
+        // Key fields to override
+        List<String> list = new ArrayList<>();
+        list.add("REGION_ID");
+        list.add("COUNTRY_ID");
+        // Do overide
+        metadataExtract.overridePrimaryKey(map, list);
+        assertEquals(map.get("REGION_ID").getKeySeq(), 1);
+        assertEquals(map.get("COUNTRY_ID").getKeySeq(), 2);
+    }
+
+    /**
+     * Get list of table names.
+     */
     @Test
     public void getTableNames() {
         logger.debug("getTableNames");
@@ -220,7 +249,7 @@ public class MetadataExtractTest {
         // List should contain 12 items
         assertEquals(list.size(), 12);
         // Show DTOs
-        list.forEach((final  var tableName) -> {
+        list.forEach((final     var tableName) -> {
             logger.debug(tableName);
         });
     }

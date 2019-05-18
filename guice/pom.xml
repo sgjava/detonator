@@ -40,8 +40,10 @@
                     <packageName>com.codeferm.dto</packageName>
                     <!-- Generate orders DTO -->
                     <sqlMap>
-                        <Orders>select * from orders</Orders>
-                    </sqlMap>
+                        <Orders>
+                            <sql>select * from orders</sql>
+                        </Orders>
+                    </sqlMap>                    
                 </configuration>
                 <executions>
                     <execution>

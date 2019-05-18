@@ -145,4 +145,14 @@ public class TransactionTest {
         final var key = ordersBo.createOrder(1, 1);
     }
 
+    /**
+     * Test linking tables.
+     */
+    @Test
+    public void linkTables() {
+        logger.debug("linkTables");
+        ordersBo.orderInfo(1);
+    }
+    
+    
 }

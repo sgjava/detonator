@@ -48,7 +48,14 @@
                     <packageName>com.codeferm.dto</packageName>
                     <!-- Generate composite DTO -->
                     <sqlMap>
-                        <RegionscCountries>select * from regions r, countries c where r.region_id = c.region_id</RegionscCountries>
+                        <RegionscCountries>
+                            <sql>select * from regions r, countries c where r.region_id = c.region_id</sql>
+                            <!-- Since composites do not have primary key columns we override -->
+                            <keyColumns>
+                                <param>REGION_ID</param>
+                                <param>COUNTRY_ID</param>
+                            </keyColumns>
+                        </RegionscCountries>
                     </sqlMap>
                     <!-- Generate using all tables and views in schema -->
                     <schema>

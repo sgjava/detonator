@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -35,15 +36,21 @@ public class MakeDto {
      * FreeMarker configuration singleton.
      */
     private final Configuration configuration = new Configuration(Configuration.getVersion());
+    /**
+     * Map data types.
+     */
+    private final boolean mapTypes;
 
     /**
      * Set DataSource variable types Set.
      *
      * @param dataSource DataSoure to run queries against.
      * @param templateDir Template directory.
+     * @param mapTypes Map Java types to optimize out BigDecimal
      */
-    public MakeDto(final DataSource dataSource, final String templateDir) {
+    public MakeDto(final DataSource dataSource, final String templateDir, final boolean mapTypes) {
         this.dataSource = dataSource;
+        this.mapTypes = mapTypes;
         try {
             configuration.setDirectoryForTemplateLoading(new File(templateDir));
         } catch (IOException e) {
@@ -65,7 +72,7 @@ public class MakeDto {
     public Set<String> getClasses(final Map<String, RsmdDto> map, final boolean pkOnly) {
         final var classes = new TreeSet<String>();
         map.entrySet().stream().map(entry -> entry.getValue()).filter(value -> !value.getColumnClassName().
-                startsWith("java.lang")).forEachOrdered((final   var value) -> {
+                startsWith("java.lang")).forEachOrdered((final      var value) -> {
             // Only include PK columns?
             if (pkOnly) {
                 if (value.getKeySeq() != null) {
@@ -101,16 +108,21 @@ public class MakeDto {
      *
      * @param template Template to use.
      * @param sql SQL used to generate metadata.
+     * @param list List of primary key column overrides.
      * @param packageName Java package name.
      * @param className Java class name.
-     * @param mapTypes Map Java types to optimize.
      * @param writer Template output.
      */
-    public void dtoTemplate(final String template, final String sql, final String packageName, final String className,
-            final boolean mapTypes, final Writer writer) {
+    public void dtoTemplate(final String template, final String sql, final List<String> list, final String packageName,
+            final String className,
+            final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sql, mapTypes);
+        // Overried primary key columns
+        if (list != null) {
+            metadataExtract.overridePrimaryKey(map, list);
+        }
         // Template model
         final Map<String, Object> model = new HashMap<>();
         model.put("imports", getClasses(map, false));
@@ -135,16 +147,20 @@ public class MakeDto {
      *
      * @param template Template to use.
      * @param sql SQL used to generate metadata.
+     * @param list List of primary key column overrides.
      * @param packageName Java package name.
      * @param className Java class name.
-     * @param mapTypes Map Java types to optimize.
      * @param writer Template output.
      */
-    public void idTemplate(final String template, final String sql, final String packageName, final String className,
-            final boolean mapTypes, final Writer writer) {
+    public void idTemplate(final String template, final String sql, final List<String> list, final String packageName, final String className,
+            final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sql, mapTypes);
+        // Overried primary key columns
+        if (list != null) {
+            metadataExtract.overridePrimaryKey(map, list);
+        }
         // Map with just PK columns
         final var pkMap = getPkMap(map);
         // Skip generation if no PK columns
@@ -174,13 +190,17 @@ public class MakeDto {
      *
      * @param template Template to use.
      * @param sql SQL used to generate metadata.
-     * @param mapTypes Map Java types to optimize.
+     * @param list List of primary key column overrides.
      * @param writer Template output.
      */
-    public void sqlTemplate(final String template, final String sql, final boolean mapTypes, final Writer writer) {
+    public void sqlTemplate(final String template, final String sql, final List<String> list, final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sql, mapTypes);
+        // Overried primary key columns
+        if (list != null) {
+            metadataExtract.overridePrimaryKey(map, list);
+        }
         final var tables = metadataExtract.uniqueTableNames(sql);
         final var tableName = tables.iterator().next();
         // Get PK fields

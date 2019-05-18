@@ -6,6 +6,8 @@ package com.codeferm.detonator;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
@@ -59,6 +61,9 @@ public class MakeDtoTest {
         dataLoader.execScript(fileName, delimiter, removeDelimiter);
     }
 
+    /**
+     * Get properties, SQL Map and configure DataSource.
+     */
     @BeforeAll
     public static void beforeAll() {
         properties = new Properties();
@@ -90,7 +95,7 @@ public class MakeDtoTest {
     }
 
     /**
-     * Shut down datasource.
+     * Shut down DataSource.
      *
      * @throws SQLException Possible exception.
      */
@@ -105,7 +110,7 @@ public class MakeDtoTest {
     @Test
     public void getClasses() {
         logger.debug("getClasses");
-        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
+        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates", true);
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sqlMap.get("md_orders"), true);
         // Test all columns
@@ -129,14 +134,31 @@ public class MakeDtoTest {
     @Test
     public void dtoTemplate() {
         logger.debug("dtoTemplate");
-        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
+        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates", true);
         final var metadataExtract = new MetadataExtract();
         final var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_orders"));
         // Use camelCase of table name
         final var className = metadataExtract.toCamelCase(tables.get(0));
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
+        makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_orders"), null, "com.codeferm.dto", className, out);
+        logger.debug(out.toString());
+    }
+    
+    /**
+     * Test composite DTO.
+     */
+    @Test
+    public void dtoComposite() {
+        logger.debug("dtoComposite");
+        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates", true);
+        // Key fields to override since composite metadata will not contain any primary key columns
+        List<String> list = new ArrayList<>();
+        list.add("REGION_ID");
+        list.add("COUNTRY_ID");
+        // Use StringWriter for template
+        final var out = new StringWriter();
+        makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_two_tables"), list, "com.codeferm.dto", "Composite", out);
         logger.debug(out.toString());
     }
 
@@ -146,14 +168,14 @@ public class MakeDtoTest {
     @Test
     public void idTemplate() {
         logger.debug("idTemplate");
-        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
+        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates", true);
         final var metadataExtract = new MetadataExtract();
         final var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_orders"));
         // Use camelCase of table name
         final var className = metadataExtract.toCamelCase(tables.get(0)) + "Pk";
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.idTemplate("key.ftl", sqlMap.get("md_orders"), "com.codeferm.dto", className, true, out);
+        makeDto.idTemplate("key.ftl", sqlMap.get("md_orders"), null, "com.codeferm.dto", className, out);
         logger.debug(out.toString());
     }
 
@@ -163,10 +185,10 @@ public class MakeDtoTest {
     @Test
     public void sqlTemplate() {
         logger.debug("sqlTemplate");
-        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates");
+        final var makeDto = new MakeDto(dataSource, "src/main/resources/templates", true);
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.sqlTemplate("sql.ftl", sqlMap.get("md_order_items"), true, out);
+        makeDto.sqlTemplate("sql.ftl", sqlMap.get("md_order_items"), null, out);
         logger.debug(out.toString());
     }
 }

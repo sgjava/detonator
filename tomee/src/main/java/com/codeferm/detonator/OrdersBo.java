@@ -88,7 +88,7 @@ public class OrdersBo {
             logger.debug("Creating {}", dto);
         }
         // Save DTO and return identity key
-        return orders.saveReturnKey(dto);
+        return orders.saveReturnKey(dto, new String[]{"ORDER_ID"});
     }
 
     /**

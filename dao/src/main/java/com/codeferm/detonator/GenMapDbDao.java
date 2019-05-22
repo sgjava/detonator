@@ -82,7 +82,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
         return key;
     }
 
-   /**
+    /**
      * Return all values.
      *
      * @return List of all values.
@@ -147,10 +147,11 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      * Save the value and return generated key.
      *
      * @param value Value to save.
+     * @param keyNames Array of key column names.
      * @return Generated key.
      */
     @Override
-    public K saveReturnKey(V value) {
+    public K saveReturnKey(V value, final String[] keyNames) {
         throw new UnsupportedOperationException("Not supported yet");
     }
 

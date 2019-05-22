@@ -3,6 +3,7 @@
  */
 package com.codeferm.detonator;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -48,6 +49,31 @@ public class MetadataExtractTest {
     private static DataSource dataSource;
 
     /**
+     * Load properties file from file path or fail back to class path.
+     *
+     * @param propertyFile Name of property file.
+     * @return Properties.
+     */
+    public static Properties loadProperties(final String propertyFile) {
+        Properties props = new Properties();
+        try {
+            // Get properties from file
+            props.load(new FileInputStream(propertyFile));
+            logger.debug("Properties loaded from file {}", propertyFile);
+        } catch (IOException e1) {
+            logger.warn("Properties file not found {}", propertyFile);
+            // Get properties from classpath
+            try (final var stream = MetadataExtractTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
+                props.load(stream);
+                logger.debug("Properties loaded from class path {}", propertyFile);
+            } catch (IOException e2) {
+                throw new RuntimeException("No properties found", e2);
+            }
+        }
+        return props;
+    }
+
+    /**
      * Create test database.
      *
      * @param fileName SQL script to create database.
@@ -64,13 +90,10 @@ public class MetadataExtractTest {
      */
     @BeforeAll
     public static void beforeAll() {
-        properties = new Properties();
-        // Get properties from classpath
-        try (final var stream = MetadataExtractTest.class.getClassLoader().getResourceAsStream("app.properties")) {
-            properties.load(stream);
-        } catch (IOException e) {
-            throw new RuntimeException("Property file exception", e);
-        }
+        // Get database properties
+        properties = loadProperties("database.properties");
+        // Merge app properties
+        properties.putAll(loadProperties("app.properties"));
         try {
             // Load SQL statements from classpath
             sqlMap = QueryLoader.instance().load("/sql.properties");
@@ -113,18 +136,18 @@ public class MetadataExtractTest {
         // Set should not be empty
         assertFalse(tables.isEmpty());
         // Set should contain one item
-        assertEquals(tables.size(), 1);
+        assertEquals(1, tables.size());
         //List item should equal "regions"
-        assertEquals(tables.get(0), "regions");
+        assertEquals("regions", tables.get(0));
         tables = metadataExtract.uniqueTableNames(sqlMap.get("md_two_tables"));
         // Set should not be empty
         assertFalse(tables.isEmpty());
         // Set should contain two items
-        assertEquals(tables.size(), 2);
+        assertEquals(2, tables.size());
         // First item should equal "regions"
-        assertEquals(tables.get(0), "regions");
+        assertEquals("regions", tables.get(0));
         // Second item should equal "countries"
-        assertEquals(tables.get(1), "countries");
+        assertEquals("countries", tables.get(1));
     }
 
     /**
@@ -135,11 +158,11 @@ public class MetadataExtractTest {
         logger.debug("toUpperCase");
         final var metadataExtract = new MetadataExtract();
         // Test upper case with lower case
-        assertEquals(metadataExtract.toUpperCase("lower"), "LOWER");
+        assertEquals("LOWER", metadataExtract.toUpperCase("lower"));
         // Test upper case with upper case
-        assertEquals(metadataExtract.toUpperCase("UPPER"), "UPPER");
+        assertEquals("UPPER", metadataExtract.toUpperCase("UPPER"));
         // Test mixed case with upper case
-        assertEquals(metadataExtract.toUpperCase("MiXed"), "MIXED");
+        assertEquals("MIXED", metadataExtract.toUpperCase("MiXed"));
     }
 
     /**
@@ -150,11 +173,11 @@ public class MetadataExtractTest {
         logger.debug("toLowerCase");
         final var metadataExtract = new MetadataExtract();
         // Test lower case with upper case
-        assertEquals(metadataExtract.toLowerCase("UPPER"), "upper");
+        assertEquals("upper", metadataExtract.toLowerCase("UPPER"));
         // Test lower case with lower case
-        assertEquals(metadataExtract.toLowerCase("lower"), "lower");
+        assertEquals("lower", metadataExtract.toLowerCase("lower"));
         // Test mixed case with lower case
-        assertEquals(metadataExtract.toLowerCase("MiXed"), "mixed");
+        assertEquals("mixed", metadataExtract.toLowerCase("MiXed"));
     }
 
     /**
@@ -168,9 +191,9 @@ public class MetadataExtractTest {
         // Map should not be empty
         assertFalse(map.isEmpty());
         // Map should contain 5 items
-        assertEquals(map.size(), 5);
+        assertEquals(5, map.size());
         // Show DTOs
-        map.entrySet().forEach((final     var entry) -> {
+        map.entrySet().forEach((final          var entry) -> {
             logger.debug(entry.getValue());
         });
     }
@@ -183,17 +206,17 @@ public class MetadataExtractTest {
         logger.debug("toCamelCase");
         final var metadataExtract = new MetadataExtract();
         // Test upper case with underscore
-        assertEquals(metadataExtract.toCamelCase("CAMEL_CASE"), "CamelCase");
+        assertEquals("CamelCase", metadataExtract.toCamelCase("CAMEL_CASE"));
         // Test lower case with underscore
-        assertEquals(metadataExtract.toCamelCase("camel_case"), "CamelCase");
+        assertEquals("CamelCase", metadataExtract.toCamelCase("camel_case"));
         // Test mixed case with underscore
-        assertEquals(metadataExtract.toCamelCase("CaMel_cASE"), "CamelCase");
+        assertEquals("CamelCase", metadataExtract.toCamelCase("CaMel_cASE"));
         // Test upper case without underscore
-        assertEquals(metadataExtract.toCamelCase("CAMELCASE"), "Camelcase");
+        assertEquals("Camelcase", metadataExtract.toCamelCase("CAMELCASE"));
         // Test lower case without underscore
-        assertEquals(metadataExtract.toCamelCase("camelcase"), "Camelcase");
+        assertEquals("Camelcase", metadataExtract.toCamelCase("camelcase"));
         // Test mixed case without underscore
-        assertEquals(metadataExtract.toCamelCase("caMelCAse"), "Camelcase");
+        assertEquals("Camelcase", metadataExtract.toCamelCase("caMelCAse"));
     }
 
     /**
@@ -207,9 +230,9 @@ public class MetadataExtractTest {
         // Map should not be empty
         assertFalse(map.isEmpty());
         // Map should contain two items
-        assertEquals(map.size(), 2);
+        assertEquals(2, map.size());
         // Show PK fields
-        map.entrySet().forEach((final     var entry) -> {
+        map.entrySet().forEach((final          var entry) -> {
             logger.debug("{} : {}", entry.getKey(), entry.getValue());
         });
     }
@@ -231,8 +254,8 @@ public class MetadataExtractTest {
         list.add("COUNTRY_ID");
         // Do overide
         metadataExtract.overridePrimaryKey(map, list);
-        assertEquals(map.get("REGION_ID").getKeySeq(), 1);
-        assertEquals(map.get("COUNTRY_ID").getKeySeq(), 2);
+        assertEquals(1, map.get("REGION_ID").getKeySeq());
+        assertEquals(2, map.get("COUNTRY_ID").getKeySeq());
     }
 
     /**
@@ -247,9 +270,9 @@ public class MetadataExtractTest {
         // Map should not be empty
         assertFalse(list.isEmpty());
         // List should contain 12 items
-        assertEquals(list.size(), 12);
+        assertEquals(12, list.size());
         // Show DTOs
-        list.forEach((final     var tableName) -> {
+        list.forEach((final          var tableName) -> {
             logger.debug(tableName);
         });
     }

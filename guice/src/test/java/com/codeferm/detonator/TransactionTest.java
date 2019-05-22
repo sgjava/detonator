@@ -6,6 +6,7 @@ package com.codeferm.detonator;
 import com.atomikos.jdbc.AtomikosDataSourceBean;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
@@ -54,18 +55,26 @@ public class TransactionTest {
     }
 
     /**
-     * Load properties file from class path.
+     * Load properties file from file path or fail back to class path.
      *
      * @param propertyFile Name of property file.
      * @return Properties.
      */
     public static Properties loadProperties(final String propertyFile) {
         Properties props = new Properties();
-        // Get properties from classpath
-        try (final var stream = TransactionTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
-            props.load(stream);
-        } catch (IOException e) {
-            throw new RuntimeException("Property file exception", e);
+        try {
+            // Get properties from file
+            props.load(new FileInputStream(propertyFile));
+            logger.debug("Properties loaded from file {}", propertyFile);
+        } catch (IOException e1) {
+            logger.warn("Properties file not found {}", propertyFile);
+            // Get properties from classpath
+            try (final var stream = TransactionTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
+                props.load(stream);
+                logger.debug("Properties loaded from class path {}", propertyFile);
+            } catch (IOException e2) {
+                throw new RuntimeException("No properties found", e2);
+            }
         }
         return props;
     }
@@ -75,12 +84,13 @@ public class TransactionTest {
      */
     @BeforeAll
     public static void beforeAll() {
-        properties = new Properties();
-        // Get properties from classpath
-        properties = loadProperties("app.properties");
+        // Get database properties from dto project
+        properties = loadProperties("../dto/src/test/resources/database.properties");
+        // Merge app properties
+        properties.putAll(loadProperties("app.properties"));
         // Create AtomikosXADataSourceBean
         final AtomikosDataSourceBean ds = new AtomikosDataSourceBean();
-        ds.setUniqueResourceName("BaseAtomikosTest");
+        ds.setUniqueResourceName("TransactionTest");
         ds.setXaDataSourceClassName(properties.getProperty("db.xa.driver"));
         Properties p = new Properties();
         p.setProperty("user", properties.getProperty("db.xa.user"));
@@ -124,13 +134,13 @@ public class TransactionTest {
         var dto = dao.find(key);
         assertNotNull(dto);
         // Status should be pending
-        assertEquals(dto.getStatus(), "Pending");
+        assertEquals("Pending", dto.getStatus());
         // Update status
         bo.updateStatus(key.getOrderId(), "Shipped");
         dto = dao.find(key);
         // Verify status update was commited
         assertNotNull(dto);
-        assertEquals(dto.getStatus(), "Shipped");
+        assertEquals("Shipped", dto.getStatus());
     }
 
     /**

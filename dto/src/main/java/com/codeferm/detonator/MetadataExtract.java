@@ -136,7 +136,11 @@ public class MetadataExtract {
             } else {
                 type = "java.math.BigInteger";
             }
-        }
+            // Oracle JDBC driver returns -127 for scale of a plain NUMBER, so we map to a Long
+            // TODO: Revisit and see if some smarter mapping can be done
+        } else if (rsmdDto.getScale() == -127) {
+            type = "java.lang.Long";
+        };
         return type;
     }
 
@@ -203,7 +207,7 @@ public class MetadataExtract {
             if (tables.size() == 1) {
                 final var pkMap = getPrimaryKey(dataSource, tables.get(0));
                 // Set PK sequence in DTO
-                pkMap.entrySet().forEach((final                 var entry) -> {
+                pkMap.entrySet().forEach((final                     var entry) -> {
                     map.get(entry.getValue()).setKeySeq(entry.getKey());
                 });
             }

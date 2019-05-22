@@ -8,6 +8,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -243,20 +244,30 @@ public class GenDbDao<K, V> implements Dao<K, V> {
      * @return Generated key.
      */
     @Override
-    public K saveReturnKey(final V value) {
+    public K saveReturnKey(final V value, final String[] keyNames) {
         // Create sorted Map of returned ID keys
         final var map = new TreeMap<String, Object>(dbDao.updateReturnKeys(sql.getProperty("save"), beanToParams(value,
-                vReadMethods)));
+                vReadMethods), keyNames));
         // Create new ID instabnce
         try {
             final K key = (K) kClass.getDeclaredConstructor().newInstance();
             // Write off returned key fields to bean
             final var it = map.entrySet().iterator();
-            kWriteMethods.forEach((final var writeMethod) -> {
+            kWriteMethods.forEach((final        var writeMethod) -> {
                 try {
                     // Get returned value from Map
-                    final var pair = it.next();
-                    writeMethod.invoke(key, pair.getValue());
+                    final var paramValue = it.next().getValue();
+                    final var paramType = writeMethod.getParameters();
+                    // If parameter type and value type match
+                    if (paramType[0].getType() == paramValue.getClass()) {
+                        writeMethod.invoke(key, paramValue);
+                    } else if (paramValue instanceof BigDecimal) {
+                        // Type didn't match, so convert BigDecimal to int value
+                        writeMethod.invoke(key, ((BigDecimal) paramValue).intValueExact());
+                    } else {
+                        throw new RuntimeException(String.format("Was expecting %s and got %s", paramType[0].getType(), paramValue.
+                                getClass()));
+                    }
                 } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }

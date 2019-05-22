@@ -71,7 +71,7 @@ public class DataLoader {
                             try (Statement statement = connection.createStatement()) {
                                 logger.debug("Executing {}", sql);
                                 statement.execute(sql);
-                            } 
+                            }
                             sql = "";
                         } else {
                             sql += "\n";

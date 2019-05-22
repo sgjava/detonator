@@ -62,7 +62,7 @@ public class OrdersBo {
         dto.setSalesmanId(salesmanId);
         dto.setStatus("Pending");
         // Save DTO and return identity key
-        return dao.saveReturnKey(dto);
+        return dao.saveReturnKey(dto, new String[]{"ORDER_ID"});
     }
 
     /**

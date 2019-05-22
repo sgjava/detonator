@@ -59,9 +59,10 @@ public interface Dao<K, V> {
      * Save the value and return generated key.
      *
      * @param value Value to save.
+     * @param keyNames Array of key column names.
      * @return Generated key.
      */
-    K saveReturnKey(final V value);
+    K saveReturnKey(final V value, final String[] keyNames);
 
     /**
      * Delete the value by key.
@@ -77,7 +78,7 @@ public interface Dao<K, V> {
      * @param params Query parameters,
      */
     void deleteBy(final String name, final Object[] params);
-    
+
     /**
      * Delete list of values by key.
      *
@@ -100,7 +101,7 @@ public interface Dao<K, V> {
      * @param params Query parameters,
      */
     void updateBy(final String name, final Object[] params);
-    
+
     /**
      * Update map of values.
      *

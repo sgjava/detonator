@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -47,8 +46,7 @@ public class DbUtilsDsDao implements DbDao {
     }
 
     /**
-     * Return query results as list of beans. {@code Connection} is closed
-     * automatically.
+     * Return query results as list of beans. {@code Connection} is closed automatically.
      *
      * @param <T> Type of object that the handler returns.
      * @param sql SQL statement to execute.
@@ -110,10 +108,11 @@ public class DbUtilsDsDao implements DbDao {
      *
      * @param sql SQL statement to execute.
      * @param params Initialize the PreparedStatement's IN parameters.
+     * @param keyNames Key columns to return.
      * @return Field name/value pairs of keys.
      */
     @Override
-    public final Map<String, Object> updateReturnKeys(final String sql, final Object[] params) {
+    public final Map<String, Object> updateReturnKeys(final String sql, final Object[] params, final String[] keyNames) {
         Map<String, Object> keys = null;
         Connection connection = null;
         PreparedStatement preparedStatement = null;
@@ -121,9 +120,17 @@ public class DbUtilsDsDao implements DbDao {
         try {
             // Get Connection from QueryRunner DataSource
             connection = queryRunner.getDataSource().getConnection();
-            preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            // Oracle will return ROW_ID if not specified
+            if (keyNames != null) {
+                preparedStatement = connection.prepareStatement(sql, keyNames);
+            } else {
+                // H2 is fine without specifiying key columns
+                preparedStatement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            }
             // Fill parameters
-            queryRunner.fillStatement(preparedStatement, params);
+            for (var i = 0; i < params.length; i++) {
+                preparedStatement.setObject(i + 1, params[i]);
+            }
             preparedStatement.executeUpdate();
             // Get keys as ResultSet
             resultSet = preparedStatement.getGeneratedKeys();

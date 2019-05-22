@@ -190,22 +190,25 @@ public interface DbDao {
     }
 
     /**
-     * Executes parameterized INSERT statement and returns auto generated keys. JDBC driver needs to support RETURN_GENERATED_KEYS.
+     * Executes the given INSERT statement with parameter array and returns auto generate key. JDBC driver needs to support
+     * RETURN_GENERATED_KEYS. {@code Connection} is closed automatically.
      *
      * @param sql SQL statement to execute.
      * @param params Initialize the PreparedStatement's IN parameters.
+     * @param keyNames Key columns to return.
      * @return Field name/value pairs of keys.
      */
-    Map<String, Object> updateReturnKeys(final String sql, final Object[] params);
+    Map<String, Object> updateReturnKeys(final String sql, final Object[] params, final String[] keyNames);
 
     /**
      * Executes INSERT statement and returns auto generated keys. JDBC driver needs to support RETURN_GENERATED_KEYS.
      *
      * @param sql SQL statement to execute.
+     * @param keyNames Key columns to return.
      * @return Field name/value pairs of keys.
      */
-    default Map<String, Object> updateReturnKeys(final String sql) {
-        return updateReturnKeys(sql, NO_PARAMS);
+    default Map<String, Object> updateReturnKeys(final String sql, final String[] keyNames) {
+        return updateReturnKeys(sql, NO_PARAMS, keyNames);
     }
 
     /**
@@ -216,7 +219,7 @@ public interface DbDao {
      * @return key value of key.
      */
     default int updateReturnKey(final String sql, final String keyName) {
-        return Integer.parseInt(updateReturnKeys(sql, NO_PARAMS).get(keyName).toString());
+        return Integer.parseInt(updateReturnKeys(sql, NO_PARAMS, new String[]{keyName}).get(keyName).toString());
     }
 
     /**
@@ -229,7 +232,7 @@ public interface DbDao {
      * @return key value of key.
      */
     default int updateReturnKey(final String sql, final Object[] params, final String keyName) {
-        return Integer.parseInt(updateReturnKeys(sql, params).get(keyName).toString());
+        return Integer.parseInt(updateReturnKeys(sql, params, new String[]{keyName}).get(keyName).toString());
     }
 
     /**

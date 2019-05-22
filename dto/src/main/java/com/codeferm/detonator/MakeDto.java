@@ -72,7 +72,7 @@ public class MakeDto {
     public Set<String> getClasses(final Map<String, RsmdDto> map, final boolean pkOnly) {
         final var classes = new TreeSet<String>();
         map.entrySet().stream().map(entry -> entry.getValue()).filter(value -> !value.getColumnClassName().
-                startsWith("java.lang")).forEachOrdered((final      var value) -> {
+                startsWith("java.lang")).forEachOrdered((final        var value) -> {
             // Only include PK columns?
             if (pkOnly) {
                 if (value.getKeySeq() != null) {
@@ -152,7 +152,8 @@ public class MakeDto {
      * @param className Java class name.
      * @param writer Template output.
      */
-    public void idTemplate(final String template, final String sql, final List<String> list, final String packageName, final String className,
+    public void idTemplate(final String template, final String sql, final List<String> list, final String packageName,
+            final String className,
             final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();

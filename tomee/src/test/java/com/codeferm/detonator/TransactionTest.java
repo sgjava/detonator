@@ -3,10 +3,10 @@
  */
 package com.codeferm.detonator;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
-import javax.annotation.Resource;
 import javax.ejb.embeddable.EJBContainer;
 import javax.inject.Inject;
 import javax.naming.Context;
@@ -56,23 +56,32 @@ public class TransactionTest {
      * @param removeDelimiter True to remove delimiter from statement
      */
     public static void createDb(final DataSource ds, final String fileName, final String delimiter, boolean removeDelimiter) {
+        logger.debug("Create test database with {}", fileName);
         final var dataLoader = new DataLoader(ds);
         dataLoader.execScript(fileName, delimiter, removeDelimiter);
     }
 
     /**
-     * Load properties file from class path.
+     * Load properties file from file path or fail back to class path.
      *
      * @param propertyFile Name of property file.
      * @return Properties.
      */
     public static Properties loadProperties(final String propertyFile) {
         Properties props = new Properties();
-        // Get properties from classpath
-        try (final var stream = TransactionTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
-            props.load(stream);
-        } catch (IOException e) {
-            throw new RuntimeException("Property file exception", e);
+        try {
+            // Get properties from file
+            props.load(new FileInputStream(propertyFile));
+            logger.debug("Properties loaded from file {}", propertyFile);
+        } catch (IOException e1) {
+            logger.warn("Properties file not found {}", propertyFile);
+            // Get properties from classpath
+            try (final var stream = TransactionTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
+                props.load(stream);
+                logger.debug("Properties loaded from class path {}", propertyFile);
+            } catch (IOException e2) {
+                throw new RuntimeException("No properties found", e2);
+            }
         }
         return props;
     }
@@ -82,9 +91,10 @@ public class TransactionTest {
      */
     @BeforeAll
     public static void beforeAll() {
-        properties = new Properties();
-        // Get properties from classpath
-        properties = loadProperties("app.properties");
+        // Get database properties from dto project
+        properties = loadProperties("../dto/src/test/resources/database.properties");
+        // Merge app properties
+        properties.putAll(loadProperties("app.properties"));
         // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
@@ -110,10 +120,16 @@ public class TransactionTest {
      */
     @BeforeEach
     void beforeEach() {
+        logger.debug("Setting up dataSource");
         final Properties p = new Properties();
         p.put("dataSource", "new://Resource?type=DataSource");
-        p.put("dataSource.JdbcDriver", properties.getProperty("db.driver"));
-        p.put("dataSource.JdbcUrl", properties.getProperty("db.url"));
+        p.put("dataSource.JdbcDriver", properties.getProperty("db.xa.driver"));
+        p.put("dataSource.JdbcUrl", properties.getProperty("db.xa.url"));
+        p.put("dataSource.userName", properties.getProperty("db.xa.user"));
+        p.put("dataSource.password", properties.getProperty("db.xa.password"));
+        p.put("dataSource.jtaManaged", true);
+        p.put("dataSource.maxActive", 10);
+        p.put("dataSource.maxIdle", 5);
         ejbContainer = EJBContainer.createEJBContainer(p);
         final Context context = ejbContainer.getContext();
         try {
@@ -153,6 +169,5 @@ public class TransactionTest {
         logger.debug("linkTables");
         ordersBo.orderInfo(1);
     }
-    
-    
+
 }

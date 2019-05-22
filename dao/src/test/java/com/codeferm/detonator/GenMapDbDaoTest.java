@@ -3,8 +3,10 @@
  */
 package com.codeferm.detonator;
 
+import static com.codeferm.detonator.DbDaoTest.loadProperties;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -81,18 +83,26 @@ public class GenMapDbDaoTest {
     }
 
     /**
-     * Load properties file from class path.
+     * Load properties file from file path or fail back to class path.
      *
      * @param propertyFile Name of property file.
      * @return Properties.
      */
     public static Properties loadProperties(final String propertyFile) {
         Properties props = new Properties();
-        // Get properties from classpath
-        try (final var stream = GenMapDbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
-            props.load(stream);
-        } catch (IOException e) {
-            throw new RuntimeException("Property file exception", e);
+        try {
+            // Get properties from file
+            props.load(new FileInputStream(propertyFile));
+            logger.debug("Properties loaded from file {}", propertyFile);
+        } catch (IOException e1) {
+            logger.warn("Properties file not found {}", propertyFile);
+            // Get properties from classpath
+            try (final var stream = GenMapDbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
+                props.load(stream);
+                logger.debug("Properties loaded from class path {}", propertyFile);
+            } catch (IOException e2) {
+                throw new RuntimeException("No properties found", e2);
+            }
         }
         return props;
     }
@@ -102,9 +112,10 @@ public class GenMapDbDaoTest {
      */
     @BeforeAll
     public static void beforeAll() {
-        properties = new Properties();
-        // Get properties from classpath
-        properties = loadProperties("app.properties");
+        // Get database properties from dto project
+        properties = loadProperties("../dto/src/test/resources/database.properties");
+        // Merge app properties
+        properties.putAll(loadProperties("app.properties"));
         // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
@@ -144,7 +155,7 @@ public class GenMapDbDaoTest {
         // List should not be empty
         assertFalse(list.isEmpty());
         // Verify exact count
-        assertEquals(list.size(), 101);
+        assertEquals(101, list.size());
     }
 
     /**
@@ -159,7 +170,7 @@ public class GenMapDbDaoTest {
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
-        assertEquals(dto.getOrderId(), 4);
+        assertEquals(4, dto.getOrderId());
         // Create ID that doesn't exist
         final var badId = new OrdersKey(0);
         final var badDto = dao.find(badId);
@@ -186,7 +197,7 @@ public class GenMapDbDaoTest {
         dao.save(dto);
         final var findDto = dao.find(dto.getKey());
         // Verify ID matches
-        assertEquals(findDto.getOrderId(), 107);
+        assertEquals(107, findDto.getOrderId());
     }
 
     /**
@@ -230,7 +241,7 @@ public class GenMapDbDaoTest {
         // Verify update
         final var updateDto = dao.find(dto.getKey());
         // Verify status matches
-        assertEquals(updateDto.getStatus(), "Shipped");
+        assertEquals("Shipped", updateDto.getStatus());
     }
 
     /**
@@ -285,6 +296,6 @@ public class GenMapDbDaoTest {
         }
         // Delete List of records
         dao.delete(list);
-        assertEquals(dao.findAll().size(), countList.size() - 3);
+        assertEquals(countList.size() - 3, dao.findAll().size());
     }
 }

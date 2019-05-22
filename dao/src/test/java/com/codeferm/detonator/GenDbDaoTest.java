@@ -3,10 +3,12 @@
  */
 package com.codeferm.detonator;
 
+import static com.codeferm.detonator.DbDaoTest.loadProperties;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.RegionscCountries;
 import com.codeferm.dto.RegionscCountriesKey;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -63,18 +65,26 @@ public class GenDbDaoTest {
     }
 
     /**
-     * Load properties file from class path.
+     * Load properties file from file path or fail back to class path.
      *
      * @param propertyFile Name of property file.
      * @return Properties.
      */
     public static Properties loadProperties(final String propertyFile) {
         Properties props = new Properties();
-        // Get properties from classpath
-        try (final var stream = GenDbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
-            props.load(stream);
-        } catch (IOException e) {
-            throw new RuntimeException("Property file exception", e);
+        try {
+            // Get properties from file
+            props.load(new FileInputStream(propertyFile));
+            logger.debug("Properties loaded from file {}", propertyFile);
+        } catch (IOException e1) {
+            logger.warn("Properties file not found {}", propertyFile);
+            // Get properties from classpath
+            try (final var stream = GenDbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
+                props.load(stream);
+                logger.debug("Properties loaded from class path {}", propertyFile);
+            } catch (IOException e2) {
+                throw new RuntimeException("No properties found", e2);
+            }
         }
         return props;
     }
@@ -84,10 +94,10 @@ public class GenDbDaoTest {
      */
     @BeforeAll
     public static void beforeAll() {
-        properties = new Properties();
-        // Get properties from classpath
-        properties = loadProperties("app.properties");
-        // Create DBCP DataSource
+        // Get database properties from dto project
+        properties = loadProperties("../dto/src/test/resources/database.properties");
+        // Merge app properties
+        properties.putAll(loadProperties("app.properties"));        // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
         ds.setUsername(properties.getProperty("db.user"));
@@ -127,7 +137,7 @@ public class GenDbDaoTest {
         // List should not be empty
         assertFalse(list.isEmpty());
         // Verify exact count
-        assertEquals(list.size(), 101);
+        assertEquals(101, list.size());
     }
 
     /**
@@ -146,7 +156,7 @@ public class GenDbDaoTest {
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
-        assertEquals(dto.getOrderId(), key.getOrderId());
+        assertEquals(key.getOrderId(), dto.getOrderId());
         // Create ID that doesn't exist
         final var badId = new OrdersKey(0);
         final var badDto = dao.find(badId);
@@ -164,11 +174,12 @@ public class GenDbDaoTest {
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
         final Dao<Integer, Orders> dao = new GenDbDao<>(dataSource, sql, Integer.class, Orders.class);
-        final var dto = dao.find(4);
+        final var key = 4;
+        final var dto = dao.find(key);
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
-        assertEquals(dto.getOrderId(), 4);
+        assertEquals(key, dto.getOrderId());
         // Find ID that doesn't exist
         final var badDto = dao.find(0);
         // DTO should be null if not found
@@ -193,10 +204,10 @@ public class GenDbDaoTest {
         final var dto = dao.find(key);
         // Verify record exists
         assertNotNull(dto);
-        // Verify Country ID matches
-        assertEquals(dto.getCountryId(), key.getCountryId());
-        // Verify Regiot ID matches
-        assertEquals(dto.getRegionId(), key.getRegionId());
+        // Verify country ID matches
+        assertEquals(key.getCountryId(), dto.getCountryId());
+        // Verify region ID matches
+        assertEquals(key.getRegionId(), dto.getRegionId());
     }
 
     /**
@@ -221,7 +232,7 @@ public class GenDbDaoTest {
         final var key = new OrdersKey(107);
         final var findDto = dao.find(key);
         // Verify ID matches
-        assertEquals(findDto.getOrderId(), 107);
+        assertEquals(107, findDto.getOrderId());
     }
 
     /**
@@ -255,7 +266,7 @@ public class GenDbDaoTest {
         // List should not be empty
         assertFalse(newRecs.isEmpty());
         // Verify exact count
-        assertEquals(newRecs.size(), 10);
+        assertEquals(10, newRecs.size());
     }
 
     /**
@@ -275,9 +286,9 @@ public class GenDbDaoTest {
         dto.setSalesmanId(1);
         dto.setStatus("Pending");
         // Save DTO and return identity key
-        final var key = dao.saveReturnKey(dto);
+        final var key = dao.saveReturnKey(dto, new String[]{"ORDER_ID"});
         // Verify returned key
-        assertEquals(key.getOrderId(), 106);
+        assertEquals(106, key.getOrderId());
     }
 
     /**
@@ -299,7 +310,7 @@ public class GenDbDaoTest {
         // Verify update
         final var updateDto = dao.find(key);
         // Verify status matches
-        assertEquals(updateDto.getStatus(), "Shipped");
+        assertEquals("Shipped", updateDto.getStatus());
     }
 
     /**
@@ -363,6 +374,6 @@ public class GenDbDaoTest {
         }
         // Delete List of records
         dao.delete(list);
-        assertEquals(dao.findAll().size(), countList.size() - 3);
+        assertEquals(countList.size() - 3, dao.findAll().size());
     }
 }

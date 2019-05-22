@@ -4,6 +4,7 @@
 package com.codeferm.detonator;
 
 import com.codeferm.dto.Orders;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -58,27 +59,36 @@ public class DbDaoTest {
     }
 
     /**
-     * Load properties file from class path.
+     * Load properties file from file path or fail back to class path.
      *
      * @param propertyFile Name of property file.
      * @return Properties.
      */
     public static Properties loadProperties(final String propertyFile) {
         Properties props = new Properties();
-        // Get properties from classpath
-        try (final var stream = DbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
-            props.load(stream);
-        } catch (IOException e) {
-            throw new RuntimeException("Property file exception", e);
+        try {
+            // Get properties from file
+            props.load(new FileInputStream(propertyFile));
+            logger.debug("Properties loaded from file {}", propertyFile);
+        } catch (IOException e1) {
+            logger.warn("Properties file not found {}", propertyFile);
+            // Get properties from classpath
+            try (final var stream = DbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
+                props.load(stream);
+                logger.debug("Properties loaded from class path {}", propertyFile);
+            } catch (IOException e2) {
+                throw new RuntimeException("No properties found", e2);
+            }
         }
         return props;
     }
 
     @BeforeAll
     public static void beforeAll() {
-        properties = new Properties();
-        // Get properties from classpath
-        properties = loadProperties("app.properties");
+        // Get database properties from dto project
+        properties = loadProperties("../dto/src/test/resources/database.properties");
+        // Merge app properties
+        properties.putAll(loadProperties("app.properties"));
         // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
@@ -117,13 +127,13 @@ public class DbDaoTest {
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
-        assertEquals(dto.getOrderId(), 1);
+        assertEquals(1, dto.getOrderId());
         // Select record that doesn't exist
         final Orders badDto = dbDao.select(sql.getProperty("find"), new Object[]{0}, Orders.class);
         // DTO should be null if not found
         assertNull(badDto);
     }
-    
+
     /**
      * Test DbDao selectList method.
      */
@@ -137,7 +147,7 @@ public class DbDaoTest {
         // List should not be empty
         assertFalse(list.isEmpty());
         // Verify exact count
-        assertEquals(list.size(), 105);
+        assertEquals(105, list.size());
     }
 
     /**
@@ -156,9 +166,9 @@ public class DbDaoTest {
         // List should not be empty
         assertFalse(list.isEmpty());
         // Verify exact count
-        assertEquals(list.size(), 13);
+        assertEquals(13, list.size());
     }
-    
+
     /**
      * Test DbDao select method returning Map.
      */
@@ -172,7 +182,7 @@ public class DbDaoTest {
         // Verify record exists
         assertNotNull(map);
         // Verify size is 5fields
-        assertEquals(map.size(), 5);
+        assertEquals(5, map.size());
     }
 
     /**
@@ -188,9 +198,9 @@ public class DbDaoTest {
         // Verify record exists
         assertNotNull(map);
         // Verify size is 5fields
-        assertEquals(map.size(), 5);
+        assertEquals(5, map.size());
     }
-    
+
     /**
      * Test DbDao selectList method without params.
      */
@@ -204,7 +214,7 @@ public class DbDaoTest {
         // List should not be empty
         assertFalse(list.isEmpty());
         // Verify exact count
-        assertEquals(list.size(), 105);
+        assertEquals(105, list.size());
     }
 
     /**
@@ -223,9 +233,9 @@ public class DbDaoTest {
         // List should not be empty
         assertFalse(list.isEmpty());
         // Verify exact count
-        assertEquals(list.size(), 13);
+        assertEquals(13, list.size());
     }
-    
+
     /**
      * Test DbDao select method return one field without params.
      */
@@ -236,7 +246,7 @@ public class DbDaoTest {
         final var sql = loadProperties("orders.properties");
         final var dbDao = new DbUtilsDsDao(dataSource);
         final var field = dbDao.select(sql.getProperty("findAll"), "ORDER_ID");
-        assertEquals(field, 1);
+        assertNotNull(field);
     }
 
     /**
@@ -249,9 +259,14 @@ public class DbDaoTest {
         final var sql = loadProperties("orders.properties");
         final var dbDao = new DbUtilsDsDao(dataSource);
         final var field = dbDao.select(sql.getProperty("find"), new Object[]{1}, "ORDER_ID");
-        assertEquals(field, 1);
+        // Here we deal with Oracle NUMBER because it will return as BigDecimal
+        if (field instanceof BigDecimal) {
+            assertEquals(BigDecimal.valueOf(1), field);
+        } else {
+            assertEquals(1, field);
+        }
     }
-    
+
     /**
      * Test DbDao update method to insert record.
      */
@@ -262,18 +277,18 @@ public class DbDaoTest {
         final var sql = loadProperties("orders.properties");
         final var dbDao = new DbUtilsDsDao(dataSource);
         // Insert new record (note null orderId is passed since it's an identity field and will be auto generated)
-        var recs = dbDao.update(sql.getProperty("save"), new Object[]{BigDecimal.valueOf(1), Date.valueOf(LocalDate.now()), null,
-            BigDecimal.valueOf(1), "Pending"});
-        // Verify 1 record affected
-        assertEquals(recs, 1);
-        // New record order_id should be 106
-        final Orders dto = dbDao.select(sql.getProperty("find"), new Object[]{106}, Orders.class);
+        final var key = dbDao.updateReturnKey(sql.getProperty("save"),
+                new Object[]{1, Date.valueOf(LocalDate.now()), null, 1, "Pending"}, "ORDER_ID");
+        // Make sure we got a key back
+        assertNotNull(key);
+        // New record order_id
+        final Orders dto = dbDao.select(sql.getProperty("find"), new Object[]{key}, Orders.class);
         // Verify ID matches
-        assertEquals(dto.getOrderId(), 106);
+        assertEquals(key, dto.getOrderId());
         // Delete inserted record
-        recs = dbDao.update(sql.getProperty("delete"), new Object[]{106});
+        var recs = dbDao.update(sql.getProperty("delete"), new Object[]{key});
         // Verify 1 record affected
-        assertEquals(recs, 1);
+        assertEquals(1, recs);
     }
 
     /**
@@ -289,11 +304,11 @@ public class DbDaoTest {
         var recs = dbDao.update(sql.getProperty("update"), new Object[]{BigDecimal.valueOf(1), Date.valueOf(LocalDate.now()), 1,
             BigDecimal.valueOf(1), "Shipped", 1});
         // Verify 1 record affected
-        assertEquals(recs, 1);
+        assertEquals(1, recs);
         // Get updated record
         final Orders dto = dbDao.select(sql.getProperty("find"), new Object[]{1}, Orders.class);
         // Verify status matches
-        assertEquals(dto.getStatus(), "Shipped");
+        assertEquals("Shipped", dto.getStatus());
     }
 
     /**
@@ -310,11 +325,11 @@ public class DbDaoTest {
         // Delete inserted record
         var recs = dbDao.update(sql.getProperty("delete"), new Object[]{1});
         // Verify 1 record affected
-        assertEquals(recs, 1);
+        assertEquals(1, recs);
         // Insert record back
         recs = dbDao.update(sql.getProperty("save"), new Object[]{saveDto.getCustomerId(), saveDto.getOrderDate(), saveDto.
             getOrderId(), saveDto.getSalesmanId(), saveDto.getStatus()});
         // Verify 1 record affected
-        assertEquals(recs, 1);
+        assertEquals(1, recs);
     }
 }

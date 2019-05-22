@@ -23,6 +23,7 @@ import org.apache.maven.project.MavenProject;
 @Mojo(name = "testGenerate", defaultPhase = LifecyclePhase.GENERATE_TEST_SOURCES, threadSafe = true, requiresDependencyResolution
         = ResolutionScope.TEST)
 public class TestGenMojo extends BaseGenMojo {
+
     /**
      * Location of generated sources dir.
      */

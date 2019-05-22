@@ -83,6 +83,7 @@ public abstract class BaseGenMojo extends AbstractMojo {
      */
     @Parameter(property = "packageName", required = true)
     private String packageName;
+
     /* Default constructor */
     public BaseGenMojo() {
     }

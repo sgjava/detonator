@@ -3,6 +3,7 @@
  */
 package com.codeferm.detonator;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.sql.SQLException;
@@ -50,6 +51,31 @@ public class MakeDtoTest {
     private static DataSource dataSource;
 
     /**
+     * Load properties file from file path or fail back to class path.
+     *
+     * @param propertyFile Name of property file.
+     * @return Properties.
+     */
+    public static Properties loadProperties(final String propertyFile) {
+        Properties props = new Properties();
+        try {
+            // Get properties from file
+            props.load(new FileInputStream(propertyFile));
+            logger.debug("Properties loaded from file {}", propertyFile);
+        } catch (IOException e1) {
+            logger.warn("Properties file not found {}", propertyFile);
+            // Get properties from classpath
+            try (final var stream = MakeDtoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
+                props.load(stream);
+                logger.debug("Properties loaded from class path {}", propertyFile);
+            } catch (IOException e2) {
+                throw new RuntimeException("No properties found", e2);
+            }
+        }
+        return props;
+    }
+
+    /**
      * Create test database.
      *
      * @param fileName SQL script to create database.
@@ -66,13 +92,10 @@ public class MakeDtoTest {
      */
     @BeforeAll
     public static void beforeAll() {
-        properties = new Properties();
-        // Get properties from classpath
-        try (final var stream = MakeDtoTest.class.getClassLoader().getResourceAsStream("app.properties")) {
-            properties.load(stream);
-        } catch (IOException e) {
-            throw new RuntimeException("Property file exception", e);
-        }
+        // Get database properties
+        properties = loadProperties("database.properties");
+        // Merge app properties
+        properties.putAll(loadProperties("app.properties"));
         try {
             // Load SQL statements from classpath
             sqlMap = QueryLoader.instance().load("/sql.properties");
@@ -118,7 +141,7 @@ public class MakeDtoTest {
         // Set should not be empty
         assertFalse(classes.isEmpty());
         // Set should contain one item
-        assertEquals(classes.size(), 1);
+        assertEquals(1, classes.size());
         for (final var className : classes) {
             logger.debug(className);
         }
@@ -144,7 +167,7 @@ public class MakeDtoTest {
         makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_orders"), null, "com.codeferm.dto", className, out);
         logger.debug(out.toString());
     }
-    
+
     /**
      * Test composite DTO.
      */

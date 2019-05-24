@@ -140,7 +140,10 @@ public class MetadataExtract {
             // TODO: Revisit and see if some smarter mapping can be done
         } else if (rsmdDto.getScale() == -127) {
             type = "java.lang.Long";
-        };
+            // Always map DATE to java.sql.Date. Oracle returns a java.sql.Timestamp, so JDBC driver must handle conversion.
+        } else if (rsmdDto.getColumnTypeName().toUpperCase(Locale.US).equals("DATE")) {
+            type = "java.sql.Date";
+        }
         return type;
     }
 
@@ -207,7 +210,7 @@ public class MetadataExtract {
             if (tables.size() == 1) {
                 final var pkMap = getPrimaryKey(dataSource, tables.get(0));
                 // Set PK sequence in DTO
-                pkMap.entrySet().forEach((final                     var entry) -> {
+                pkMap.entrySet().forEach((final                         var entry) -> {
                     map.get(entry.getValue()).setKeySeq(entry.getKey());
                 });
             }

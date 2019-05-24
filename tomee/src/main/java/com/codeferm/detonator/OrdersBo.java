@@ -10,6 +10,8 @@ import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
 import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -61,7 +63,7 @@ public class OrdersBo {
      * @param ordersId Order ID to look up.
      * @return DTO if it exists.
      */
-    public Orders orderExists(final int ordersId) {
+    public Orders orderExists(final long ordersId) {
         // Make sure order exists 
         final var dto = orders.find(new OrdersKey(ordersId));
         if (dto == null) {
@@ -77,7 +79,7 @@ public class OrdersBo {
      * @param salesmanId Salesman ID.
      * @return Generated key.
      */
-    public OrdersKey createOrder(final int customerId, final int salesmanId) {
+    public OrdersKey createOrder(final long customerId, final long salesmanId) {
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
         dto.setCustomerId(customerId);

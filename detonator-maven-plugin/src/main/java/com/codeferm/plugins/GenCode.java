@@ -230,6 +230,7 @@ public class GenCode {
      */
     public void generate(final MakeDto makeDto, final String sourceDir, final SqlStatement sql, final String className) {
         try {
+            log.info(String.format("Generating artifacts for class %s", className));
             // Use FileOutputStream for SQL properties output
             try (var out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(String.format("%s/%s.properties",
                     genResDir, className.toLowerCase(Locale.US))), false), StandardCharsets.UTF_8))) {

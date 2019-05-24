@@ -263,7 +263,7 @@ public class DbDaoTest {
         if (field instanceof BigDecimal) {
             assertEquals(BigDecimal.valueOf(1), field);
         } else {
-            assertEquals(1, field);
+            assertEquals(1L, field);
         }
     }
 

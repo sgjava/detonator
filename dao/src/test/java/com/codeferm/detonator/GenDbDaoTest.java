@@ -3,7 +3,6 @@
  */
 package com.codeferm.detonator;
 
-import static com.codeferm.detonator.DbDaoTest.loadProperties;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.RegionscCountries;
@@ -12,6 +11,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -151,14 +152,14 @@ public class GenDbDaoTest {
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create ID to find
-        final var key = new OrdersKey(4);
+        final var key = new OrdersKey(4L);
         final var dto = dao.find(key);
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
         assertEquals(key.getOrderId(), dto.getOrderId());
         // Create ID that doesn't exist
-        final var badId = new OrdersKey(0);
+        final var badId = new OrdersKey(0L);
         final var badDto = dao.find(badId);
         // DTO should be null if not found
         assertNull(badDto);
@@ -200,7 +201,7 @@ public class GenDbDaoTest {
         final Dao<RegionscCountriesKey, RegionscCountries> dao = new GenDbDao<>(dataSource, sql, RegionscCountriesKey.class,
                 RegionscCountries.class);
         // Create ID to find
-        final var key = new RegionscCountriesKey("DE", 1);
+        final var key = new RegionscCountriesKey("DE", 1L);
         final var dto = dao.find(key);
         // Verify record exists
         assertNotNull(dto);
@@ -222,14 +223,14 @@ public class GenDbDaoTest {
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
-        dto.setCustomerId(1);
+        dto.setCustomerId(1L);
         dto.setOrderDate(Date.valueOf(LocalDate.now()));
-        dto.setSalesmanId(1);
+        dto.setSalesmanId(1L);
         dto.setStatus("Pending");
         // Save DTO
         dao.save(dto);
         // Create ID to find (should be 107 based on last orderId)
-        final var key = new OrdersKey(107);
+        final var key = new OrdersKey(107L);
         final var findDto = dao.find(key);
         // Verify ID matches
         assertEquals(107, findDto.getOrderId());
@@ -249,19 +250,19 @@ public class GenDbDaoTest {
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
-        dto.setCustomerId(1);
+        dto.setCustomerId(1L);
         dto.setOrderDate(Date.valueOf(LocalDate.now()));
-        dto.setSalesmanId(1);
+        dto.setSalesmanId(1L);
         dto.setStatus("Pending");
         // Preserve insertion order
         final Map<OrdersKey, Orders> map = new LinkedHashMap<>();
         // For RDBMS ID is ignored
-        for (int i = 0; i < 10; i++) {
+        for (long i = 0; i < 10; i++) {
             map.put(new OrdersKey(i), dto);
         }
         // Save Map of DTOs
         dao.save(map);
-        // Select new records (ORDER_ID > 107)
+        // Select new records (ORDER_ID > 107L)
         final var newRecs = dao.findBy("findByIdGreaterThan", new Object[]{107});
         // List should not be empty
         assertFalse(newRecs.isEmpty());
@@ -281,9 +282,9 @@ public class GenDbDaoTest {
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
-        dto.setCustomerId(1);
+        dto.setCustomerId(1L);
         dto.setOrderDate(Date.valueOf(LocalDate.now()));
-        dto.setSalesmanId(1);
+        dto.setSalesmanId(1L);
         dto.setStatus("Pending");
         // Save DTO and return identity key
         final var key = dao.saveReturnKey(dto, new String[]{"ORDER_ID"});
@@ -302,7 +303,7 @@ public class GenDbDaoTest {
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create ID to find
-        final var key = new OrdersKey(4);
+        final var key = new OrdersKey(4L);
         final var dto = dao.find(key);
         dto.setStatus("Shipped");
         // Uopdate record
@@ -347,7 +348,7 @@ public class GenDbDaoTest {
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create ID to delete
-        final var key = new OrdersKey(1);
+        final var key = new OrdersKey(1L);
         // Delete record
         dao.delete(key);
         final var dto = dao.find(key);
@@ -369,7 +370,7 @@ public class GenDbDaoTest {
         final var countList = dao.findAll();
         List<OrdersKey> list = new ArrayList<>();
         // Build list of orders to delete
-        for (int i = 0; i < 3; i++) {
+        for (long i = 0; i < 3; i++) {
             list.add(new OrdersKey(i + 6));
         }
         // Delete List of records

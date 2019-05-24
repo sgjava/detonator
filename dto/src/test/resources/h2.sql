@@ -17,7 +17,7 @@ DROP TABLE inventories IF EXISTS;
 -- regions
 CREATE TABLE regions
   (
-    region_id int auto_increment primary key,
+    region_id bigint auto_increment primary key,
     region_name VARCHAR2( 50 ) NOT NULL
   );
 -- countries table
@@ -25,7 +25,7 @@ CREATE TABLE countries
   (
     country_id   CHAR( 2 ) primary key,
     country_name VARCHAR2( 40 ) NOT NULL,
-    region_id    int                 , -- fk
+    region_id    bigint                 , -- fk
     CONSTRAINT fk_countries_regions FOREIGN KEY( region_id )
       REFERENCES regions( region_id ) 
       ON DELETE CASCADE
@@ -34,7 +34,7 @@ CREATE TABLE countries
 -- location
 CREATE TABLE locations
   (
-    location_id int auto_increment primary key,
+    location_id bigint auto_increment primary key,
     address     VARCHAR2( 255 ) NOT NULL,
     postal_code VARCHAR2( 20 )          ,
     city        VARCHAR2( 50 )          ,
@@ -48,7 +48,7 @@ CREATE TABLE locations
 -- warehouses
 CREATE TABLE warehouses
   (
-    warehouse_id int auto_increment primary key,
+    warehouse_id bigint auto_increment primary key,
     warehouse_name VARCHAR( 255 ) ,
     location_id    int, -- fk
     CONSTRAINT fk_warehouses_locations 
@@ -59,7 +59,7 @@ CREATE TABLE warehouses
 -- employees
 CREATE TABLE employees
   (
-    employee_id int auto_increment primary key,
+    employee_id bigint auto_increment primary key,
     first_name VARCHAR( 255 ) NOT NULL,
     last_name  VARCHAR( 255 ) NOT NULL,
     email      VARCHAR( 255 ) NOT NULL,
@@ -75,14 +75,14 @@ CREATE TABLE employees
 -- product category
 CREATE TABLE product_categories
   (
-    category_id int auto_increment primary key,
+    category_id bigint auto_increment primary key,
     category_name VARCHAR2( 255 ) NOT NULL
   );
 
 -- products table
 CREATE TABLE products
   (
-    product_id int auto_increment primary key,
+    product_id bigint auto_increment primary key,
     product_name  VARCHAR2( 255 ) NOT NULL,
     description   VARCHAR2( 2000 )        ,
     standard_cost NUMBER( 9, 2 )          ,
@@ -96,7 +96,7 @@ CREATE TABLE products
 -- customers
 CREATE TABLE customers
   (
-    customer_id int auto_increment primary key,
+    customer_id bigint auto_increment primary key,
     name         VARCHAR2( 255 ) NOT NULL,
     address      VARCHAR2( 255 )         ,
     website      VARCHAR2( 255 )         ,
@@ -105,7 +105,7 @@ CREATE TABLE customers
 -- contacts
 CREATE TABLE contacts
   (
-    contact_id int auto_increment primary key,
+    contact_id bigint auto_increment primary key,
     first_name  VARCHAR2( 255 ) NOT NULL,
     last_name   VARCHAR2( 255 ) NOT NULL,
     email       VARCHAR2( 255 ) NOT NULL,
@@ -119,10 +119,10 @@ CREATE TABLE contacts
 -- orders table
 CREATE TABLE orders
   (
-    order_id int auto_increment primary key,
-    customer_id int NOT NULL, -- fk
+    order_id bigint auto_increment primary key,
+    customer_id bigint NOT NULL, -- fk
     status      VARCHAR( 20 ) NOT NULL ,
-    salesman_id int         , -- fk
+    salesman_id bigint         , -- fk
     order_date  DATE NOT NULL          ,
     CONSTRAINT fk_orders_customers 
       FOREIGN KEY( customer_id )
@@ -136,9 +136,9 @@ CREATE TABLE orders
 -- order items
 CREATE TABLE order_items
   (
-    order_id   int                                , -- fk
-    item_id    int                                ,
-    product_id int NOT NULL                       , -- fk
+    order_id   bigint                                , -- fk
+    item_id    bigint                                ,
+    product_id bigint NOT NULL                       , -- fk
     quantity   NUMBER( 8, 2 ) NOT NULL                        ,
     unit_price NUMBER( 8, 2 ) NOT NULL                        ,
     CONSTRAINT pk_order_items 
@@ -155,8 +155,8 @@ CREATE TABLE order_items
 -- inventories
 CREATE TABLE inventories
   (
-    product_id   int        , -- fk
-    warehouse_id int        , -- fk
+    product_id   bigint        , -- fk
+    warehouse_id bigint        , -- fk
     quantity     NUMBER( 8, 0 ) NOT NULL,
     CONSTRAINT pk_inventories 
       PRIMARY KEY( product_id, warehouse_id ),

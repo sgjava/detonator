@@ -16,3 +16,8 @@ high performance code generation to your Maven based projects.
 * [DeTOnator Guice](https://github.com/sgjava/detonator/tree/master/guice) JTA transactions in Java SE.
 * [DeTOnator TomEE](https://github.com/sgjava/detonator/tree/master/tomee) Use DeTOnator DAO in a Jakarta EE project.
 * Based on OpenJDK 11 LTS.
+
+* database.properties in the dto project is used by dao, guice and tomee modules. This way all modules are in sync with one database
+implementation.
+* app.properties is each project's test resources is used by each module to test specific properties. You can also override
+database.properties to use the same test schema as the dto project.

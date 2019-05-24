@@ -253,7 +253,7 @@ public class GenDbDao<K, V> implements Dao<K, V> {
             final K key = (K) kClass.getDeclaredConstructor().newInstance();
             // Write off returned key fields to bean
             final var it = map.entrySet().iterator();
-            kWriteMethods.forEach((final        var writeMethod) -> {
+            kWriteMethods.forEach((final          var writeMethod) -> {
                 try {
                     // Get returned value from Map
                     final var paramValue = it.next().getValue();
@@ -262,8 +262,12 @@ public class GenDbDao<K, V> implements Dao<K, V> {
                     if (paramType[0].getType() == paramValue.getClass()) {
                         writeMethod.invoke(key, paramValue);
                     } else if (paramValue instanceof BigDecimal) {
-                        // Type didn't match, so convert BigDecimal to int value
-                        writeMethod.invoke(key, ((BigDecimal) paramValue).intValueExact());
+                        if (paramType[0].getType() == Long.class) {
+                            writeMethod.invoke(key, ((BigDecimal) paramValue).longValueExact());
+                        } else {
+                            // Type didn't match Long, so convert BigDecimal to int value
+                            writeMethod.invoke(key, ((BigDecimal) paramValue).intValueExact());
+                        }
                     } else {
                         throw new RuntimeException(String.format("Was expecting %s and got %s", paramType[0].getType(), paramValue.
                                 getClass()));

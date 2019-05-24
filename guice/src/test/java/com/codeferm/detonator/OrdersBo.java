@@ -54,7 +54,7 @@ public class OrdersBo {
      * @return Generated key.
      */
     @Transaction
-    public OrdersKey createOrder(final int customerId, final int salesmanId) {
+    public OrdersKey createOrder(final long customerId, final long salesmanId) {
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
         dto.setCustomerId(customerId);
@@ -72,7 +72,7 @@ public class OrdersBo {
      * @param status New status value.
      */
     @Transaction
-    public void updateStatus(final int ordersId, final String status) {
+    public void updateStatus(final long ordersId, final String status) {
         // Make sure order exists 
         final var dto = dao.find(new OrdersKey(ordersId));
         if (dto == null) {

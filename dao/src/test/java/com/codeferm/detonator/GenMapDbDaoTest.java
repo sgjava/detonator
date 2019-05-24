@@ -3,13 +3,14 @@
  */
 package com.codeferm.detonator;
 
-import static com.codeferm.detonator.DbDaoTest.loadProperties;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -166,13 +167,13 @@ public class GenMapDbDaoTest {
         logger.debug("findById");
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
-        final var dto = dao.find(new OrdersKey(4));
+        final var dto = dao.find(new OrdersKey(4L));
         // Verify record exists
         assertNotNull(dto);
         // Verify ID matches
         assertEquals(4, dto.getOrderId());
         // Create ID that doesn't exist
-        final var badId = new OrdersKey(0);
+        final var badId = new OrdersKey(0L);
         final var badDto = dao.find(badId);
         // DTO should be null if not found
         assertNull(badDto);
@@ -188,10 +189,10 @@ public class GenMapDbDaoTest {
         final Dao<OrdersKey, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Create DTO to save
         final var dto = new Orders();
-        dto.setOrderId(107);
-        dto.setCustomerId(1);
+        dto.setOrderId(107L);
+        dto.setCustomerId(1L);
         dto.setOrderDate(Date.valueOf(LocalDate.now()));
-        dto.setSalesmanId(1);
+        dto.setSalesmanId(1L);
         dto.setStatus("Pending");
         // Save DTO
         dao.save(dto);
@@ -214,12 +215,12 @@ public class GenMapDbDaoTest {
         for (int i = 0; i < 10; i++) {
             // Create DTO to save
             final var dto = new Orders();
-            dto.setOrderId(i + 108);
-            dto.setCustomerId(1);
+            dto.setOrderId(i + 108L);
+            dto.setCustomerId(1L);
             dto.setOrderDate(Date.valueOf(LocalDate.now()));
-            dto.setSalesmanId(1);
+            dto.setSalesmanId(1L);
             dto.setStatus("Pending");
-            map.put(new OrdersKey(i + 108), dto);
+            map.put(new OrdersKey(i + 108L), dto);
         }
         // Save Map of DTOs
         dao.save(map);
@@ -234,7 +235,7 @@ public class GenMapDbDaoTest {
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Create ID to find
-        final var dto = dao.find(new OrdersKey(4));
+        final var dto = dao.find(new OrdersKey(4L));
         dto.setStatus("Shipped");
         // Uopdate record
         dao.update(dto.getKey(), dto);
@@ -254,8 +255,8 @@ public class GenMapDbDaoTest {
         final Dao<OrdersKey, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Preserve insertion order
         final Map<OrdersKey, Orders> map = new LinkedHashMap<>();
-        for (int i = 0; i < 10; i++) {
-            final var dto = dao.find(new OrdersKey(i + 10));
+        for (long i = 0; i < 10; i++) {
+            final var dto = dao.find(new OrdersKey(i + 10L));
             dto.setStatus("Pending");
             map.put(dto.getKey(), dto);
         }
@@ -271,7 +272,7 @@ public class GenMapDbDaoTest {
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenMapDbDao<>(db, "orders", Orders.class);
         // Create ID to delete
-        final var key = new OrdersKey(1);
+        final var key = new OrdersKey(1L);
         // Delete record
         dao.delete(key);
         final var dto = dao.find(key);
@@ -292,7 +293,7 @@ public class GenMapDbDaoTest {
         List<OrdersKey> list = new ArrayList<>();
         // Build list of orders to delete
         for (int i = 0; i < 3; i++) {
-            list.add(new OrdersKey(i + 6));
+            list.add(new OrdersKey(i + 6L));
         }
         // Delete List of records
         dao.delete(list);

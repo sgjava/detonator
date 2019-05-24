@@ -32,6 +32,13 @@
                     <dbPassword></dbPassword>
                     <dbUrl>jdbc:h2:~/test</dbUrl>
                     <dbPoolSize>10</dbPoolSize>
+                    <!--
+                    <dbDriver>oracle.jdbc.driver.OracleDriver</dbDriver>
+                    <dbUser>ot</dbUser>
+                    <dbPassword>testtest</dbPassword>
+                    <dbUrl>jdbc:oracle:thin:@//192.168.1.154:1521/XE</dbUrl>
+                    <dbPoolSize>11</dbPoolSize>
+                    -->
                     <mapTypes>true</mapTypes>
                     <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
                     <dtoTemplate>dto.ftl</dtoTemplate>
@@ -53,6 +60,9 @@
                     <schema>
                         <catalog></catalog>
                         <schemaPattern></schemaPattern>
+                        <!--
+                        <schemaPattern>ot</schemaPattern>
+                         -->
                         <tableNamePattern>%</tableNamePattern>
                     </schema>                  
                 </configuration>

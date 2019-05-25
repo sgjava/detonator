@@ -11,8 +11,10 @@ select * will pick up all the changes.
 you can move between maps and RDBMS without changing your code! Create a Github issue if you run into any JDBC driver issues.
 * Minimal dependencies are required reducing the transitive dependencies included in your project.
 * Output is in the form of a Java Writer class thus making it easy to go between String, file, pipe, etc.
-* Optional Java type mapping allows BigDecimal with a scale of zero to be mapped to integer types based on precision. Other mappings
-could be added as required.
+* Optional Java type mapping allows BigDecimal with a scale of zero to be mapped to integer types based on precision. SQL DATE types
+are always mapped to java.sql.Date. Oracle will return SQL DATE as java.sql.Timestamp, so it fixes a type mismatch when using DATE
+from another database that maps it properly.
+Other mappings could be added as required.
 * FreeMarker Java Template Engine is used to render the output.
 * See unit tests for example code.
 

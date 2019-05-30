@@ -33,15 +33,6 @@ public interface Dao<K, V> {
     V find(final K key);
 
     /**
-     * Return List of values using named query and parameters.
-     *
-     * @param name Query name.
-     * @param params Query parameters,
-     * @return List of values.
-     */
-    List<V> findBy(final String name, final Object[] params);
-
-    /**
      * Save the value.
      *
      * @param value Value to save.
@@ -49,20 +40,11 @@ public interface Dao<K, V> {
     void save(final V value);
 
     /**
-     * Save List of values.
+     * Save Map of key/values.
      *
      * @param map Map of keys and values to save.
      */
     void save(final Map<K, V> map);
-
-    /**
-     * Save the value and return generated key.
-     *
-     * @param value Value to save.
-     * @param keyNames Array of key column names.
-     * @return Generated key.
-     */
-    K saveReturnKey(final V value, final String[] keyNames);
 
     /**
      * Delete the value by key.
@@ -70,14 +52,6 @@ public interface Dao<K, V> {
      * @param key Key of value to delete.
      */
     void delete(final K key);
-
-    /**
-     * Delete values using named query and parameters.
-     *
-     * @param name Query name.
-     * @param params Query parameters,
-     */
-    void deleteBy(final String name, final Object[] params);
 
     /**
      * Delete list of values by key.
@@ -95,15 +69,7 @@ public interface Dao<K, V> {
     void update(final K key, final V value);
 
     /**
-     * Update value using named query and parameters.
-     *
-     * @param name Query name.
-     * @param params Query parameters,
-     */
-    void updateBy(final String name, final Object[] params);
-
-    /**
-     * Update map of values.
+     * Update map of key/values.
      *
      * @param map Map of keys and values to update.
      */

@@ -104,18 +104,6 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
     }
 
     /**
-     * Return List of values using named query and parameters.
-     *
-     * @param name Query name.
-     * @param params Query parameters,
-     * @return List of values.
-     */
-    @Override
-    public List<V> findBy(String name, Object[] params) {
-        throw new UnsupportedOperationException("Not supported yet");
-    }
-
-    /**
      * Save the value.
      *
      * @param value Value to save.
@@ -144,18 +132,6 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
     }
 
     /**
-     * Save the value and return generated key.
-     *
-     * @param value Value to save.
-     * @param keyNames Array of key column names.
-     * @return Generated key.
-     */
-    @Override
-    public K saveReturnKey(V value, final String[] keyNames) {
-        throw new UnsupportedOperationException("Not supported yet");
-    }
-
-    /**
      * Delete the value by key.
      *
      * @param key Key of value to delete.
@@ -163,17 +139,6 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
     @Override
     public void delete(K key) {
         map.remove(key);
-    }
-
-    /**
-     * Delete values using named query and parameters.
-     *
-     * @param name Query name.
-     * @param params Query parameters,
-     */
-    @Override
-    public void deleteBy(String name, Object[] params) {
-        throw new UnsupportedOperationException("Not supported yet");
     }
 
     /**
@@ -197,17 +162,6 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
     @Override
     public void update(K key, V value) {
         map.put(key, value);
-    }
-
-    /**
-     * Update value using named query and parameters.
-     *
-     * @param name Query name.
-     * @param params Query parameters,
-     */
-    @Override
-    public void updateBy(String name, Object[] params) {
-        throw new UnsupportedOperationException("Not supported yet");
     }
 
     /**

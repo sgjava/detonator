@@ -28,7 +28,7 @@ import javax.sql.DataSource;
  * @param <K> Key type.
  * @param <V> Value type.
  */
-public class GenDbDao<K, V> implements Dao<K, V> {
+public class GenDbDao<K, V> implements DbDao<K, V> {
 
     /**
      * DataSource.
@@ -37,7 +37,7 @@ public class GenDbDao<K, V> implements Dao<K, V> {
     /**
      * Database DAO.
      */
-    private final DbDao dbDao;
+    private final Db dbDao;
     /**
      * SQL as properties.
      */
@@ -82,7 +82,7 @@ public class GenDbDao<K, V> implements Dao<K, V> {
         kReadMethods = getReadMethods(kClass.getDeclaredFields(), kClass);
         // Get key write methods
         kWriteMethods = getWriteMethods(kClass.getDeclaredFields(), kClass);
-        dbDao = new DbUtilsDsDao(this.dataSource);
+        dbDao = new DbUtilsDs(this.dataSource);
     }
 
     /**

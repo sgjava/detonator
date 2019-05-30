@@ -20,7 +20,7 @@ import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 
 /**
- * DbUtils DataSource implementation of Dao interface. This class should be considered thread safe since QueryRunner is thread safe.
+ * DbUtils DataSource implementation of Db interface. This class should be considered thread safe since QueryRunner is thread safe.
  * Do not use connection based transactions since there's no guarantee the same connection is used for each method. You must use JTA
  * based transactions for DataSources.
  *
@@ -28,7 +28,7 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class DbUtilsDsDao implements DbDao {
+public class DbUtilsDs implements Db {
 
     /**
      * QueryRunner is thread safe.
@@ -40,7 +40,7 @@ public class DbUtilsDsDao implements DbDao {
      *
      * @param dataSource Database data source.
      */
-    public DbUtilsDsDao(final DataSource dataSource) {
+    public DbUtilsDs(final DataSource dataSource) {
         super();
         queryRunner = new QueryRunner(dataSource);
     }

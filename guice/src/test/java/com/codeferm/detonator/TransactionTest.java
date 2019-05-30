@@ -125,7 +125,7 @@ public class TransactionTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
-        final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
+        final DbDao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create transactional business object
         OrdersBo bo = TransactionFactory.createObject(OrdersBo.class, AtomikosTransModule.class);
         bo.setDao(dao);
@@ -152,7 +152,7 @@ public class TransactionTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
-        final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
+        final DbDao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create transactional business object
         OrdersBo bo = TransactionFactory.createObject(OrdersBo.class, AtomikosTransModule.class);
         bo.setDao(dao);

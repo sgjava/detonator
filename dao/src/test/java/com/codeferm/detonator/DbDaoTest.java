@@ -122,7 +122,7 @@ public class DbDaoTest {
         logger.debug("select");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         final Orders dto = dbDao.select(sql.getProperty("find"), new Object[]{1}, Orders.class);
         // Verify record exists
         assertNotNull(dto);
@@ -142,7 +142,7 @@ public class DbDaoTest {
         logger.debug("selectList");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         final var list = dbDao.selectList(sql.getProperty("findAll"), Orders.class);
         // List should not be empty
         assertFalse(list.isEmpty());
@@ -161,7 +161,7 @@ public class DbDaoTest {
         // Add custom SQL
         sql.put("findBySalesman",
                 "select CUSTOMER_ID, ORDER_DATE, ORDER_ID, SALESMAN_ID, STATUS from ORDERS where SALESMAN_ID = ?");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         final var list = dbDao.selectList(sql.getProperty("findBySalesman"), new Object[]{62}, Orders.class);
         // List should not be empty
         assertFalse(list.isEmpty());
@@ -177,7 +177,7 @@ public class DbDaoTest {
         logger.debug("selectMap");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         final var map = dbDao.select(sql.getProperty("findAll"));
         // Verify record exists
         assertNotNull(map);
@@ -193,7 +193,7 @@ public class DbDaoTest {
         logger.debug("selectMapParams");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         final var map = dbDao.select(sql.getProperty("find"), new Object[]{1});
         // Verify record exists
         assertNotNull(map);
@@ -209,7 +209,7 @@ public class DbDaoTest {
         logger.debug("selectListMap");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         final var list = dbDao.selectList(sql.getProperty("findAll"));
         // List should not be empty
         assertFalse(list.isEmpty());
@@ -228,7 +228,7 @@ public class DbDaoTest {
         // Add custom SQL
         sql.put("findBySalesman",
                 "select CUSTOMER_ID, ORDER_DATE, ORDER_ID, SALESMAN_ID, STATUS from ORDERS where SALESMAN_ID = ?");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         final var list = dbDao.selectList(sql.getProperty("findBySalesman"), new Object[]{62});
         // List should not be empty
         assertFalse(list.isEmpty());
@@ -244,7 +244,7 @@ public class DbDaoTest {
         logger.debug("selectField");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         final var field = dbDao.select(sql.getProperty("findAll"), "ORDER_ID");
         assertNotNull(field);
     }
@@ -257,7 +257,7 @@ public class DbDaoTest {
         logger.debug("selectFieldParams");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         final var field = dbDao.select(sql.getProperty("find"), new Object[]{1}, "ORDER_ID");
         // Here we deal with Oracle NUMBER because it will return as BigDecimal
         if (field instanceof BigDecimal) {
@@ -275,7 +275,7 @@ public class DbDaoTest {
         logger.debug("insert");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         // Insert new record (note null orderId is passed since it's an identity field and will be auto generated)
         final var key = dbDao.updateReturnKey(sql.getProperty("save"),
                 new Object[]{1, Date.valueOf(LocalDate.now()), null, 1, "Pending"}, "ORDER_ID");
@@ -299,7 +299,7 @@ public class DbDaoTest {
         logger.debug("update");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         // Insert new record (note null orderId is passed since it's an identity field and will be auto generated)
         var recs = dbDao.update(sql.getProperty("update"), new Object[]{BigDecimal.valueOf(1), Date.valueOf(LocalDate.now()), 1,
             BigDecimal.valueOf(1), "Shipped", 1});
@@ -319,7 +319,7 @@ public class DbDaoTest {
         logger.debug("delete");
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
-        final var dbDao = new DbUtilsDsDao(dataSource);
+        final var dbDao = new DbUtilsDs(dataSource);
         // Get updated record
         final Orders saveDto = dbDao.select(sql.getProperty("find"), new Object[]{1}, Orders.class);
         // Delete inserted record

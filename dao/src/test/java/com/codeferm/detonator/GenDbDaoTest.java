@@ -11,8 +11,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -247,7 +245,7 @@ public class GenDbDaoTest {
         // Merge custom SQL
         sql.putAll(loadProperties("orders-custom.properties"));
         // Create generic DAO
-        final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
+        final DbDao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
         dto.setCustomerId(1L);
@@ -279,7 +277,7 @@ public class GenDbDaoTest {
         // Get generated SQL
         final var sql = loadProperties("orders.properties");
         // Create generic DAO
-        final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
+        final DbDao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
         dto.setCustomerId(1L);
@@ -325,7 +323,7 @@ public class GenDbDaoTest {
         // Merge custom SQL
         sql.putAll(loadProperties("orders-custom.properties"));
         // Create generic DAO
-        final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
+        final DbDao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Select records to update
         final var list = dao.findBy("findByIdLessThan", new Object[]{10});
         // Preserve insertion order

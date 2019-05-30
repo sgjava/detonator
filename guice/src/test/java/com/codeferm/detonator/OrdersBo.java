@@ -20,7 +20,7 @@ public class OrdersBo {
     /**
      * Generic DAO.
      */
-    private Dao<OrdersKey, Orders> dao;
+    private DbDao<OrdersKey, Orders> dao;
 
     /**
      * Default constructor.
@@ -33,7 +33,7 @@ public class OrdersBo {
      *
      * @return DAO.
      */
-    public Dao<OrdersKey, Orders> getDao() {
+    public DbDao<OrdersKey, Orders> getDao() {
         return dao;
     }
 
@@ -42,7 +42,7 @@ public class OrdersBo {
      *
      * @param dao DAO.
      */
-    public void setDao(final Dao<OrdersKey, Orders> dao) {
+    public void setDao(final DbDao<OrdersKey, Orders> dao) {
         this.dao = dao;
     }
 

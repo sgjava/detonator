@@ -4,8 +4,6 @@
 package com.codeferm.detonator;
 
 import com.codeferm.dto.Orders;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -47,48 +45,17 @@ public class DbDaoTest {
     private static DataSource dataSource;
 
     /**
-     * Create test database.
-     *
-     * @param fileName SQL script to create database.
-     * @param delimiter Line delimiter.
-     * @param removeDelimiter True to remove delimiter from statement
+     * Common test methods.
      */
-    public static void createDb(final String fileName, final String delimiter, boolean removeDelimiter) {
-        final var dataLoader = new DataLoader(dataSource);
-        dataLoader.execScript(fileName, delimiter, removeDelimiter);
-    }
-
-    /**
-     * Load properties file from file path or fail back to class path.
-     *
-     * @param propertyFile Name of property file.
-     * @return Properties.
-     */
-    public static Properties loadProperties(final String propertyFile) {
-        Properties props = new Properties();
-        try {
-            // Get properties from file
-            props.load(new FileInputStream(propertyFile));
-            logger.debug("Properties loaded from file {}", propertyFile);
-        } catch (IOException e1) {
-            logger.warn("Properties file not found {}", propertyFile);
-            // Get properties from classpath
-            try (final var stream = DbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
-                props.load(stream);
-                logger.debug("Properties loaded from class path {}", propertyFile);
-            } catch (IOException e2) {
-                throw new RuntimeException("No properties found", e2);
-            }
-        }
-        return props;
-    }
+    private static Common common;
 
     @BeforeAll
     public static void beforeAll() {
+        common = new Common();
         // Get database properties from dto project
-        properties = loadProperties("../dto/src/test/resources/database.properties");
+        properties = common.loadProperties("../dto/src/test/resources/database.properties");
         // Merge app properties
-        properties.putAll(loadProperties("app.properties"));
+        properties.putAll(common.loadProperties("app.properties"));
         // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
@@ -99,8 +66,8 @@ public class DbDaoTest {
         dataSource = ds;
         // Create database?
         if (Boolean.parseBoolean(properties.getProperty("db.create"))) {
-            createDb(properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.parseBoolean(properties.
-                    getProperty("db.remove.delimiter")));
+            common.createDb(dataSource, properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.
+                    parseBoolean(properties.getProperty("db.remove.delimiter")));
         }
     }
 
@@ -121,7 +88,7 @@ public class DbDaoTest {
     void select() {
         logger.debug("select");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         final var dbDao = new DbUtilsDs(dataSource);
         final Orders dto = dbDao.select(sql.getProperty("find"), new Object[]{1}, Orders.class);
         // Verify record exists
@@ -141,7 +108,7 @@ public class DbDaoTest {
     void selectList() {
         logger.debug("selectList");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         final var dbDao = new DbUtilsDs(dataSource);
         final var list = dbDao.selectList(sql.getProperty("findAll"), Orders.class);
         // List should not be empty
@@ -157,7 +124,7 @@ public class DbDaoTest {
     void selectListParams() {
         logger.debug("selectListParams");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Add custom SQL
         sql.put("findBySalesman",
                 "select CUSTOMER_ID, ORDER_DATE, ORDER_ID, SALESMAN_ID, STATUS from ORDERS where SALESMAN_ID = ?");
@@ -176,7 +143,7 @@ public class DbDaoTest {
     void selectMap() {
         logger.debug("selectMap");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         final var dbDao = new DbUtilsDs(dataSource);
         final var map = dbDao.select(sql.getProperty("findAll"));
         // Verify record exists
@@ -192,7 +159,7 @@ public class DbDaoTest {
     void selectMapParams() {
         logger.debug("selectMapParams");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         final var dbDao = new DbUtilsDs(dataSource);
         final var map = dbDao.select(sql.getProperty("find"), new Object[]{1});
         // Verify record exists
@@ -208,7 +175,7 @@ public class DbDaoTest {
     void selectListMap() {
         logger.debug("selectListMap");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         final var dbDao = new DbUtilsDs(dataSource);
         final var list = dbDao.selectList(sql.getProperty("findAll"));
         // List should not be empty
@@ -224,7 +191,7 @@ public class DbDaoTest {
     void selectListMapParams() {
         logger.debug("selectListMapParams");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Add custom SQL
         sql.put("findBySalesman",
                 "select CUSTOMER_ID, ORDER_DATE, ORDER_ID, SALESMAN_ID, STATUS from ORDERS where SALESMAN_ID = ?");
@@ -243,7 +210,7 @@ public class DbDaoTest {
     void selectField() {
         logger.debug("selectField");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         final var dbDao = new DbUtilsDs(dataSource);
         final var field = dbDao.select(sql.getProperty("findAll"), "ORDER_ID");
         assertNotNull(field);
@@ -256,7 +223,7 @@ public class DbDaoTest {
     void selectFieldParams() {
         logger.debug("selectFieldParams");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         final var dbDao = new DbUtilsDs(dataSource);
         final var field = dbDao.select(sql.getProperty("find"), new Object[]{1}, "ORDER_ID");
         // Here we deal with Oracle NUMBER because it will return as BigDecimal
@@ -274,7 +241,7 @@ public class DbDaoTest {
     void insert() {
         logger.debug("insert");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         final var dbDao = new DbUtilsDs(dataSource);
         // Insert new record (note null orderId is passed since it's an identity field and will be auto generated)
         final var key = dbDao.updateReturnKey(sql.getProperty("save"),
@@ -298,7 +265,7 @@ public class DbDaoTest {
     void update() {
         logger.debug("update");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         final var dbDao = new DbUtilsDs(dataSource);
         // Insert new record (note null orderId is passed since it's an identity field and will be auto generated)
         var recs = dbDao.update(sql.getProperty("update"), new Object[]{BigDecimal.valueOf(1), Date.valueOf(LocalDate.now()), 1,
@@ -318,7 +285,7 @@ public class DbDaoTest {
     void delete() {
         logger.debug("delete");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         final var dbDao = new DbUtilsDs(dataSource);
         // Get updated record
         final Orders saveDto = dbDao.select(sql.getProperty("find"), new Object[]{1}, Orders.class);

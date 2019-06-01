@@ -5,19 +5,14 @@ package com.codeferm.detonator;
 
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentMap;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
@@ -31,7 +26,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
 
 /**
  * Test MapDB DAO.
@@ -58,65 +52,23 @@ public class GenMapDbDaoTest {
      * MapDB database.
      */
     private static DB db;
-
     /**
-     * Create test SQL database and populate MapDB.
-     *
-     * @param fileName SQL script to create database.
-     * @param delimiter Line delimiter.
-     * @param removeDelimiter True to remove delimiter from statement
+     * Common test methods.
      */
-    public static void createDb(final String fileName, final String delimiter, boolean removeDelimiter) {
-        final var dataLoader = new DataLoader(dataSource);
-        dataLoader.execScript(fileName, delimiter, removeDelimiter);
-        db = DBMaker.fileDB(properties.getProperty("map.file")).make();
-        final ConcurrentMap<OrdersKey, Orders> map = db.hashMap("orders", Serializer.JAVA, Serializer.JAVA).createOrOpen();
-        map.clear();
-        final var sql = loadProperties("orders.properties");
-        // Create generic RDBMS DAO
-        final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
-        // Get all records
-        final var list = dao.findAll();
-        list.forEach((orders) -> {
-            map.put(new OrdersKey(orders.getOrderId()), orders);
-        });
-        db.commit();
-    }
-
-    /**
-     * Load properties file from file path or fail back to class path.
-     *
-     * @param propertyFile Name of property file.
-     * @return Properties.
-     */
-    public static Properties loadProperties(final String propertyFile) {
-        Properties props = new Properties();
-        try {
-            // Get properties from file
-            props.load(new FileInputStream(propertyFile));
-            logger.debug("Properties loaded from file {}", propertyFile);
-        } catch (IOException e1) {
-            logger.warn("Properties file not found {}", propertyFile);
-            // Get properties from classpath
-            try (final var stream = GenMapDbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
-                props.load(stream);
-                logger.debug("Properties loaded from class path {}", propertyFile);
-            } catch (IOException e2) {
-                throw new RuntimeException("No properties found", e2);
-            }
-        }
-        return props;
-    }
+    private static Common common;
 
     /**
      * Set up DataSource and initialize database.
      */
     @BeforeAll
     public static void beforeAll() {
+        common = new Common();
         // Get database properties from dto project
-        properties = loadProperties("../dto/src/test/resources/database.properties");
+        properties = common.loadProperties("../dto/src/test/resources/database.properties");
         // Merge app properties
-        properties.putAll(loadProperties("app.properties"));
+        properties.putAll(common.loadProperties("app.properties"));
+        // Create MapDB
+        db = DBMaker.fileDB(properties.getProperty("map.file")).make();
         // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
@@ -127,8 +79,8 @@ public class GenMapDbDaoTest {
         dataSource = ds;
         // Create database?
         if (Boolean.parseBoolean(properties.getProperty("db.create"))) {
-            createDb(properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.parseBoolean(properties.
-                    getProperty("db.remove.delimiter")));
+            common.copyDbToMap(dataSource, db, properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.
+                    parseBoolean(properties.getProperty("db.remove.delimiter")));
         }
     }
 
@@ -172,6 +124,7 @@ public class GenMapDbDaoTest {
         assertNotNull(dto);
         // Verify ID matches
         assertEquals(4, dto.getOrderId());
+        logger.debug(dto);
         // Create ID that doesn't exist
         final var badId = new OrdersKey(0L);
         final var badDto = dao.find(badId);

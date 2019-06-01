@@ -52,51 +52,20 @@ public class GenDbDaoTest {
     private static DataSource dataSource;
 
     /**
-     * Create test database.
-     *
-     * @param fileName SQL script to create database.
-     * @param delimiter Line delimiter.
-     * @param removeDelimiter True to remove delimiter from statement
+     * Common test methods.
      */
-    public static void createDb(final String fileName, final String delimiter, boolean removeDelimiter) {
-        final var dataLoader = new DataLoader(dataSource);
-        dataLoader.execScript(fileName, delimiter, removeDelimiter);
-    }
-
-    /**
-     * Load properties file from file path or fail back to class path.
-     *
-     * @param propertyFile Name of property file.
-     * @return Properties.
-     */
-    public static Properties loadProperties(final String propertyFile) {
-        Properties props = new Properties();
-        try {
-            // Get properties from file
-            props.load(new FileInputStream(propertyFile));
-            logger.debug("Properties loaded from file {}", propertyFile);
-        } catch (IOException e1) {
-            logger.warn("Properties file not found {}", propertyFile);
-            // Get properties from classpath
-            try (final var stream = GenDbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
-                props.load(stream);
-                logger.debug("Properties loaded from class path {}", propertyFile);
-            } catch (IOException e2) {
-                throw new RuntimeException("No properties found", e2);
-            }
-        }
-        return props;
-    }
+    private static Common common;
 
     /**
      * Set up DataSource and initialize database.
      */
     @BeforeAll
     public static void beforeAll() {
+        common = new Common();
         // Get database properties from dto project
-        properties = loadProperties("../dto/src/test/resources/database.properties");
+        properties = common.loadProperties("../dto/src/test/resources/database.properties");
         // Merge app properties
-        properties.putAll(loadProperties("app.properties"));        // Create DBCP DataSource
+        properties.putAll(common.loadProperties("app.properties"));        // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
         ds.setUsername(properties.getProperty("db.user"));
@@ -106,8 +75,8 @@ public class GenDbDaoTest {
         dataSource = ds;
         // Create database?
         if (Boolean.parseBoolean(properties.getProperty("db.create"))) {
-            createDb(properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.parseBoolean(properties.
-                    getProperty("db.remove.delimiter")));
+            common.createDb(dataSource, properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.
+                    parseBoolean(properties.getProperty("db.remove.delimiter")));
         }
     }
 
@@ -128,7 +97,7 @@ public class GenDbDaoTest {
     public void findAll() {
         logger.debug("findAll");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Get all records
@@ -146,7 +115,7 @@ public class GenDbDaoTest {
     public void find() {
         logger.debug("find");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create ID to find
@@ -170,7 +139,7 @@ public class GenDbDaoTest {
     public void findSimpleType() {
         logger.debug("findSimpleType");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Create generic DAO
         final Dao<Integer, Orders> dao = new GenDbDao<>(dataSource, sql, Integer.class, Orders.class);
         final var key = 4;
@@ -192,9 +161,9 @@ public class GenDbDaoTest {
     public void findComposite() {
         logger.debug("findComposite");
         // Get generated SQL
-        final var sql = loadProperties("regionsccountries.properties");
+        final var sql = common.loadProperties("regionsccountries.properties");
         // Merge custom SQL
-        sql.putAll(loadProperties("regionsccountries-custom.properties"));
+        sql.putAll(common.loadProperties("regionsccountries-custom.properties"));
         // Create generic DAO
         final Dao<RegionscCountriesKey, RegionscCountries> dao = new GenDbDao<>(dataSource, sql, RegionscCountriesKey.class,
                 RegionscCountries.class);
@@ -216,7 +185,7 @@ public class GenDbDaoTest {
     public void save() {
         logger.debug("save");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
@@ -241,9 +210,9 @@ public class GenDbDaoTest {
     public void saveBatch() {
         logger.debug("saveBatch");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Merge custom SQL
-        sql.putAll(loadProperties("orders-custom.properties"));
+        sql.putAll(common.loadProperties("orders-custom.properties"));
         // Create generic DAO
         final DbDao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
@@ -275,7 +244,7 @@ public class GenDbDaoTest {
     public void saveReturnId() {
         logger.debug("saveReturnId");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Create generic DAO
         final DbDao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
@@ -297,7 +266,7 @@ public class GenDbDaoTest {
     public void update() {
         logger.debug("update");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create ID to find
@@ -319,9 +288,9 @@ public class GenDbDaoTest {
     public void updateBatch() {
         logger.debug("updateBatch");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Merge custom SQL
-        sql.putAll(loadProperties("orders-custom.properties"));
+        sql.putAll(common.loadProperties("orders-custom.properties"));
         // Create generic DAO
         final DbDao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Select records to update
@@ -342,7 +311,7 @@ public class GenDbDaoTest {
     public void delete() {
         logger.debug("delete");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create ID to delete
@@ -361,7 +330,7 @@ public class GenDbDaoTest {
     public void deleteBatch() {
         logger.debug("deleteBatch");
         // Get generated SQL
-        final var sql = loadProperties("orders.properties");
+        final var sql = common.loadProperties("orders.properties");
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Get all records

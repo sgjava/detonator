@@ -15,7 +15,7 @@ import org.mapdb.DB;
 import org.mapdb.Serializer;
 
 /**
- * Generic MapDB DAO. Some methods cannot be implemented as you would with a RDBMS.
+ * Generic MapDB DAO. Some methods cannot be implemented as you would with a RDBMS, thus it's a basic Dao.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0

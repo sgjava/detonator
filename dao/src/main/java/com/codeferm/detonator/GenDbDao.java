@@ -62,6 +62,10 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
      * Key write methods.
      */
     private final List<Method> kWriteMethods;
+    /**
+     * getKey method of value object.
+     */
+    private Method keyMethod;    
 
     /**
      * Constructor to initialize DataSource and cache value and key methods.
@@ -83,6 +87,20 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
         // Get key write methods
         kWriteMethods = getWriteMethods(kClass.getDeclaredFields(), kClass);
         dbDao = new DbUtilsDs(this.dataSource);
+        // Get value fields
+        final var fields = vClass.getDeclaredFields();
+        // Get last field
+        final var field = fields[fields.length - 1];
+        // Last field should be key if it exists
+        if (field.getName().equals("key")) {
+            try {
+                keyMethod = new PropertyDescriptor(field.getName(), vClass).getReadMethod();
+            } catch (IntrospectionException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            keyMethod = null;
+        }
     }
 
     /**
@@ -96,6 +114,24 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
                 || type == Character.class || type == Byte.class || type == Boolean.class || type == String.class;
     }
 
+    /**
+     * Get key or null;
+     *
+     * @param value Value to get key from.
+     * @return ID;
+     */
+    public K getKey(V value) {
+        K key = null;
+        if (keyMethod != null) {
+            try {
+                key = (K) keyMethod.invoke(value, (Object[]) null);
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return key;
+    }
+    
     /**
      * Get read method of each property. Built in key field is ignored if present.
      *

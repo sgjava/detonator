@@ -3,6 +3,8 @@
  */
 package com.codeferm.detonator;
 
+import com.codeferm.dto.Orders;
+import com.codeferm.dto.OrdersKey;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -16,6 +18,9 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +42,11 @@ public class TransactionTest {
      * Test properties.
      */
     private static Properties properties;
+    /**
+     * Orders DAO.
+     */
+    @Inject
+    private Dao<OrdersKey, Orders> ordersDao;
     /**
      * Business object.
      */
@@ -74,7 +84,6 @@ public class TransactionTest {
             props.load(new FileInputStream(propertyFile));
             logger.debug("Properties loaded from file {}", propertyFile);
         } catch (IOException e1) {
-            logger.warn("Properties file not found {}", propertyFile);
             // Get properties from classpath
             try (final var stream = TransactionTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
                 props.load(stream);
@@ -122,7 +131,14 @@ public class TransactionTest {
     void beforeEach() {
         logger.debug("Setting up dataSource");
         final Properties p = new Properties();
+        // XADataSource
+        p.put("dataSourceXa", String.format("new://Resource?type=javax.sql.XADataSource&class-name=%s", properties.getProperty(
+                "db.xa.driver")));
+        p.put("dataSourceXa.DatabaseName", "test");
+        // DataSource
         p.put("dataSource", "new://Resource?type=DataSource");
+        p.put("dataSource.DataSourceCreator", "dbcp");
+        p.put("dataSource.XaDataSource", "dataSourceXa");        
         p.put("dataSource.JdbcDriver", properties.getProperty("db.xa.driver"));
         p.put("dataSource.JdbcUrl", properties.getProperty("db.xa.url"));
         p.put("dataSource.userName", properties.getProperty("db.xa.user"));
@@ -130,6 +146,8 @@ public class TransactionTest {
         p.put("dataSource.jtaManaged", true);
         p.put("dataSource.maxActive", 10);
         p.put("dataSource.maxIdle", 5);
+        // Transaction manager
+        //p.put("transactionManager", "new://TransactionManager?type=TransactionManager");
         ejbContainer = EJBContainer.createEJBContainer(p);
         final Context context = ejbContainer.getContext();
         try {
@@ -159,6 +177,29 @@ public class TransactionTest {
     public void commit() {
         logger.debug("commit");
         final var key = ordersBo.createOrder(1, 1);
+        // Verify record was commited
+        var dto = ordersDao.find(key);
+        assertNotNull(dto);
+        // Status should be pending
+        assertEquals("Pending", dto.getStatus());
+        // Update status
+        ordersBo.updateStatus(key.getOrderId(), "Shipped");
+        dto = ordersDao.find(key);
+        // Verify status update was commited
+        assertNotNull(dto);
+        assertEquals("Shipped", dto.getStatus());
+    }
+
+    /**
+     * Test JTA rollback.
+     */
+    @Test
+    public void rollback() {
+        logger.debug("rollback");
+        // Record doesn't exist and should rollback
+        Assertions.assertThrows(RuntimeException.class, () -> {
+            ordersBo.updateStatus(0, "Shipped");
+        });
     }
 
     /**

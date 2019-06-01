@@ -10,12 +10,10 @@ import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
 import java.sql.Date;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.LocalDate;
-import javax.enterprise.context.ApplicationScoped;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,8 +24,6 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0.0
  * @since 1.0.0
  */
-@Transactional
-@ApplicationScoped
 public class OrdersBo {
 
     /**
@@ -39,17 +35,17 @@ public class OrdersBo {
      * Orders DAO.
      */
     @Inject
-    private Dao<OrdersKey, Orders> orders;
+    private DbDao<OrdersKey, Orders> orders;
     /**
      * OrderItems DAO.
      */
     @Inject
-    private Dao<OrderItemsKey, OrderItems> orderItems;
+    private DbDao<OrderItemsKey, OrderItems> orderItems;
     /**
      * Products DAO.
      */
     @Inject
-    private Dao<ProductsKey, Products> products;
+    private DbDao<ProductsKey, Products> products;
 
     /**
      * Default constructor.
@@ -79,6 +75,7 @@ public class OrdersBo {
      * @param salesmanId Salesman ID.
      * @return Generated key.
      */
+    @TransactionAttribute(TransactionAttributeType.MANDATORY)
     public OrdersKey createOrder(final long customerId, final long salesmanId) {
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
@@ -99,7 +96,8 @@ public class OrdersBo {
      * @param ordersId Key to look up.
      * @param status New status value.
      */
-    public void updateStatus(final int ordersId, final String status) {
+    @TransactionAttribute(TransactionAttributeType.MANDATORY)
+    public void updateStatus(final long ordersId, final String status) {
         // Make sure order exists 
         final var dto = orderExists(ordersId);
         dto.setStatus(status);
@@ -115,14 +113,14 @@ public class OrdersBo {
      *
      * @param ordersId Orders ID.
      */
-    public void orderInfo(final int ordersId) {
+    public void orderInfo(final long ordersId) {
         // Make sure order exists 
         final var ordersDto = orderExists(ordersId);
         logger.debug("Order {}", ordersDto);
         // Get list of order items using named query
         final var orderItemsList = orderItems.findBy("findByOrderId", new Object[]{ordersId});
         logger.debug("Order items {}", orderItemsList);
-        // Show product for each order, note the Long to int is required because products.productId was auto increment
+        // Show product for each order
         orderItemsList.stream().map(dto -> products.find(new ProductsKey(dto.getProductId()))).forEachOrdered(
                 productsDto -> {
             logger.debug("Product {}", productsDto);

@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,12 +25,13 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Singleton
 public class OrdersBo {
 
     /**
      * Logger.
      */
-    private static final Logger logger = LogManager.getLogger(OrdersBo.class);
+    private final Logger logger = LogManager.getLogger(OrdersBo.class);
 
     /**
      * Orders DAO.

@@ -52,8 +52,7 @@ public class DaoProducer {
     /**
      * Logger.
      */
-    private static final Logger logger = LogManager.getLogger(DaoProducer.class);
-
+    private final Logger logger = LogManager.getLogger(DaoProducer.class);
     /**
      * DataSource.
      */

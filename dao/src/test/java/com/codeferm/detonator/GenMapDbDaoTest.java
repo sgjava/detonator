@@ -39,7 +39,7 @@ public class GenMapDbDaoTest {
     /**
      * Logger.
      */
-    private static final Logger logger = LogManager.getLogger(GenMapDbDaoTest.class);
+    private final Logger logger = LogManager.getLogger(GenMapDbDaoTest.class);
     /**
      * Test properties.
      */

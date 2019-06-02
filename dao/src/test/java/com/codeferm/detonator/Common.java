@@ -51,7 +51,7 @@ public class Common {
     /**
      * Logger.
      */
-    private static final Logger logger = LogManager.getLogger(Common.class);
+    private final Logger logger = LogManager.getLogger(Common.class);
 
     /**
      * Default constructor.

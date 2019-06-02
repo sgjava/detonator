@@ -125,11 +125,14 @@ public class TransactionTest {
     }
 
     /**
-     * Fire up EJB container.
+     * Fire up EJB container for each test.
      */
     @BeforeEach
     void beforeEach() {
-        logger.debug("Setting up dataSource");
+        logger.debug("Starting EJBContainer");
+        // Use log4j2 for logging
+        System.setProperty("openejb.logger.external", "true");
+        System.setProperty("openejb.log.factory", "log4j2");
         final Properties p = new Properties();
         // XADataSource
         p.put("dataSourceXa", String.format("new://Resource?type=javax.sql.XADataSource&class-name=%s", properties.getProperty(
@@ -146,8 +149,6 @@ public class TransactionTest {
         p.put("dataSource.jtaManaged", true);
         p.put("dataSource.maxActive", 10);
         p.put("dataSource.maxIdle", 5);
-        // Transaction manager
-        //p.put("transactionManager", "new://TransactionManager?type=TransactionManager");
         ejbContainer = EJBContainer.createEJBContainer(p);
         final Context context = ejbContainer.getContext();
         try {
@@ -158,10 +159,11 @@ public class TransactionTest {
     }
 
     /**
-     * Close EJB container.
+     * Close EJB container after each test.
      */
     @AfterEach
     void after() {
+        logger.debug("Closing EJBContainer");
         try {
             ejbContainer.getContext().unbind("inject");
         } catch (NamingException e) {

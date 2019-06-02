@@ -48,7 +48,7 @@ public class AtomikosTransInterceptor implements MethodInterceptor {
     /**
      * Logger.
      */
-    private static final Logger logger = LogManager.getLogger(AtomikosTransInterceptor.class);
+    private final Logger logger = LogManager.getLogger(AtomikosTransInterceptor.class);
 
     /**
      * Invoke method wrapped in a transaction.

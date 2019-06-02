@@ -25,7 +25,7 @@ public class DataLoader {
     /**
      * Logger.
      */
-    private static final Logger logger = LogManager.getLogger(DataLoader.class);
+    private final Logger logger = LogManager.getLogger(DataLoader.class);
 
     /**
      * DataSource.

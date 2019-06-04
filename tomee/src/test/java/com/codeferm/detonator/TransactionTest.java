@@ -135,19 +135,20 @@ public class TransactionTest {
         System.setProperty("openejb.log.factory", "log4j2");
         final Properties p = new Properties();
         // XADataSource
-        p.put("dataSourceXa", String.format("new://Resource?type=javax.sql.XADataSource&class-name=%s", properties.getProperty(
+        p.put("dataSourceXa", String.format("new://Resource?type=XADataSource&class-name=%s", properties.getProperty(
                 "db.xa.driver")));
-        p.put("dataSourceXa.DatabaseName", "test");
+        p.put("dataSourceXa.url", properties.getProperty("db.xa.url"));
+        p.put("dataSourceXa.user", properties.getProperty("db.xa.user"));
+        p.put("dataSourceXa.password", properties.getProperty("db.xa.password"));
+        p.put("dataSourceXa.SkipImplicitAttributes", "true");
+        // Otherwise goes to connection properties        
+        p.put("dataSourceXa.SkipPropertiesFallback", "true");
         // DataSource
         p.put("dataSource", "new://Resource?type=DataSource");
         p.put("dataSource.DataSourceCreator", "dbcp");
-        p.put("dataSource.XaDataSource", "dataSourceXa");        
-        p.put("dataSource.JdbcDriver", properties.getProperty("db.xa.driver"));
-        p.put("dataSource.JdbcUrl", properties.getProperty("db.xa.url"));
-        p.put("dataSource.userName", properties.getProperty("db.xa.user"));
-        p.put("dataSource.password", properties.getProperty("db.xa.password"));
+        p.put("dataSource.xaDataSource", "dataSourceXa");
         p.put("dataSource.jtaManaged", true);
-        p.put("dataSource.maxActive", 10);
+        p.put("dataSource.maxActive", 11);
         p.put("dataSource.maxIdle", 5);
         ejbContainer = EJBContainer.createEJBContainer(p);
         final Context context = ejbContainer.getContext();

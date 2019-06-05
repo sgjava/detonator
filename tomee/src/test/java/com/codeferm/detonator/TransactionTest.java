@@ -17,7 +17,7 @@ import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -55,7 +55,11 @@ public class TransactionTest {
     /**
      * EJB container.
      */
-    EJBContainer ejbContainer;
+    private static EJBContainer ejbContainer;
+    /**
+     * EJB context.
+     */
+    private static Context context;
 
     /**
      * Create test database.
@@ -96,7 +100,7 @@ public class TransactionTest {
     }
 
     /**
-     * Initialize database one time.
+     * Initialize database and EjbContainer one time.
      */
     @BeforeAll
     public static void beforeAll() {
@@ -122,14 +126,6 @@ public class TransactionTest {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Fire up EJB container for each test.
-     */
-    @BeforeEach
-    void beforeEach() {
-        logger.debug("Starting EJBContainer");
         // Use log4j2 for logging
         System.setProperty("openejb.logger.external", "true");
         System.setProperty("openejb.log.factory", "log4j2");
@@ -147,11 +143,21 @@ public class TransactionTest {
         p.put("dataSource", "new://Resource?type=DataSource");
         p.put("dataSource.DataSourceCreator", "dbcp");
         p.put("dataSource.xaDataSource", "dataSourceXa");
+        p.put("dataSource.userName", properties.getProperty("db.user"));
+        p.put("dataSource.password", properties.getProperty("db.password"));
         p.put("dataSource.jtaManaged", true);
         p.put("dataSource.maxActive", 11);
         p.put("dataSource.maxIdle", 5);
         ejbContainer = EJBContainer.createEJBContainer(p);
-        final Context context = ejbContainer.getContext();
+        context = ejbContainer.getContext();
+    }
+
+    /**
+     * Inject stuff for tests.
+     */
+    @BeforeEach
+    public void beforeEach() {
+        logger.debug("EJBContainer context bind");
         try {
             context.bind("inject", this);
         } catch (NamingException e) {
@@ -162,8 +168,8 @@ public class TransactionTest {
     /**
      * Close EJB container after each test.
      */
-    @AfterEach
-    void after() {
+    @AfterAll
+    public static void afterAll() {
         logger.debug("Closing EJBContainer");
         try {
             ejbContainer.getContext().unbind("inject");

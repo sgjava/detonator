@@ -11,8 +11,6 @@ import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
 import java.sql.Date;
 import java.time.LocalDate;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -26,7 +24,6 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0.0
  * @since 1.0.0
  */
-@Transactional
 @ApplicationScoped
 public class OrdersBo {
 
@@ -79,7 +76,7 @@ public class OrdersBo {
      * @param salesmanId Salesman ID.
      * @return Generated key.
      */
-    @TransactionAttribute(TransactionAttributeType.MANDATORY)
+    @Transactional
     public OrdersKey createOrder(final long customerId, final long salesmanId) {
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
@@ -100,7 +97,7 @@ public class OrdersBo {
      * @param ordersId Key to look up.
      * @param status New status value.
      */
-    @TransactionAttribute(TransactionAttributeType.MANDATORY)
+    @Transactional
     public void updateStatus(final long ordersId, final String status) {
         // Make sure order exists 
         final var dto = orderExists(ordersId);

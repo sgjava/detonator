@@ -101,6 +101,7 @@ public class GenMapDbDaoTest {
     @AfterAll
     public static void afterAll() throws SQLException {
         ((BasicDataSource) dataSource).close();
+        db.commit();
         db.close();
     }
 

@@ -47,7 +47,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      */
     private Method keyMethod;
     /**
-     *
+     * MapDB atomic Long use for primary kay.
      */
     private final Atomic.Long keyInc;
 
@@ -137,6 +137,13 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
         }
     }
 
+    /**
+     * Save the value and return generated key. Only Long single field types are supported. Atomic.Long is used to generate the key
+     * value. This will be preserved across restarts if you use DBMaker.fileDB.
+     *
+     * @param value Value to save.
+     * @return Generated key.
+     */    
     @Override
     public K saveReturnKey(final V value, final String[] keyNames) {
         // Get key from value

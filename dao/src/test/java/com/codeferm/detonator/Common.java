@@ -29,13 +29,17 @@ import com.codeferm.dto.RegionscCountries;
 import com.codeferm.dto.RegionscCountriesKey;
 import com.codeferm.dto.Warehouses;
 import com.codeferm.dto.WarehousesKey;
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 
@@ -72,7 +76,6 @@ public class Common {
             props.load(new FileInputStream(propertyFile));
             logger.debug("Properties loaded from file {}", propertyFile);
         } catch (IOException e1) {
-            logger.warn("Properties file not found {}", propertyFile);
             // Get properties from classpath
             try (final var stream = GenMapDbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
                 props.load(stream);
@@ -112,7 +115,7 @@ public class Common {
     public ConcurrentMap copyTable(DataSource dataSource, final DB db, final String mapName, final String propName,
             final Class kClass, final Class vClass) {
         logger.debug("Copying table to map {}", mapName);
-        final ConcurrentMap map = db.hashMap(mapName, Serializer.JAVA, Serializer.JAVA).createOrOpen();
+        final ConcurrentMap map = db.treeMap(mapName, Serializer.JAVA, Serializer.JAVA).createOrOpen();
         // Start with empty Map
         map.clear();
         final var sql = loadProperties(propName);
@@ -123,8 +126,26 @@ public class Common {
         list.forEach(dto -> {
             map.put(dao.getKey(dto), dto);
         });
-        logger.debug("Committing {} to file system", mapName);
-        db.commit();
+        // Create auto increment key starting with last key in map
+        final var lastKey = ((BTreeMap) map).lastKey();
+        // Get value fields
+        final var fields = kClass.getDeclaredFields();
+        // Only set atomic values if single field key
+        if (fields.length == 1) {
+            // Get field
+            final var field = fields[0];
+            // Only Long can be auto increment
+            if (field.getType() == Long.class) {
+                try {
+                    final var readMethod = new PropertyDescriptor(field.getName(), kClass).getReadMethod();
+                    final var lastValue = readMethod.invoke(lastKey, (Object[]) null);
+                    logger.debug("Setting atomic to {}", lastValue);
+                    db.atomicLong(String.format("%s_key", mapName), (Long) lastValue).create();
+                } catch (IntrospectionException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
         return map;
     }
 
@@ -157,5 +178,7 @@ public class Common {
         copyTable(dataSource, db, "regionsccountries", "regionsccountries.properties", RegionscCountriesKey.class,
                 RegionscCountries.class);
         copyTable(dataSource, db, "warehouses", "warehouses.properties", WarehousesKey.class, Warehouses.class);
+        logger.debug("Committing Map to file {}", fileName);
+        db.commit();
     }
 }

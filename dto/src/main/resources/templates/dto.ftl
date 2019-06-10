@@ -3,8 +3,8 @@
  */
 package ${packageName};
 
-<#assign imports = imports + [ "java.io.Serializable" ] />
 <#assign imports = imports + [ "java.util.Objects" ] />
+<#assign imports = imports + [ "java.io.Serializable" ] />
 <#list imports as import>
 import ${import};
 </#list>

@@ -47,6 +47,15 @@ public interface Dao<K, V> {
     void save(final Map<K, V> map);
 
     /**
+     * Save the value and return generated key.
+     *
+     * @param value Value to save.
+     * @param keyNames Array of key column names.
+     * @return Generated key.
+     */
+    K saveReturnKey(final V value, final String[] keyNames);
+
+    /**
      * Delete the value by key.
      *
      * @param key Key of value to delete.

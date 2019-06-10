@@ -26,15 +26,6 @@ public interface DbDao<K, V> extends Dao<K, V> {
     List<V> findBy(final String name, final Object[] params);
 
     /**
-     * Save the value and return generated key.
-     *
-     * @param value Value to save.
-     * @param keyNames Array of key column names.
-     * @return Generated key.
-     */
-    K saveReturnKey(final V value, final String[] keyNames);
-
-    /**
      * Delete values using named query and parameters.
      *
      * @param name Query name.

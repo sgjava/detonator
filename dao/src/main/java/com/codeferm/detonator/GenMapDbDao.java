@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
+import org.mapdb.Atomic;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 
@@ -34,25 +35,42 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      */
     private final ConcurrentMap<K, V> map;
     /**
+     * Value class type.
+     */
+    private final Class vClass;
+    /**
+     * Key class type.
+     */
+    private final Class kClass;
+    /**
      * getKey method of value object.
      */
     private Method keyMethod;
+    /**
+     *
+     */
+    private final Atomic.Long keyInc;
 
     /**
      * Constructor.
      *
      * @param db MapDB DB.
-     * @param collectionName Name of collection.
+     * @param collName Name of collection.
+     * @param kClass Key class type.
      * @param vClass Value class type.
      */
-    public GenMapDbDao(final DB db, final String collectionName, final Class vClass) {
+    public GenMapDbDao(final DB db, final String collName, final Class kClass, final Class vClass) {
+        this.kClass = kClass;
+        this.vClass = vClass;
         this.db = db;
-        this.map = db.hashMap(collectionName, Serializer.JAVA, Serializer.JAVA).createOrOpen();
+        this.map = db.treeMap(collName, Serializer.JAVA, Serializer.JAVA).createOrOpen();
+        // This should be created already.
+        keyInc = db.atomicLong(String.format("%s_key", collName)).open();
         // Get value fields
         final var fields = vClass.getDeclaredFields();
-        // Get last field
+        // Get last kField
         final var field = fields[fields.length - 1];
-        // Last field should be key if it exists
+        // Last kField should be key if it exists
         if (field.getName().equals("key")) {
             try {
                 keyMethod = new PropertyDescriptor(field.getName(), vClass).getReadMethod();
@@ -111,7 +129,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
     @Override
     public void save(V value) {
         final K key = getKey(value);
-        // Treat this like SQL and throw key violation if key exists
+        // Treat this like SQL DB and throw key violation if key exists
         if (!map.containsKey(key)) {
             map.put(key, value);
         } else {
@@ -119,8 +137,27 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
         }
     }
 
+    @Override
+    public K saveReturnKey(final V value, final String[] keyNames) {
+        // Get key from value
+        var k = getKey(value);
+        try {
+            // Write method for key field
+            var keyWrite = new PropertyDescriptor(keyNames[0], kClass).getWriteMethod();
+            // Get next atomic value
+            final var nextVal = keyInc.incrementAndGet();
+            // Write it to key
+            keyWrite.invoke(k, nextVal);
+            // Save in map
+            map.put(k, value);
+        } catch (IntrospectionException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+        return k;
+    }
+
     /**
-     * Save List of values.
+     * Save map of values.
      *
      * @param map Map of keys and values to save.
      */

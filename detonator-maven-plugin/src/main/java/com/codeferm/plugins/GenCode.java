@@ -243,7 +243,7 @@ public class GenCode {
             }
             // Use StringWriter in case ID is empty (i.e. no PK or composite SQL)
             final var out = new StringWriter();
-            makeDto.idTemplate(idTemplate, sql.getSql(), sql.getKeyColumns(), packageName, String.format("%sKey", className), out);
+            makeDto.keyTemplate(idTemplate, sql.getSql(), sql.getKeyColumns(), packageName, String.format("%sKey", className), out);
             final var idStr = out.toString();
             // Check for empty result
             if (!idStr.isEmpty()) {

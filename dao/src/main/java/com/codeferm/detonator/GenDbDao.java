@@ -121,15 +121,15 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
      * @return ID;
      */
     public K getKey(V value) {
-        K key = null;
+        K k = null;
         if (keyMethod != null) {
             try {
-                key = (K) keyMethod.invoke(value, (Object[]) null);
+                k = (K) keyMethod.invoke(value, (Object[]) null);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
         }
-        return key;
+        return k;
     }
     
     /**

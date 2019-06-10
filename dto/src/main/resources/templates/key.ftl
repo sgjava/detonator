@@ -3,8 +3,9 @@
  */
 package ${packageName};
 
-<#assign imports = imports + [ "java.io.Serializable" ] />
+<#assign imports = imports + [ "java.util.Comparator" ] />
 <#assign imports = imports + [ "java.util.Objects" ] />
+<#assign imports = imports + [ "java.io.Serializable" ] />
 <#list imports as import>
 import ${import};
 </#list>
@@ -14,7 +15,7 @@ import ${import};
  *
  * ${sql}
  */
-public class ${className} implements Serializable {
+public class ${className} implements Comparable<${className}>, Serializable {
 <#list map?values as rsmdDto>
 
     /**
@@ -101,5 +102,19 @@ public class ${className} implements Serializable {
         return "${className}{" +
 <#list map?values as rsmdDto>                <#if rsmdDto?is_first>"${rsmdDto.getVarName()}="<#else>", ${rsmdDto.getVarName()}="</#if> + ${rsmdDto.getVarName()} + <#if rsmdDto?is_last>"}";</#if>
 </#list>
+    }
+
+    /**
+     * Generated compareTo method. Compares this object with the specified object for order. Returns a negative integer, zero, or a
+     * positive integer as this object is less than, equal to, or greater than the specified object.
+     *
+     * @return A negative integer, zero, or a positive integer as this object is less than, equal to, or greater than the specified
+     * object.
+     */
+    @Override
+    public int compareTo(${className} o) {
+        <#list mapOrder?values as rsmdDto><#if rsmdDto?is_first>return Comparator.comparing(${className}::get${rsmdDto.getMethodName()})<#else>
+                .thenComparing(${className}::get${rsmdDto.getMethodName()})</#if></#list>
+                .compare(this, o);
     }
 }

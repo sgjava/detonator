@@ -186,7 +186,7 @@ public class MakeDtoTest {
     }
 
     /**
-     * Test idTemplate.
+     * Test keyTemplate.
      */
     @Test
     public void idTemplate() {
@@ -195,10 +195,10 @@ public class MakeDtoTest {
         final var metadataExtract = new MetadataExtract();
         final var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_orders"));
         // Use camelCase of table name
-        final var className = metadataExtract.toCamelCase(tables.get(0)) + "Pk";
+        final var className = metadataExtract.toCamelCase(tables.get(0)) + "Key";
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.idTemplate("key.ftl", sqlMap.get("md_orders"), null, "com.codeferm.dto", className, out);
+        makeDto.keyTemplate("key.ftl", sqlMap.get("md_orders"), null, "com.codeferm.dto", className, out);
         logger.debug(out.toString());
     }
 

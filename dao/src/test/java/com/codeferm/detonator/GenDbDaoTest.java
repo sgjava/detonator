@@ -7,8 +7,6 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.RegionscCountries;
 import com.codeferm.dto.RegionscCountriesKey;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -197,10 +195,11 @@ public class GenDbDaoTest {
         // Save DTO
         dao.save(dto);
         // Create ID to find (should be 107 based on last orderId)
-        final var key = new OrdersKey(107L);
+        final var key = new OrdersKey(106L);
         final var findDto = dao.find(key);
+        assertNotNull(findDto);
         // Verify ID matches
-        assertEquals(107, findDto.getOrderId());
+        assertEquals(106, findDto.getOrderId());
     }
 
     /**
@@ -230,7 +229,7 @@ public class GenDbDaoTest {
         // Save Map of DTOs
         dao.save(map);
         // Select new records (ORDER_ID > 107L)
-        final var newRecs = dao.findBy("findByIdGreaterThan", new Object[]{107});
+        final var newRecs = dao.findBy("findByIdGreaterThan", new Object[]{106});
         // List should not be empty
         assertFalse(newRecs.isEmpty());
         // Verify exact count
@@ -238,11 +237,11 @@ public class GenDbDaoTest {
     }
 
     /**
-     * Test DAO save method.
+     * Test DAO save and return generated key method.
      */
     @Test
-    public void saveReturnId() {
-        logger.debug("saveReturnId");
+    public void saveReturnKey() {
+        logger.debug("saveReturnKey");
         // Get generated SQL
         final var sql = common.loadProperties("orders.properties");
         // Create generic DAO
@@ -256,7 +255,7 @@ public class GenDbDaoTest {
         // Save DTO and return identity key
         final var key = dao.saveReturnKey(dto, new String[]{"ORDER_ID"});
         // Verify returned key
-        assertEquals(106, key.getOrderId());
+        assertEquals(117, key.getOrderId());
     }
 
     /**

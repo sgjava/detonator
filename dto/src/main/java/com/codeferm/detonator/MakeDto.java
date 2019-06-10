@@ -72,7 +72,7 @@ public class MakeDto {
     public Set<String> getClasses(final Map<String, RsmdDto> map, final boolean pkOnly) {
         final var classes = new TreeSet<String>();
         map.entrySet().stream().map(entry -> entry.getValue()).filter(value -> !value.getColumnClassName().
-                startsWith("java.lang")).forEachOrdered((final        var value) -> {
+                startsWith("java.lang")).forEachOrdered((final         var value) -> {
             // Only include PK columns?
             if (pkOnly) {
                 if (value.getKeySeq() != null) {
@@ -143,7 +143,7 @@ public class MakeDto {
     }
 
     /**
-     * Use database metadata to generate Java ID objects. Pass in the Writer required for a particular purpose.
+     * Use database metadata to generate Java key objects. Pass in the Writer required for a particular purpose.
      *
      * @param template Template to use.
      * @param sql SQL used to generate metadata.
@@ -152,7 +152,7 @@ public class MakeDto {
      * @param className Java class name.
      * @param writer Template output.
      */
-    public void idTemplate(final String template, final String sql, final List<String> list, final String packageName,
+    public void keyTemplate(final String template, final String sql, final List<String> list, final String packageName,
             final String className,
             final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
@@ -164,6 +164,11 @@ public class MakeDto {
         }
         // Map with just PK columns
         final var pkMap = getPkMap(map);
+        // Map of PK columns ordered by sequence
+        final var pkOrder = new TreeMap<Integer, RsmdDto>();
+        pkMap.entrySet().forEach(entry -> {
+            pkOrder.put(entry.getValue().getKeySeq(), entry.getValue());
+        });
         // Skip generation if no PK columns
         if (!pkMap.isEmpty()) {
             // Template model
@@ -175,6 +180,7 @@ public class MakeDto {
             model.put("sql", sql.replaceAll("\\R", " "));
             model.put("className", className);
             model.put("map", pkMap);
+            model.put("mapOrder", pkOrder);
             // Process ID template
             try {
                 final var temp = configuration.getTemplate(template);

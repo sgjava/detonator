@@ -47,6 +47,10 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      */
     private Method keyMethod;
     /**
+     * Used for keys with single Long value.
+     */
+    private Method longMethod;
+    /**
      * MapDB atomic Long use for primary kay.
      */
     private final Atomic.Long keyInc;
@@ -66,14 +70,22 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
         this.map = db.treeMap(collName, Serializer.JAVA, Serializer.JAVA).createOrOpen();
         // This should be created already.
         keyInc = db.atomicLong(String.format("%s_key", collName)).open();
-        // Get value fields
-        final var fields = vClass.getDeclaredFields();
+        // Get value vFields
+        final var vFields = vClass.getDeclaredFields();
         // Get last kField
-        final var field = fields[fields.length - 1];
+        final var vField = vFields[vFields.length - 1];
         // Last kField should be key if it exists
-        if (field.getName().equals("key")) {
+        if (vField.getName().equals("key")) {
             try {
-                keyMethod = new PropertyDescriptor(field.getName(), vClass).getReadMethod();
+                // Value key read method
+                keyMethod = new PropertyDescriptor(vField.getName(), vClass).getReadMethod();
+                var kFields = kClass.getDeclaredFields();
+                // Only set atomic values if single field key                
+                if (kFields.length == 1) {
+                    final var propertyDescriptor = new PropertyDescriptor(kFields[0].getName(), kClass);
+                    // Long write method method
+                    longMethod = propertyDescriptor.getWriteMethod();
+                }
             } catch (IntrospectionException e) {
                 throw new RuntimeException(e);
             }
@@ -143,21 +155,17 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      *
      * @param value Value to save.
      * @return Generated key.
-     */    
+     */
     @Override
     public K saveReturnKey(final V value, final String[] keyNames) {
         // Get key from value
         var k = getKey(value);
         try {
-            // Write method for key field
-            var keyWrite = new PropertyDescriptor(keyNames[0], kClass).getWriteMethod();
-            // Get next atomic value
-            final var nextVal = keyInc.incrementAndGet();
-            // Write it to key
-            keyWrite.invoke(k, nextVal);
+            // Write next atomic value to key field
+            longMethod.invoke(k, keyInc.incrementAndGet());
             // Save in map
             map.put(k, value);
-        } catch (IntrospectionException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
         return k;

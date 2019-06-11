@@ -18,6 +18,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -153,7 +154,7 @@ public class TransactionTest {
     }
 
     /**
-     * Inject stuff for tests.
+     * Inject stuff for each test.
      */
     @BeforeEach
     public void beforeEach() {
@@ -166,16 +167,24 @@ public class TransactionTest {
     }
 
     /**
-     * Close EJB container after each test.
+     * Uninject stuff for each test.
      */
-    @AfterAll
-    public static void afterAll() {
-        logger.debug("Closing EJBContainer");
+    @AfterEach
+    public void afterEach() {
+        logger.debug("EJBContainer context unbind");
         try {
             ejbContainer.getContext().unbind("inject");
         } catch (NamingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Close EJB container.
+     */
+    @AfterAll
+    public static void afterAll() {
+        logger.debug("Closing EJBContainer");
         ejbContainer.close();
     }
 

@@ -49,7 +49,7 @@
                     -->
                     <mapTypes>true</mapTypes>
                     <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
-                    <dtoTemplate>dto.ftl</dtoTemplate>
+                    <dtoTemplate>dtobv.ftl</dtoTemplate>
                     <idTemplate>key.ftl</idTemplate>
                     <sqlTemplate>sql.ftl</sqlTemplate>
                     <packageName>com.codeferm.dto</packageName>

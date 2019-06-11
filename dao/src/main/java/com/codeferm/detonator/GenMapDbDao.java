@@ -80,8 +80,8 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
                 // Value key read method
                 keyMethod = new PropertyDescriptor(vField.getName(), vClass).getReadMethod();
                 var kFields = kClass.getDeclaredFields();
-                // Only set atomic values if single field key                
-                if (kFields.length == 1) {
+                // Only set atomic values if single Long field
+                if (kFields.length == 1 && kFields[0].getType() == Long.class) {
                     final var propertyDescriptor = new PropertyDescriptor(kFields[0].getName(), kClass);
                     // Long write method method
                     longMethod = propertyDescriptor.getWriteMethod();
@@ -153,7 +153,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      * Save the value and return generated key. Only Long single field types are supported. Atomic.Long is used to generate the key
      * value. This will be preserved across restarts if you use DBMaker.fileDB.
      *
-     * @param value Value to save.
+     * @param value Value to save is ignored for MapDB.
      * @return Generated key.
      */
     @Override

@@ -204,7 +204,7 @@ public class GenMapDbDaoTest {
         dto.setSalesmanId(1L);
         dto.setStatus("Pending");
         // Save DTO and return identity key
-        final var key = dao.saveReturnKey(dto, new String[]{"orderId"});
+        final var key = dao.saveReturnKey(dto, new String[]{"ORDER_ID"});
         // Verify returned key
         assertEquals(106, key.getOrderId());
     }    

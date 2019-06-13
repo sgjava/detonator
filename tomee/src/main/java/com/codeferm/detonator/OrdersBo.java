@@ -14,6 +14,10 @@ import java.time.LocalDate;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,6 +35,10 @@ public class OrdersBo {
      * Logger.
      */
     private final Logger logger = LogManager.getLogger(OrdersBo.class);
+    /**
+     * Bean validator.
+     */
+    private final Validator validator;
 
     /**
      * Orders DAO.
@@ -49,9 +57,10 @@ public class OrdersBo {
     private DbDao<ProductsKey, Products> products;
 
     /**
-     * Default constructor.
+     * Default constructor. Create bean validator.
      */
     public OrdersBo() {
+        this.validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
     /**
@@ -67,6 +76,25 @@ public class OrdersBo {
             throw new RuntimeException(String.format("ordersId %d not found", ordersId));
         }
         return dto;
+    }
+
+    /**
+     * Run bean validation.
+     *
+     * @param dto DTO to validate.
+     */
+    public void orderValid(final Orders dto) {
+        var violations = validator.validate(dto);
+        if (violations.size() > 0) {
+            var message = "";
+            // Build exception message
+            message = violations.stream().map((violation) -> String.format("%s.%s %s | ", violation.getRootBeanClass().
+                    getSimpleName(), violation.getPropertyPath(),
+                    violation.getMessage())).reduce(message, String::concat);
+            // Trim last seperator
+            message = message.substring(0, message.length() - 3);
+            throw new RuntimeException(String.format("Bean violations: %s", message));
+        }
     }
 
     /**
@@ -87,8 +115,13 @@ public class OrdersBo {
         if (logger.isDebugEnabled()) {
             logger.debug("Creating {}", dto);
         }
+        var k = orders.saveReturnKey(dto, new String[]{"ORDER_ID"});
+        // Set key in value
+        dto.setOrderId(k.getOrderId());
+        // Do bean validation after key created
+        orderValid(dto);
         // Save DTO and return identity key
-        return orders.saveReturnKey(dto, new String[]{"ORDER_ID"});
+        return k;
     }
 
     /**

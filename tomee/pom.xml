@@ -16,7 +16,7 @@
     <description>Jakarta EE 8</description>
     
     <properties>
-        <tomee.version>8.0.0-SNAPSHOT</tomee.version>
+        <tomee.version>8.0.0-M3</tomee.version>
     </properties>
     
     <repositories>

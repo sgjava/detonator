@@ -97,7 +97,7 @@ public class OrdersObj {
     }
 
     /**
-     * Run bean validation.
+     * Throws exception if bean validation fails.
      *
      * @param dto DTO to validate.
      */

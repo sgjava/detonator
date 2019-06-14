@@ -33,26 +33,26 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
-import javax.inject.Singleton;
 import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * DAO producer. Probably a more type safe way of doing this, but this works and is efficient.
+ * DAO and business object producer. Probably a more type safe way of doing this, but this works and is efficient.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
  */
-@Singleton
-public class DaoProducer {
+@ApplicationScoped
+public class OrdersProducer {
 
     /**
      * Logger.
      */
-    private final Logger logger = LogManager.getLogger(DaoProducer.class);
+    private final Logger logger = LogManager.getLogger(OrdersProducer.class);
     /**
      * DataSource.
      */
@@ -62,12 +62,17 @@ public class DaoProducer {
      * DAO Map.
      */
     private final Map<String, DbDao<?, ?>> map;
+    /**
+     * Plain Java business object.
+     */
+    final OrdersObj ordersObj;
 
     /**
      * Default constructor.
      */
-    public DaoProducer() {
+    public OrdersProducer() {
         map = new ConcurrentHashMap<>();
+        ordersObj = new OrdersObj();
     }
 
     /**
@@ -106,6 +111,9 @@ public class DaoProducer {
         logger.debug("Init DAO Map");
         daoConfig();
         logger.debug("Done DAO Map");
+        ordersObj.setOrderItems((DbDao<OrderItemsKey, OrderItems>) map.get("orderitems"));
+        ordersObj.setOrders((DbDao<OrdersKey, Orders>) map.get("orders"));
+        ordersObj.setProducts((DbDao<ProductsKey, Products>) map.get("products"));
     }
 
     /**
@@ -117,7 +125,7 @@ public class DaoProducer {
     public Properties loadProperties(final String propertyFile) {
         Properties props = new Properties();
         // Get properties from classpath
-        try (final var stream = DaoProducer.class.getClassLoader().getResourceAsStream(propertyFile)) {
+        try (final var stream = OrdersProducer.class.getClassLoader().getResourceAsStream(propertyFile)) {
             props.load(stream);
         } catch (IOException e) {
             throw new RuntimeException("Property file exception", e);
@@ -183,5 +191,11 @@ public class DaoProducer {
     @Produces
     public DbDao<WarehousesKey, Warehouses> getWarehouses() {
         return (DbDao<WarehousesKey, Warehouses>) map.get("warehouses");
+    }
+
+    @Produces
+    @OrdersObjType
+    public OrdersObj getOrdersObj() {
+        return ordersObj;
     }
 }

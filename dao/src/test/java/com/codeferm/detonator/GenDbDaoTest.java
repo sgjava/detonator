@@ -3,6 +3,8 @@
  */
 package com.codeferm.detonator;
 
+import com.codeferm.dto.OrderItems;
+import com.codeferm.dto.OrderItemsKey;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.RegionscCountries;
@@ -131,25 +133,20 @@ public class GenDbDaoTest {
     }
 
     /**
-     * Test DAO find method using simple type instead of ID bean.
+     * Test DAO findRange method.
      */
     @Test
-    public void findSimpleType() {
-        logger.debug("findSimpleType");
+    public void findRange() {
+        logger.debug("findRange");
         // Get generated SQL
-        final var sql = common.loadProperties("orders.properties");
+        final var sql = common.loadProperties("orderitems.properties");
         // Create generic DAO
-        final Dao<Integer, Orders> dao = new GenDbDao<>(dataSource, sql, Integer.class, Orders.class);
-        final var key = 4;
-        final var dto = dao.find(key);
-        // Verify record exists
-        assertNotNull(dto);
-        // Verify ID matches
-        assertEquals(key, dto.getOrderId());
-        // Find ID that doesn't exist
-        final var badDto = dao.find(0);
-        // DTO should be null if not found
-        assertNull(badDto);
+        final Dao<OrderItemsKey, OrderItems> dao = new GenDbDao<>(dataSource, sql, OrderItemsKey.class, OrderItems.class);
+        // Get OrderItems by key range
+        var list = dao.findRange(new OrderItemsKey(0L, 4L), new OrderItemsKey(999L, 4L));
+        assertNotNull(list);
+        // Verify exact count
+        assertEquals(8, list.size());
     }
 
     /**

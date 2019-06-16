@@ -33,6 +33,15 @@ public interface Dao<K, V> {
     V find(final K key);
 
     /**
+     * Return range of values using from and to keys inclusive.
+     *
+     * @param fromKey Search from.
+     * @param toKey Search to.
+     * @return List of values.
+     */
+    List<V> findRange(final K fromKey, final K toKey);
+
+    /**
      * Save the value.
      *
      * @param value Value to save.

@@ -7,11 +7,13 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import org.mapdb.Atomic;
+import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 
@@ -45,13 +47,13 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
     /**
      * getKey method of value object.
      */
-    private Method keyMethod;
+    private final Method keyReadMethod;
     /**
-     * Used for keys with single Long value.
+     * Used for keys with single value.
      */
-    private Method longMethod;
+    private Method writeMethod;
     /**
-     * MapDB atomic Long use for primary kay.
+     * MapDB atomic Long use for primary key.
      */
     private final Atomic.Long keyInc;
 
@@ -78,19 +80,15 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
         if (vField.getName().equals("key")) {
             try {
                 // Value key read method
-                keyMethod = new PropertyDescriptor(vField.getName(), vClass).getReadMethod();
-                var kFields = kClass.getDeclaredFields();
-                // Only set atomic values if single Long field
-                if (kFields.length == 1 && kFields[0].getType() == Long.class) {
-                    final var propertyDescriptor = new PropertyDescriptor(kFields[0].getName(), kClass);
-                    // Long write method method
-                    longMethod = propertyDescriptor.getWriteMethod();
-                }
+                keyReadMethod = new PropertyDescriptor(vField.getName(), vClass).getReadMethod();
+                final var kFields = kClass.getDeclaredFields();
+                // Key write method method
+                writeMethod = new PropertyDescriptor(kFields[0].getName(), kClass).getWriteMethod();
             } catch (IntrospectionException e) {
                 throw new RuntimeException(e);
             }
         } else {
-            keyMethod = null;
+            keyReadMethod = null;
         }
     }
 
@@ -102,9 +100,9 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      */
     public K getKey(V value) {
         K key = null;
-        if (keyMethod != null) {
+        if (keyReadMethod != null) {
             try {
-                key = (K) keyMethod.invoke(value, (Object[]) null);
+                key = (K) keyReadMethod.invoke(value, (Object[]) null);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
@@ -134,12 +132,26 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
     }
 
     /**
+     * Return range of values using from and to keys inclusive.
+     *
+     * @param fromKey Search from.
+     * @param toKey Search to.
+     * @return List of values.
+     */
+    @Override
+    public List<V> findRange(final K fromKey, final K toKey) {
+        // Return map of values within range
+        final Map<K, V> subMap = ((BTreeMap ) map).subMap(fromKey, toKey);
+        return new ArrayList(subMap.values());
+    }
+
+    /**
      * Save the value.
      *
      * @param value Value to save.
      */
     @Override
-    public void save(V value) {
+    public void save(final V value) {
         final K key = getKey(value);
         // Treat this like SQL DB and throw key violation if key exists
         if (!map.containsKey(key)) {
@@ -162,7 +174,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
         var k = getKey(value);
         try {
             // Write next atomic value to key field
-            longMethod.invoke(k, keyInc.incrementAndGet());
+            writeMethod.invoke(k, keyInc.incrementAndGet());
             // Save in map
             map.put(k, value);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
@@ -177,7 +189,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      * @param map Map of keys and values to save.
      */
     @Override
-    public void save(Map<K, V> map) {
+    public void save(final Map<K, V> map) {
         map.entrySet().forEach(entry -> {
             save(entry.getValue());
         });
@@ -189,7 +201,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      * @param key Key of value to delete.
      */
     @Override
-    public void delete(K key) {
+    public void delete(final K key) {
         map.remove(key);
     }
 
@@ -212,7 +224,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      * @param value Updated value.
      */
     @Override
-    public void update(K key, V value) {
+    public void update(final K key, final V value) {
         map.put(key, value);
     }
 
@@ -222,7 +234,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      * @param map Map of keys and values to update.
      */
     @Override
-    public void update(Map<K, V> map) {
+    public void update(final Map<K, V> map) {
         map.entrySet().forEach(entry -> {
             update(entry.getKey(), entry.getValue());
         });

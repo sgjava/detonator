@@ -3,6 +3,8 @@
  */
 package com.codeferm.detonator;
 
+import com.codeferm.dto.OrderItems;
+import com.codeferm.dto.OrderItemsKey;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import java.io.IOException;
@@ -122,11 +124,11 @@ public class GenMapDbDaoTest {
     }
 
     /**
-     * Test DAO findById method.
+     * Test DAO find method.
      */
     @Test
-    public void findById() {
-        logger.debug("findById");
+    public void find() {
+        logger.debug("find");
         // Create generic DAO
         final Dao<OrdersKey, Orders> dao = new GenMapDbDao<>(db, "orders", OrdersKey.class, Orders.class);
         final var dto = dao.find(new OrdersKey(4L));
@@ -140,6 +142,22 @@ public class GenMapDbDaoTest {
         final var badDto = dao.find(badId);
         // DTO should be null if not found
         assertNull(badDto);
+    }
+
+    /**
+     * Test DAO findRange method.
+     */
+    @Test
+    public void findRange() {
+        logger.debug("findRange");
+        // Create generic DAO
+        final Dao<OrderItemsKey, OrderItems> dao = new GenMapDbDao<>(db, "orderitems", OrderItemsKey.class, OrderItems.class);
+        // Get OrderItems by key range
+        var list = dao.findRange(new OrderItemsKey(0L, 4L), new OrderItemsKey(999L, 4L));
+        assertNotNull(list);
+        logger.debug(list);
+        // Verify exact count
+        assertEquals(8, list.size());
     }
 
     /**
@@ -188,7 +206,7 @@ public class GenMapDbDaoTest {
         // Save Map of DTOs
         dao.save(map);
     }
-    
+
     /**
      * Test DAO save and return generated key method.
      */
@@ -207,7 +225,7 @@ public class GenMapDbDaoTest {
         final var key = dao.saveReturnKey(dto, new String[]{"ORDER_ID"});
         // Verify returned key
         assertEquals(106, key.getOrderId());
-    }    
+    }
 
     /**
      * Test DAO update method.

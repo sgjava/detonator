@@ -8,6 +8,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,9 +64,13 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
      */
     private final List<Method> kWriteMethods;
     /**
+     * Key method parameters.
+     */
+    private final List<Parameter[]> kParams;
+    /**
      * getKey method of value object.
      */
-    private Method keyMethod;    
+    private Method keyMethod;
 
     /**
      * Constructor to initialize DataSource and cache value and key methods.
@@ -86,6 +91,16 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
         kReadMethods = getReadMethods(kClass.getDeclaredFields(), kClass);
         // Get key write methods
         kWriteMethods = getWriteMethods(kClass.getDeclaredFields(), kClass);
+        // If key is a simple class then ignore params
+        if (kWriteMethods != null) {
+            kParams = new ArrayList<>();
+            // Get key write method parameters
+            kWriteMethods.forEach(kWriteMethod -> {
+                kParams.add(kWriteMethod.getParameters());
+            });
+        } else {
+            kParams = null;
+        }
         dbDao = new DbUtilsDs(this.dataSource);
         // Get value fields
         final var fields = vClass.getDeclaredFields();
@@ -101,17 +116,6 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
         } else {
             keyMethod = null;
         }
-    }
-
-    /**
-     * See if simple type or bean.
-     *
-     * @param type Class type.
-     * @return True if simple type.
-     */
-    public boolean isPrimitiveWrapperOrString(final Class<?> type) {
-        return type == Double.class || type == Float.class || type == Long.class || type == Integer.class || type == Short.class
-                || type == Character.class || type == Byte.class || type == Boolean.class || type == String.class;
     }
 
     /**
@@ -131,7 +135,7 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
         }
         return k;
     }
-    
+
     /**
      * Get read method of each property. Built in key field is ignored if present.
      *
@@ -140,21 +144,17 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
      * @return {@code Map} of bean write methods.
      */
     public final List<Method> getReadMethods(final Field[] fields, final Class clazz) {
-        List<Method> list = null;
-        // Only get read methods for beans
-        if (!isPrimitiveWrapperOrString(clazz)) {
-            list = new ArrayList<>();
-            for (Field field : fields) {
-                // Ignore synthetic classes, dynamic proxies and key field
-                if (!field.isSynthetic() && !field.getName().equals("key")) {
-                    PropertyDescriptor propertyDescriptor;
-                    try {
-                        propertyDescriptor = new PropertyDescriptor(field.getName(), clazz);
-                    } catch (IntrospectionException e) {
-                        throw new RuntimeException(e);
-                    }
-                    list.add(propertyDescriptor.getReadMethod());
+        final List<Method> list = new ArrayList<>();
+        for (Field field : fields) {
+            // Ignore synthetic classes, dynamic proxies and key field
+            if (!field.isSynthetic() && !field.getName().equals("key")) {
+                PropertyDescriptor propertyDescriptor;
+                try {
+                    propertyDescriptor = new PropertyDescriptor(field.getName(), clazz);
+                } catch (IntrospectionException e) {
+                    throw new RuntimeException(e);
                 }
+                list.add(propertyDescriptor.getReadMethod());
             }
         }
         return list;
@@ -168,21 +168,17 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
      * @return {@code Map} of bean write methods.
      */
     public final List<Method> getWriteMethods(final Field[] fields, final Class clazz) {
-        List<Method> list = null;
-        // Only get write methods for beans
-        if (!isPrimitiveWrapperOrString(clazz)) {
-            list = new ArrayList<>();
-            for (Field field : fields) {
-                // Ignore synthetic classes or dynamic proxies.
-                if (!field.isSynthetic()) {
-                    PropertyDescriptor propertyDescriptor;
-                    try {
-                        propertyDescriptor = new PropertyDescriptor(field.getName(), clazz);
-                    } catch (IntrospectionException e) {
-                        throw new RuntimeException(e);
-                    }
-                    list.add(propertyDescriptor.getWriteMethod());
+        final List<Method> list = new ArrayList<>();
+        for (Field field : fields) {
+            // Ignore synthetic classes or dynamic proxies.
+            if (!field.isSynthetic()) {
+                PropertyDescriptor propertyDescriptor;
+                try {
+                    propertyDescriptor = new PropertyDescriptor(field.getName(), clazz);
+                } catch (IntrospectionException e) {
+                    throw new RuntimeException(e);
                 }
+                list.add(propertyDescriptor.getWriteMethod());
             }
         }
         return list;
@@ -216,6 +212,50 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
     }
 
     /**
+     * Convert Map to new key. Handle BigDecimal to integer type mapping.
+     *
+     * @param map Map should be ordered by field name in ascending order.
+     * @return Populated key.
+     */
+    public K mapToKey(final Map<String, Object> map) {
+        try {
+            // Create new key instance
+            final K key = (K) kClass.getDeclaredConstructor().newInstance();
+            // Write off returned key fields to bean
+            final var it = map.entrySet().iterator();
+            // Interate Map
+            kWriteMethods.forEach(writeMethod -> {
+                var i = 0;
+                try {
+                    // Get returned value from Map
+                    final var paramValue = it.next().getValue();
+                    final var paramType = kParams.get(i++);
+                    // If parameter type and value type match
+                    if (paramType[0].getType() == paramValue.getClass()) {
+                        writeMethod.invoke(key, paramValue);
+                    } else if (paramValue instanceof BigDecimal) {
+                        if (paramType[0].getType() == Long.class) {
+                            writeMethod.invoke(key, ((BigDecimal) paramValue).longValueExact());
+                        } else {
+                            // Type didn't match Long, so convert BigDecimal to int value
+                            writeMethod.invoke(key, ((BigDecimal) paramValue).intValueExact());
+                        }
+                    } else {
+                        throw new RuntimeException(String.format("Was expecting %s and got %s", paramType[0].getType(), paramValue.
+                                getClass()));
+                    }
+                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            return key;
+        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
+                | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException("Error creating key class", e);
+        }
+    }
+
+    /**
      * Return all values.
      *
      * @return List of all values.
@@ -234,6 +274,22 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
     @Override
     public V find(final K key) {
         return dbDao.select(sql.getProperty("find"), beanToParams(key, kReadMethods), vClass);
+    }
+
+    /**
+     * Return range of values using from and to keys inclusive.
+     *
+     * @param fromKey Search from.
+     * @param toKey Search to.
+     * @return List of values.
+     */
+    @Override
+    public List<V> findRange(final K fromKey, final K toKey) {
+        // Value params array as List
+        final var list = new ArrayList(Arrays.asList(beanToParams(fromKey, kReadMethods)));
+        // Add ID params array to List
+        list.addAll(Arrays.asList(beanToParams(toKey, kReadMethods)));
+        return findBy("findRange", list.toArray());
     }
 
     /**
@@ -284,39 +340,7 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
         // Create sorted Map of returned ID keys
         final var map = new TreeMap<String, Object>(dbDao.updateReturnKeys(sql.getProperty("save"), beanToParams(value,
                 vReadMethods), keyNames));
-        // Create new ID instabnce
-        try {
-            final K key = (K) kClass.getDeclaredConstructor().newInstance();
-            // Write off returned key fields to bean
-            final var it = map.entrySet().iterator();
-            kWriteMethods.forEach((final          var writeMethod) -> {
-                try {
-                    // Get returned value from Map
-                    final var paramValue = it.next().getValue();
-                    final var paramType = writeMethod.getParameters();
-                    // If parameter type and value type match
-                    if (paramType[0].getType() == paramValue.getClass()) {
-                        writeMethod.invoke(key, paramValue);
-                    } else if (paramValue instanceof BigDecimal) {
-                        if (paramType[0].getType() == Long.class) {
-                            writeMethod.invoke(key, ((BigDecimal) paramValue).longValueExact());
-                        } else {
-                            // Type didn't match Long, so convert BigDecimal to int value
-                            writeMethod.invoke(key, ((BigDecimal) paramValue).intValueExact());
-                        }
-                    } else {
-                        throw new RuntimeException(String.format("Was expecting %s and got %s", paramType[0].getType(), paramValue.
-                                getClass()));
-                    }
-                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-            return key;
-        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
-                | IllegalArgumentException | InvocationTargetException e) {
-            throw new RuntimeException("Error creating key class", e);
-        }
+        return mapToKey(map);
     }
 
     /**

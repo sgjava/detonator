@@ -145,6 +145,8 @@ public class Common {
                     throw new RuntimeException(e);
                 }
             }
+        } else {
+            db.atomicLong(String.format("%s_key", mapName), 0L).create();
         }
         return map;
     }

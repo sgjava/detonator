@@ -20,7 +20,7 @@ import org.apache.logging.log4j.Logger;
  * Plain Java business object that only needs DAOs set from calling class. This way you can use DataSource or XADataSource. You can
  * also use transactions in your calling class to handle automatic rollback on exception. Bean validation is built in if your DTOs
  * are decorated with javax.validation.constraints.* annotations.
- * 
+ *
  * This class should be considered thread safe since the Validator and DAOs are thread safe.
  *
  * @author Steven P. Goldsmith
@@ -40,15 +40,15 @@ public class OrdersObj {
     /**
      * Orders DAO.
      */
-    private DbDao<OrdersKey, Orders> orders;
+    private Dao<OrdersKey, Orders> orders;
     /**
      * OrderItems DAO.
      */
-    private DbDao<OrderItemsKey, OrderItems> orderItems;
+    private Dao<OrderItemsKey, OrderItems> orderItems;
     /**
      * Products DAO.
      */
-    private DbDao<ProductsKey, Products> products;
+    private Dao<ProductsKey, Products> products;
 
     /**
      * Default constructor. Validates bean instances. Implementations of this interface must be thread-safe.
@@ -57,7 +57,7 @@ public class OrdersObj {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
-    public DbDao<OrdersKey, Orders> getOrders() {
+    public Dao<OrdersKey, Orders> getOrders() {
         return orders;
     }
 
@@ -65,7 +65,7 @@ public class OrdersObj {
         this.orders = orders;
     }
 
-    public DbDao<OrderItemsKey, OrderItems> getOrderItems() {
+    public Dao<OrderItemsKey, OrderItems> getOrderItems() {
         return orderItems;
     }
 
@@ -73,7 +73,7 @@ public class OrdersObj {
         this.orderItems = orderItems;
     }
 
-    public DbDao<ProductsKey, Products> getProducts() {
+    public Dao<ProductsKey, Products> getProducts() {
         return products;
     }
 
@@ -166,13 +166,14 @@ public class OrdersObj {
         // Make sure order exists 
         final var ordersDto = orderExists(ordersId);
         logger.debug("Order {}", ordersDto);
-        // Get list of order items using named query
-        final var orderItemsList = orderItems.findBy("findByOrderId", new Object[]{ordersId});
+        // Get list of order items by key range
+        final var orderItemsList = orderItems.findRange(new OrderItemsKey(0L, ordersDto.getOrderId()), new OrderItemsKey(Long.MAX_VALUE,
+                ordersDto.getOrderId()));
         logger.debug("Order items {}", orderItemsList);
-        // Show product for each order
-        orderItemsList.stream().map(dto -> products.find(new ProductsKey(dto.getProductId()))).forEachOrdered(
-                productsDto -> {
-            logger.debug("Product {}", productsDto);
-        });
+        // Show product for each order item
+        for (OrderItems orderItems : orderItemsList) {
+            final var dto = products.find(new ProductsKey(orderItems.getProductId()));
+            logger.debug("itemId {}, Product {}", orderItems.getItemId(), dto);
+        }
     }
 }

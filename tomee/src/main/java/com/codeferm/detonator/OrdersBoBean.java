@@ -18,23 +18,23 @@ import org.apache.logging.log4j.Logger;
  * @since 1.0.0
  */
 @ApplicationScoped
-public class OrdersBo {
+public class OrdersBoBean {
 
     /**
      * Logger.
      */
-    private final Logger logger = LogManager.getLogger(OrdersBo.class);
+    private final Logger logger = LogManager.getLogger(OrdersBoBean.class);
     /**
      * Plain Java business object.
      */
     @Inject
-    @OrdersObjType
-    private OrdersObj ordersObj;
+    @OrdersBoType
+    private OrdersBo ordersBo;
 
     /**
      * Default constructor.
      */
-    public OrdersBo() {
+    public OrdersBoBean() {
     }
 
     /**
@@ -46,7 +46,7 @@ public class OrdersBo {
      */
     @Transactional
     public OrdersKey createOrder(final long customerId, final long salesmanId) {
-        return ordersObj.createOrder(customerId, salesmanId);
+        return ordersBo.createOrder(customerId, salesmanId);
     }
 
     /**
@@ -57,7 +57,7 @@ public class OrdersBo {
      */
     @Transactional
     public void updateStatus(final long ordersId, final String status) {
-        ordersObj.updateStatus(ordersId, status);
+        ordersBo.updateStatus(ordersId, status);
     }
 
     /**
@@ -66,7 +66,7 @@ public class OrdersBo {
      * @param ordersId Orders ID.
      */
     public void orderInfo(final long ordersId) {
-        ordersObj.orderInfo(ordersId);
+        ordersBo.orderInfo(ordersId);
     }
 
 }

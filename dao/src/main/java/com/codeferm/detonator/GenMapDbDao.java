@@ -70,8 +70,14 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
         this.vClass = vClass;
         this.db = db;
         this.map = db.treeMap(collName, Serializer.JAVA, Serializer.JAVA).createOrOpen();
-        // This should be created already.
-        keyInc = db.atomicLong(String.format("%s_key", collName)).open();
+        final var atomicKey = String.format("%s_key", collName);
+        // See if key exists
+        if (db.exists(atomicKey)) {
+            // This should be created already.
+            keyInc = db.atomicLong(atomicKey).open();
+        } else {
+            keyInc = null;
+        }
         // Get value vFields
         final var vFields = vClass.getDeclaredFields();
         // Get last kField
@@ -141,7 +147,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
     @Override
     public List<V> findRange(final K fromKey, final K toKey) {
         // Return map of values within range
-        final Map<K, V> subMap = ((BTreeMap ) map).subMap(fromKey, toKey);
+        final Map<K, V> subMap = ((BTreeMap) map).subMap(fromKey, toKey);
         return new ArrayList(subMap.values());
     }
 

@@ -4,8 +4,12 @@
 package com.codeferm.detonator;
 
 import com.atomikos.jdbc.AtomikosDataSourceBean;
+import com.codeferm.dto.OrderItems;
+import com.codeferm.dto.OrderItemsKey;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
+import com.codeferm.dto.Products;
+import com.codeferm.dto.ProductsKey;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -41,6 +45,10 @@ public class TransactionTest {
      * DataSource.
      */
     private static DataSource dataSource;
+    /**
+     * Common test methods.
+     */
+    private static Common common;    
 
     /**
      * Create test database.
@@ -84,6 +92,7 @@ public class TransactionTest {
      */
     @BeforeAll
     public static void beforeAll() {
+        common = new Common();
         // Get database properties from dto project
         properties = loadProperties("../dto/src/test/resources/database.properties");
         // Merge app properties
@@ -115,6 +124,23 @@ public class TransactionTest {
     public static void afterAll() throws SQLException {
         ((AtomikosDataSourceBean) dataSource).close();
     }
+    
+    public OrdersBo createBo() {
+        // Create generic DAOs
+        final Dao<OrdersKey, Orders> orders
+                = new GenDbDao<>(dataSource, common.loadProperties("orders.properties"), OrdersKey.class, Orders.class);
+        final Dao<OrderItemsKey, OrderItems> orderItems = new GenDbDao<>(dataSource, common.loadProperties("orderitems.properties"),
+                OrderItemsKey.class, OrderItems.class);
+        final Dao<ProductsKey, Products> products = new GenDbDao<>(dataSource, common.loadProperties("products.properties"),
+                ProductsKey.class, Products.class);
+        // Create BO and set DAOs
+        final var ordersBo = new OrdersBo();
+        ordersBo.setOrders(orders);
+        ordersBo.setOrderItems(orderItems);
+        ordersBo.setProducts(products);
+        return ordersBo;
+    }
+    
 
     /**
      * Test JTA commit.
@@ -122,22 +148,18 @@ public class TransactionTest {
     @Test
     public void commit() {
         logger.debug("commit");
-        // Get generated SQL
-        final var sql = loadProperties("orders.properties");
-        // Create generic DAO
-        final DbDao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create transactional business object
-        OrdersBo bo = TransactionFactory.createObject(OrdersBo.class, AtomikosTransModule.class);
-        bo.setDao(dao);
+        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
+        bo.setOrdersBo(createBo());
         final var key = bo.createOrder(1, 1);
         // Verify record was commited
-        var dto = dao.find(key);
+        var dto = bo.getOrdersBo().getOrders().find(key);
         assertNotNull(dto);
         // Status should be pending
         assertEquals("Pending", dto.getStatus());
         // Update status
         bo.updateStatus(key.getOrderId(), "Shipped");
-        dto = dao.find(key);
+        dto = bo.getOrdersBo().getOrders().find(key);
         // Verify status update was commited
         assertNotNull(dto);
         assertEquals("Shipped", dto.getStatus());
@@ -149,16 +171,24 @@ public class TransactionTest {
     @Test
     public void rollback() {
         logger.debug("rollback");
-        // Get generated SQL
-        final var sql = loadProperties("orders.properties");
-        // Create generic DAO
-        final DbDao<OrdersKey, Orders> dao = new GenDbDao<>(dataSource, sql, OrdersKey.class, Orders.class);
         // Create transactional business object
-        OrdersBo bo = TransactionFactory.createObject(OrdersBo.class, AtomikosTransModule.class);
-        bo.setDao(dao);
+        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
+        bo.setOrdersBo(createBo());
         // Record doesn't exist and should rollback
         Assertions.assertThrows(RuntimeException.class, () -> {
             bo.updateStatus(0, "Shipped");
         });
+    }
+    
+    /**
+     * Test linking tables.
+     */
+    @Test
+    public void linkTables() {
+        logger.debug("linkTables");
+        // Create transactional business object
+        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
+        bo.setOrdersBo(createBo());
+        bo.orderInfo(1);
     }
 }

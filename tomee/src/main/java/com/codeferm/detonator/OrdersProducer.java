@@ -65,14 +65,14 @@ public class OrdersProducer {
     /**
      * Plain Java business object.
      */
-    final OrdersObj ordersObj;
+    final OrdersBo ordersBo;
 
     /**
      * Default constructor.
      */
     public OrdersProducer() {
         map = new ConcurrentHashMap<>();
-        ordersObj = new OrdersObj();
+        ordersBo = new OrdersBo();
     }
 
     /**
@@ -111,9 +111,9 @@ public class OrdersProducer {
         logger.debug("Init DAO Map");
         daoConfig();
         logger.debug("Done DAO Map");
-        ordersObj.setOrderItems((DbDao<OrderItemsKey, OrderItems>) map.get("orderitems"));
-        ordersObj.setOrders((DbDao<OrdersKey, Orders>) map.get("orders"));
-        ordersObj.setProducts((DbDao<ProductsKey, Products>) map.get("products"));
+        ordersBo.setOrderItems((DbDao<OrderItemsKey, OrderItems>) map.get("orderitems"));
+        ordersBo.setOrders((DbDao<OrdersKey, Orders>) map.get("orders"));
+        ordersBo.setProducts((DbDao<ProductsKey, Products>) map.get("products"));
     }
 
     /**
@@ -194,8 +194,8 @@ public class OrdersProducer {
     }
 
     @Produces
-    @OrdersObjType
-    public OrdersObj getOrdersObj() {
-        return ordersObj;
+    @OrdersBoType
+    public OrdersBo getOrdersBo() {
+        return ordersBo;
     }
 }

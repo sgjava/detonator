@@ -27,12 +27,12 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class OrdersObj {
+public class OrdersBo {
 
     /**
      * Logger.
      */
-    private final Logger logger = LogManager.getLogger(OrdersObj.class);
+    private final Logger logger = LogManager.getLogger(OrdersBo.class);
     /**
      * Bean validator.
      */
@@ -53,7 +53,7 @@ public class OrdersObj {
     /**
      * Default constructor. Validates bean instances. Implementations of this interface must be thread-safe.
      */
-    public OrdersObj() {
+    public OrdersBo() {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
@@ -61,7 +61,7 @@ public class OrdersObj {
         return orders;
     }
 
-    public void setOrders(DbDao<OrdersKey, Orders> orders) {
+    public void setOrders(Dao<OrdersKey, Orders> orders) {
         this.orders = orders;
     }
 
@@ -69,7 +69,7 @@ public class OrdersObj {
         return orderItems;
     }
 
-    public void setOrderItems(DbDao<OrderItemsKey, OrderItems> orderItems) {
+    public void setOrderItems(Dao<OrderItemsKey, OrderItems> orderItems) {
         this.orderItems = orderItems;
     }
 
@@ -77,7 +77,7 @@ public class OrdersObj {
         return products;
     }
 
-    public void setProducts(DbDao<ProductsKey, Products> products) {
+    public void setProducts(Dao<ProductsKey, Products> products) {
         this.products = products;
     }
 
@@ -171,9 +171,9 @@ public class OrdersObj {
                 ordersDto.getOrderId()));
         logger.debug("Order items {}", orderItemsList);
         // Show product for each order item
-        for (OrderItems orderItems : orderItemsList) {
-            final var dto = products.find(new ProductsKey(orderItems.getProductId()));
-            logger.debug("itemId {}, Product {}", orderItems.getItemId(), dto);
-        }
+        orderItemsList.forEach(items -> {
+            final var dto = products.find(new ProductsKey(items.getProductId()));
+            logger.debug("itemId {}, Product {}", items.getItemId(), dto);
+        });
     }
 }

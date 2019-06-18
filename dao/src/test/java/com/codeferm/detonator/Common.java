@@ -77,7 +77,7 @@ public class Common {
             logger.debug("Properties loaded from file {}", propertyFile);
         } catch (IOException e1) {
             // Get properties from classpath
-            try (final var stream = GenMapDbDaoTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
+            try (final var stream = Common.class.getClassLoader().getResourceAsStream(propertyFile)) {
                 props.load(stream);
                 logger.debug("Properties loaded from class path {}", propertyFile);
             } catch (IOException e2) {
@@ -145,8 +145,6 @@ public class Common {
                     throw new RuntimeException(e);
                 }
             }
-        } else {
-            db.atomicLong(String.format("%s_key", mapName), 0L).create();
         }
         return map;
     }

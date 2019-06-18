@@ -52,7 +52,7 @@ public class TransactionTest {
      * Business object.
      */
     @Inject
-    private OrdersBo ordersBo;
+    private OrdersBoBean ordersBo;
     /**
      * EJB container.
      */

@@ -8,12 +8,12 @@
     </parent>
 
     <groupId>com.codeferm</groupId>
-    <artifactId>dao</artifactId>
+    <artifactId>bo</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     
-    <name>DeTOnator DAO</name>
-    <description>Simple DAO layer</description>
+    <name>DeTOnator BO</name>
+    <description>DeTOnator Business Objects</description>
 
     <properties>
         <atomikos.version>4.0.6</atomikos.version>
@@ -41,7 +41,7 @@
                     -->
                     <mapTypes>true</mapTypes>
                     <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
-                    <dtoTemplate>dto.ftl</dtoTemplate>
+                    <dtoTemplate>dtobv.ftl</dtoTemplate>
                     <idTemplate>key.ftl</idTemplate>
                     <sqlTemplate>sql.ftl</sqlTemplate>
                     <packageName>com.codeferm.dto</packageName>
@@ -68,9 +68,9 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>generate-test-sources</phase>
+                        <phase>generate-sources</phase>
                         <goals>
-                            <goal>testGenerate</goal>
+                            <goal>generate</goal>
                         </goals>
                     </execution>
                 </executions>                
@@ -91,23 +91,18 @@
                 <configuration>
                     <trimStackTrace>false</trimStackTrace>
                 </configuration>            
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.2</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>            
         </plugins>
     </build>
     
     <dependencies>
+        <!-- Provided -->
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>2.0.1.Final</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- Compile -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -129,7 +124,24 @@
             <artifactId>mapdb</artifactId>
             <version>3.0.7</version>
         </dependency>
+        <dependency>
+            <groupId>com.codeferm</groupId>
+            <artifactId>dao</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>        
         <!-- Test -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>6.0.17.Final</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.el</artifactId>
+            <version>3.0.0</version>
+            <scope>test</scope>
+        </dependency>        
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -148,5 +160,13 @@
             <version>2.3.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- Include dao project test jar -->
+        <dependency>
+            <groupId>com.codeferm</groupId>
+            <artifactId>dao</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>         
     </dependencies>
 </project>

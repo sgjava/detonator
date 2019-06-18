@@ -20,5 +20,5 @@ import javax.inject.Qualifier;
 @Documented
 @Qualifier
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
-public @interface OrdersObjType {
+public @interface OrdersBoType {
 }

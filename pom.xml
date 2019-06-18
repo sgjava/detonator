@@ -13,6 +13,7 @@
         <module>dto</module>
         <module>detonator-maven-plugin</module>
         <module>dao</module>
+        <module>bo</module>
         <module>guice</module>
         <module>tomee</module>
     </modules>

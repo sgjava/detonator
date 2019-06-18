@@ -1,6 +1,6 @@
 ![Title](images/title.png)
 
-DeTOnator DTO is an easy to use code generator that explodes database schema into DTOs, IDs, SQL, etc. Being template driven you can
+DeTOnator DTO is an easy to use code generator that explodes database schema into DTOs, Keys, SQL, etc. Being template driven you can
 modify or create new templates to generate code for a particular framework or even another language besides Java. 
 * DeTOnator DTO reads your database schema to build artifacts, so it can be used to detect changes in the schema that breaks your
 code. By using DTOs and Java's type safety you will see when field names are removed or changed. Adding nullable fields usually will

@@ -21,46 +21,6 @@
             
     <build>
         <plugins>
-            <!-- Generate DTOs -->
-            <plugin>
-                <groupId>com.codeferm</groupId>
-                <artifactId>detonator-maven-plugin</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
-                <configuration>
-                    <dbDriver>org.h2.Driver</dbDriver>
-                    <dbUser>sa</dbUser>
-                    <dbPassword></dbPassword>
-                    <dbUrl>jdbc:h2:~/test</dbUrl>
-                    <dbPoolSize>10</dbPoolSize>
-                    <!--
-                    <dbDriver>oracle.jdbc.driver.OracleDriver</dbDriver>
-                    <dbUser>ot</dbUser>
-                    <dbPassword>testtest</dbPassword>
-                    <dbUrl>jdbc:oracle:thin:@//192.168.1.154:1521/XE</dbUrl>
-                    <dbPoolSize>11</dbPoolSize>
-                    -->
-                    <mapTypes>true</mapTypes>
-                    <templatesDir>${project.basedir}/../dto/src/main/resources/templates</templatesDir>
-                    <dtoTemplate>dto.ftl</dtoTemplate>
-                    <idTemplate>key.ftl</idTemplate>
-                    <sqlTemplate>sql.ftl</sqlTemplate>
-                    <packageName>com.codeferm.dto</packageName>
-                    <!-- Generate orders DTO -->
-                    <sqlMap>
-                        <Orders>
-                            <sql>select * from orders</sql>
-                        </Orders>
-                    </sqlMap>                    
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>testGenerate</goal>
-                        </goals>
-                    </execution>
-                </executions>                
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -97,7 +57,7 @@
             <groupId>com.codeferm</groupId>
             <artifactId>dao</artifactId>
             <version>1.0.0-SNAPSHOT</version>
-        </dependency>        
+        </dependency>
         <dependency>
             <groupId>javax.transaction</groupId>
             <artifactId>javax.transaction-api</artifactId>
@@ -118,7 +78,24 @@
             <artifactId>transactions-jta</artifactId>
             <version>${atomikos.version}</version>
         </dependency>                
+        <dependency>
+            <groupId>com.codeferm</groupId>
+            <artifactId>bo</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>        
         <!-- Test -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>6.0.17.Final</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.el</artifactId>
+            <version>3.0.0</version>
+            <scope>test</scope>
+        </dependency>           
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -154,6 +131,14 @@
             <artifactId>atomikos-util</artifactId>
             <version>${atomikos.version}</version>
             <scope>test</scope>
-        </dependency>        
+        </dependency>
+        <!-- Include dao project test jar -->
+        <dependency>
+            <groupId>com.codeferm</groupId>
+            <artifactId>dao</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>         
     </dependencies>
 </project>

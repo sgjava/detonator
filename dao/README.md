@@ -19,10 +19,6 @@ instance. GenerousBeanProcessor in DbUtils handles this mapping automatically.
 * Multiple DML operations are optimized for JDBC by using batch. Thus, you can save, update and delete lists of records with the back
 end being optimized.
 * No annotations are required for DTOs to work, but you can use Bean Validation 2.0 annotations if you want your DTOs validated.
-* Use [DeTOnator Guice](https://github.com/sgjava/detonator/tree/master/guice) for Method level transactions using a simple @Transaction
-annotation.
-* Use [DeTOnator TomEE](https://github.com/sgjava/detonator/tree/master/tomee) used standard @Transactional annotation for method or
-class level transactions..
 * CQRS is supported out of the box since composite (i.e. more than one table in select) SQL is supported. You can generate a DTO that
 handles composite SQL (query) and use single table SQL (command) to generate DTOs and SQL for DML operations. This is also useful
 for legacy databases that were not forward engineered from an ORM type tool.

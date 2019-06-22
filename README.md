@@ -22,7 +22,7 @@ implementation.
 * app.properties is each project's test resources is used by each module to test specific properties. You can also override
 database.properties to use the same test schema as the dto project.
 
-The sample database from [Oracle](https://www.oracletutorial.com/getting-started/oracle-sample-database)) has been modified and
+The sample database from [Oracle](https://www.oracletutorial.com/getting-started/oracle-sample-database) has been modified and
 cleaned up a bit. An H2 equivalent is also provided. While not the best structured database in the world it does provide something
 for the tests to kick around.
 

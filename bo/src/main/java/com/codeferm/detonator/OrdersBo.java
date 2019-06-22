@@ -11,6 +11,11 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
+import com.lmax.disruptor.BusySpinWaitStrategy;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
+import com.lmax.disruptor.util.DaemonThreadFactory;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.concurrent.locks.ReentrantLock;
@@ -57,16 +62,26 @@ public class OrdersBo {
      */
     private Dao<InventoriesKey, Inventories> inventories;
     /**
-     * Lock for inventories update.
+     * Disruptor used for inventory changes.
      */
-    private final ReentrantLock lock;
+    private final Disruptor<InventoryEvent> disruptor;
+    /**
+     * Inventory event ring buffer.
+     */
+    private final RingBuffer<InventoryEvent> ringBuffer;
 
     /**
      * Default constructor. Initialize validator and lock.
      */
     public OrdersBo() {
-        this.validator = Validation.buildDefaultValidatorFactory().getValidator();
-        this.lock = new ReentrantLock();
+        validator = Validation.buildDefaultValidatorFactory().getValidator();
+        // Construct the Disruptor
+        disruptor = new Disruptor<>(new InventoryEventFactory(), 128, DaemonThreadFactory.INSTANCE, ProducerType.SINGLE,
+                new BusySpinWaitStrategy());
+        // Connect the handler        
+        disruptor.handleEventsWith(new InventoryEventHandler());
+        // Start the Disruptor, starts all threads running
+        ringBuffer = disruptor.start();
     }
 
     public Dao<OrdersKey, Orders> getOrders() {
@@ -99,6 +114,18 @@ public class OrdersBo {
 
     public void setInventories(Dao<InventoriesKey, Inventories> inventories) {
         this.inventories = inventories;
+    }
+
+    public Validator getValidator() {
+        return validator;
+    }
+
+    public Disruptor<InventoryEvent> getDisruptor() {
+        return disruptor;
+    }
+
+    public RingBuffer<InventoryEvent> getRingBuffer() {
+        return ringBuffer;
     }
 
     /**
@@ -136,28 +163,20 @@ public class OrdersBo {
     }
 
     /**
-     * Update inventory in thread safe manner. This could become a bottleneck depending on the persistence latency.
+     * Update inventory quantities in thread safe manner using ring buffer.
      *
      * @param productId Product ID.
      * @param warehouseId Warehouse ID.
      * @param quantity Quantity add, but you can use a negative number to subtract quantity.
      */
     public void updateInventory(final Long productId, final Long warehouseId, final Integer quantity) {
-        lock.lock();
-        try {
-            final var dto = productExists(productId, warehouseId);
-            final var newQuantity = dto.getQuantity() + quantity;
-            // Must have > 0 products left in inventory
-            if (newQuantity > 0) {
-                dto.setQuantity(newQuantity);
-                inventories.update(dto.getKey(), dto);
-            } else {
-                throw new RuntimeException(String.format("Low inventory: %d, product: %d, warehouse: %d", newQuantity, productId,
-                        warehouseId));
-            }
-        } finally {
-            lock.unlock();
-        }
+        final var sequenceId = ringBuffer.next();
+        final var event = ringBuffer.get(sequenceId);
+        event.setProductId(productId);
+        event.setQuantity(quantity);
+        event.setWarehouseId(warehouseId);
+        event.setInventories(inventories);
+        ringBuffer.publish(sequenceId);
     }
 
     /**

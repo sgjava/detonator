@@ -11,10 +11,12 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
+import com.lmax.disruptor.TimeoutException;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
@@ -130,7 +132,7 @@ public class OrdersBoTest {
     }
 
     /**
-     * Test updateInventory method.
+     * Test updateInventory method concurrency.
      */
     @Test
     public void updateInventory() {
@@ -150,12 +152,19 @@ public class OrdersBoTest {
         }
         // Shutdow executor service
         executor.shutdown();
-        // Wait for everything to finish
-        logger.debug("Waiting for threads to finish");
+        // Wait for BO client threads to finish
+        logger.debug("Waiting for BO client threads to finish");
         try {
             executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        }
+        // Wait for Disruptor threads to finish
+        logger.debug("Waiting for Disruptor to finish");
+        try {
+            ordersBo.getDisruptor().shutdown(10, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            throw new RuntimeException("Disruptor shutdown timeout", e);
         }
         // Get updated inventories dto
         final var dtoUpdated = ordersBo.productExists(dto.getProductId(), dto.getWarehouseId());

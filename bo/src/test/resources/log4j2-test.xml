@@ -6,11 +6,14 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="com.codeferm.detonator.DataLoader" level="info">
-            <AppenderRef ref="Console"/>
-        </Logger>
         <Root level="debug">
             <AppenderRef ref="Console"/>
         </Root>
+        <Logger name="com.codeferm.detonator.DataLoader" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.hibernate.validator" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
     </Loggers>
 </Configuration>

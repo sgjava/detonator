@@ -120,10 +120,10 @@
             <version>1.7</version>
         </dependency>
         <dependency>
-            <groupId>org.mapdb</groupId>
-            <artifactId>mapdb</artifactId>
-            <version>3.0.7</version>
-        </dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>3.4.2</version>
+        </dependency>       
         <dependency>
             <groupId>com.codeferm</groupId>
             <artifactId>dao</artifactId>

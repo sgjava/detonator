@@ -4,6 +4,8 @@
 package com.codeferm.detonator;
 
 import com.atomikos.jdbc.AtomikosDataSourceBean;
+import com.codeferm.dto.Inventories;
+import com.codeferm.dto.InventoriesKey;
 import com.codeferm.dto.OrderItems;
 import com.codeferm.dto.OrderItemsKey;
 import com.codeferm.dto.Orders;
@@ -133,11 +135,15 @@ public class TransactionTest {
                 OrderItemsKey.class, OrderItems.class);
         final Dao<ProductsKey, Products> products = new GenDbDao<>(dataSource, common.loadProperties("products.properties"),
                 ProductsKey.class, Products.class);
+        final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(dataSource, common.loadProperties(
+                "inventories.properties"),
+                InventoriesKey.class, Inventories.class);
         // Create BO and set DAOs
         final var ordersBo = new OrdersBo();
         ordersBo.setOrders(orders);
         ordersBo.setOrderItems(orderItems);
         ordersBo.setProducts(products);
+        ordersBo.setInventories(inventories);
         return ordersBo;
     }
     

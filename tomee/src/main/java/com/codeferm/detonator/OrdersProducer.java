@@ -111,9 +111,10 @@ public class OrdersProducer {
         logger.debug("Init DAO Map");
         daoConfig();
         logger.debug("Done DAO Map");
-        ordersBo.setOrderItems((DbDao<OrderItemsKey, OrderItems>) map.get("orderitems"));
-        ordersBo.setOrders((DbDao<OrdersKey, Orders>) map.get("orders"));
-        ordersBo.setProducts((DbDao<ProductsKey, Products>) map.get("products"));
+        ordersBo.setOrderItems(getOrderItems());
+        ordersBo.setOrders(getOrders());
+        ordersBo.setProducts(getProducts());
+        ordersBo.setInventories(getInventories());
     }
 
     /**
@@ -134,63 +135,63 @@ public class OrdersProducer {
     }
 
     @Produces
-    public DbDao<ContactsKey, Contacts> getContacts() {
-        return (DbDao<ContactsKey, Contacts>) map.get("contacts");
+    public Dao<ContactsKey, Contacts> getContacts() {
+        return (Dao<ContactsKey, Contacts>) map.get("contacts");
     }
 
     @Produces
-    public DbDao<CountriesKey, Countries> getCountries() {
-        return (DbDao<CountriesKey, Countries>) map.get("countries");
+    public Dao<CountriesKey, Countries> getCountries() {
+        return (Dao<CountriesKey, Countries>) map.get("countries");
     }
 
     @Produces
-    public DbDao<CustomersKey, Customers> getCustomers() {
-        return (DbDao<CustomersKey, Customers>) map.get("customers");
+    public Dao<CustomersKey, Customers> getCustomers() {
+        return (Dao<CustomersKey, Customers>) map.get("customers");
     }
 
     @Produces
-    public DbDao<EmployeesKey, Employees> getEmployees() {
-        return (DbDao<EmployeesKey, Employees>) map.get("employees");
+    public Dao<EmployeesKey, Employees> getEmployees() {
+        return (Dao<EmployeesKey, Employees>) map.get("employees");
     }
 
     @Produces
-    public DbDao<InventoriesKey, Inventories> getInventories() {
-        return (DbDao<InventoriesKey, Inventories>) map.get("inventories");
+    public Dao<InventoriesKey, Inventories> getInventories() {
+        return (Dao<InventoriesKey, Inventories>) map.get("inventories");
     }
 
     @Produces
-    public DbDao<LocationsKey, Locations> getLocations() {
-        return (DbDao<LocationsKey, Locations>) map.get("locations");
+    public Dao<LocationsKey, Locations> getLocations() {
+        return (Dao<LocationsKey, Locations>) map.get("locations");
     }
 
     @Produces
-    public DbDao<OrderItemsKey, OrderItems> getOrderItems() {
-        return (DbDao<OrderItemsKey, OrderItems>) map.get("orderitems");
+    public Dao<OrderItemsKey, OrderItems> getOrderItems() {
+        return (Dao<OrderItemsKey, OrderItems>) map.get("orderitems");
     }
 
     @Produces
-    public DbDao<OrdersKey, Orders> getOrders() {
-        return (DbDao<OrdersKey, Orders>) map.get("orders");
+    public Dao<OrdersKey, Orders> getOrders() {
+        return (Dao<OrdersKey, Orders>) map.get("orders");
     }
 
     @Produces
-    public DbDao<ProductCategoriesKey, ProductCategories> getProductCategories() {
-        return (DbDao<ProductCategoriesKey, ProductCategories>) map.get("productcategories");
+    public Dao<ProductCategoriesKey, ProductCategories> getProductCategories() {
+        return (Dao<ProductCategoriesKey, ProductCategories>) map.get("productcategories");
     }
 
     @Produces
-    public DbDao<ProductsKey, Products> getProducts() {
-        return (DbDao<ProductsKey, Products>) map.get("products");
+    public Dao<ProductsKey, Products> getProducts() {
+        return (Dao<ProductsKey, Products>) map.get("products");
     }
 
     @Produces
-    public DbDao<RegionsKey, Regions> getRegions() {
-        return (DbDao<RegionsKey, Regions>) map.get("regions");
+    public Dao<RegionsKey, Regions> getRegions() {
+        return (Dao<RegionsKey, Regions>) map.get("regions");
     }
 
     @Produces
-    public DbDao<WarehousesKey, Warehouses> getWarehouses() {
-        return (DbDao<WarehousesKey, Warehouses>) map.get("warehouses");
+    public Dao<WarehousesKey, Warehouses> getWarehouses() {
+        return (Dao<WarehousesKey, Warehouses>) map.get("warehouses");
     }
 
     @Produces

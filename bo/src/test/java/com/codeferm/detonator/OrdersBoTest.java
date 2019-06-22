@@ -3,6 +3,8 @@
  */
 package com.codeferm.detonator;
 
+import com.codeferm.dto.Inventories;
+import com.codeferm.dto.InventoriesKey;
 import com.codeferm.dto.OrderItems;
 import com.codeferm.dto.OrderItemsKey;
 import com.codeferm.dto.Orders;
@@ -11,6 +13,8 @@ import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
@@ -57,7 +61,8 @@ public class OrdersBoTest {
         // Get database properties from dto project
         properties = common.loadProperties("../dto/src/test/resources/database.properties");
         // Merge app properties
-        properties.putAll(common.loadProperties("app.properties"));        // Create DBCP DataSource
+        properties.putAll(common.loadProperties("app.properties"));
+        // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
         ds.setUsername(properties.getProperty("db.user"));
@@ -90,11 +95,15 @@ public class OrdersBoTest {
                 OrderItemsKey.class, OrderItems.class);
         final Dao<ProductsKey, Products> products = new GenDbDao<>(dataSource, common.loadProperties("products.properties"),
                 ProductsKey.class, Products.class);
+        final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(dataSource, common.loadProperties(
+                "inventories.properties"),
+                InventoriesKey.class, Inventories.class);
         // Create BO and set DAOs
         final var ordersBo = new OrdersBo();
         ordersBo.setOrders(orders);
         ordersBo.setOrderItems(orderItems);
         ordersBo.setProducts(products);
+        ordersBo.setInventories(inventories);
         return ordersBo;
     }
 
@@ -117,9 +126,43 @@ public class OrdersBoTest {
         // Verify status update was commited
         assertNotNull(dto);
         assertEquals("Shipped", dto.getStatus());
-        
+
     }
-    
+
+    /**
+     * Test updateInventory method.
+     */
+    @Test
+    public void updateInventory() {
+        logger.debug("updateInventory");
+        final var ordersBo = createBo();
+        // Get inventories dto
+        final var dto = ordersBo.productExists(3L, 1L);
+        // Database pool size - 1 threads
+        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
+        //
+        for (int i = 0; i < 100; i++) {
+            final Runnable task = () -> {
+                // Subtract 1 from inventory
+                ordersBo.updateInventory(dto.getProductId(), dto.getWarehouseId(), -1);
+            };
+            executor.execute(task);
+        }
+        // Shutdow executor service
+        executor.shutdown();
+        // Wait for everything to finish
+        logger.debug("Waiting for threads to finish");
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        // Get updated inventories dto
+        final var dtoUpdated = ordersBo.productExists(dto.getProductId(), dto.getWarehouseId());
+        logger.debug("Quantity left {}", dtoUpdated.getQuantity());
+        assertEquals(dto.getQuantity() - 100, dtoUpdated.getQuantity());
+    }
+
     /**
      * Test linking tables.
      */
@@ -128,6 +171,6 @@ public class OrdersBoTest {
         logger.debug("linkTables");
         final var ordersBo = createBo();
         ordersBo.orderInfo(1);
-    }    
+    }
 
 }

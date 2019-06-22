@@ -3,6 +3,8 @@
  */
 package com.codeferm.detonator;
 
+import com.codeferm.dto.Inventories;
+import com.codeferm.dto.InventoriesKey;
 import com.codeferm.dto.OrderItems;
 import com.codeferm.dto.OrderItemsKey;
 import com.codeferm.dto.Orders;
@@ -11,6 +13,7 @@ import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import org.apache.logging.log4j.LogManager;
@@ -49,12 +52,21 @@ public class OrdersBo {
      * Products DAO.
      */
     private Dao<ProductsKey, Products> products;
+    /**
+     * Inventories DAO.
+     */
+    private Dao<InventoriesKey, Inventories> inventories;
+    /**
+     * Lock for inventories update.
+     */
+    private final ReentrantLock lock;
 
     /**
-     * Default constructor. Validates bean instances. Implementations of this interface must be thread-safe.
+     * Default constructor. Initialize validator and lock.
      */
     public OrdersBo() {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
+        this.lock = new ReentrantLock();
     }
 
     public Dao<OrdersKey, Orders> getOrders() {
@@ -81,19 +93,12 @@ public class OrdersBo {
         this.products = products;
     }
 
-    /**
-     * Throw exception if order doesn't exist.
-     *
-     * @param ordersId Order ID to look up.
-     * @return DTO if it exists.
-     */
-    public Orders orderExists(final long ordersId) {
-        // Make sure order exists 
-        final var dto = orders.find(new OrdersKey(ordersId));
-        if (dto == null) {
-            throw new RuntimeException(String.format("ordersId %d not found", ordersId));
-        }
-        return dto;
+    public Dao<InventoriesKey, Inventories> getInventories() {
+        return inventories;
+    }
+
+    public void setInventories(Dao<InventoriesKey, Inventories> inventories) {
+        this.inventories = inventories;
     }
 
     /**
@@ -112,6 +117,62 @@ public class OrdersBo {
             message = message.substring(0, message.length() - 3);
             throw new RuntimeException(String.format("Bean violations: %s", message));
         }
+    }
+
+    /**
+     * Throw exception if product and warehouse doesn't exist or return dto if it does.
+     *
+     * @param productId
+     * @param warehouseId
+     * @return
+     */
+    public Inventories productExists(final Long productId, final Long warehouseId) {
+        // Make sure order exists 
+        final var dto = inventories.find(new InventoriesKey(productId, warehouseId));
+        if (dto == null) {
+            throw new RuntimeException(String.format("productId %d : warehouseId %d not found", productId, warehouseId));
+        }
+        return dto;
+    }
+
+    /**
+     * Update inventory in thread safe manner. This could become a bottleneck depending on the persistence latency.
+     *
+     * @param productId Product ID.
+     * @param warehouseId Warehouse ID.
+     * @param quantity Quantity add, but you can use a negative number to subtract quantity.
+     */
+    public void updateInventory(final Long productId, final Long warehouseId, final Integer quantity) {
+        lock.lock();
+        try {
+            final var dto = productExists(productId, warehouseId);
+            final var newQuantity = dto.getQuantity() + quantity;
+            // Must have > 0 products left in inventory
+            if (newQuantity > 0) {
+                dto.setQuantity(newQuantity);
+                inventories.update(dto.getKey(), dto);
+            } else {
+                throw new RuntimeException(String.format("Low inventory: %d, product: %d, warehouse: %d", newQuantity, productId,
+                        warehouseId));
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Throw exception if order doesn't exist or return dto if it does.
+     *
+     * @param ordersId Order ID to look up.
+     * @return DTO if it exists.
+     */
+    public Orders orderExists(final long ordersId) {
+        // Make sure order exists 
+        final var dto = orders.find(new OrdersKey(ordersId));
+        if (dto == null) {
+            throw new RuntimeException(String.format("ordersId %d not found", ordersId));
+        }
+        return dto;
     }
 
     /**
@@ -135,7 +196,7 @@ public class OrdersBo {
         var k = orders.saveReturnKey(dto, new String[]{"ORDER_ID"});
         // Set key in value
         dto.setOrderId(k.getOrderId());
-        // Do bean validation after key created and rollback on exception
+        // Do bean validation after key created and throw exception on validation failure
         dtoValid(dto);
         return k;
     }

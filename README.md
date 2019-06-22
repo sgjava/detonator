@@ -26,4 +26,4 @@ The sample database from [Oracle](https://www.oracletutorial.com/getting-started
 cleaned up a bit. An H2 equivalent is also provided. While not the best structured database in the world it does provide something
 for the tests to kick around.
 
-![Title](images/title.png)
+![Title](images/sampledb.png)

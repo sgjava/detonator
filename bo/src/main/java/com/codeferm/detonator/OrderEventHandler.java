@@ -74,9 +74,6 @@ public class OrderEventHandler implements EventHandler<OrderEvent> {
         dto.setOrderDate(Date.valueOf(LocalDate.now()));
         dto.setSalesmanId(event.getSalesmanId());
         dto.setStatus("New");
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating {}", dto);
-        }
         // Save DTO and return identity key
         var k = event.getOrders().saveReturnKey(dto, new String[]{"ORDER_ID"});
         // Set key in value

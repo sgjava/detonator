@@ -3,12 +3,17 @@
  */
 package com.codeferm.detonator;
 
+import com.codeferm.dto.OrderItems;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
+import com.lmax.disruptor.TimeoutException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import javax.ejb.embeddable.EJBContainer;
 import javax.inject.Inject;
 import javax.naming.Context;
@@ -20,8 +25,6 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -194,18 +197,25 @@ public class TransactionTest {
     @Test
     public void commit() {
         logger.debug("commit");
-        final var key = ordersBo.createOrder(1, 1);
-        // Verify record was commited
-        var dto = ordersDao.find(key);
-        assertNotNull(dto);
-        // Status should be pending
-        assertEquals("Pending", dto.getStatus());
-        // Update status
-        ordersBo.updateStatus(key.getOrderId(), "Shipped");
-        dto = ordersDao.find(key);
-        // Verify status update was commited
-        assertNotNull(dto);
-        assertEquals("Shipped", dto.getStatus());
+        final List<OrderItems> list = new ArrayList<>();
+        final OrderItems item1 = new OrderItems();
+        item1.setItemId(1L);
+        item1.setProductId(3L);
+        item1.setQuantity(1);
+        list.add(item1);
+        final OrderItems item2 = new OrderItems();
+        item2.setItemId(2L);
+        item2.setProductId(4L);
+        item2.setQuantity(1);
+        list.add(item2);
+        ordersBo.createOrder(1, 1, list);
+        // Wait for Disruptor threads to finish
+        logger.debug("Waiting for Disruptor to finish");
+        try {
+            ordersBo.getOrdersBo().getDisruptor().shutdown(10, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            throw new RuntimeException("Disruptor shutdown timeout", e);
+        }
     }
 
     /**

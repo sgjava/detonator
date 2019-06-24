@@ -12,17 +12,19 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
+import com.lmax.disruptor.TimeoutException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -50,7 +52,7 @@ public class TransactionTest {
     /**
      * Common test methods.
      */
-    private static Common common;    
+    private static Common common;
 
     /**
      * Create test database.
@@ -126,7 +128,7 @@ public class TransactionTest {
     public static void afterAll() throws SQLException {
         ((AtomikosDataSourceBean) dataSource).close();
     }
-    
+
     public OrdersBo createBo() {
         // Create generic DAOs
         final Dao<OrdersKey, Orders> orders
@@ -146,7 +148,6 @@ public class TransactionTest {
         ordersBo.setInventories(inventories);
         return ordersBo;
     }
-    
 
     /**
      * Test JTA commit.
@@ -157,18 +158,23 @@ public class TransactionTest {
         // Create transactional business object
         OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
         bo.setOrdersBo(createBo());
-        final var key = bo.createOrder(1, 1);
-        // Verify record was commited
-        var dto = bo.getOrdersBo().getOrders().find(key);
-        assertNotNull(dto);
-        // Status should be pending
-        assertEquals("Pending", dto.getStatus());
-        // Update status
-        bo.updateStatus(key.getOrderId(), "Shipped");
-        dto = bo.getOrdersBo().getOrders().find(key);
-        // Verify status update was commited
-        assertNotNull(dto);
-        assertEquals("Shipped", dto.getStatus());
+        final List<OrderItems> list = new ArrayList<>();
+        final OrderItems item1 = new OrderItems();
+        item1.setItemId(1L);
+        item1.setProductId(3L);
+        item1.setQuantity(1);
+        list.add(item1);
+        final OrderItems item2 = new OrderItems();
+        item2.setItemId(2L);
+        item2.setProductId(4L);
+        item2.setQuantity(1);
+        list.add(item2);
+        bo.createOrder(1, 1, list);
+        try {
+            bo.getOrdersBo().getDisruptor().shutdown(10, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            throw new RuntimeException("Disruptor shutdown timeout", e);
+        }
     }
 
     /**
@@ -185,7 +191,7 @@ public class TransactionTest {
             bo.updateStatus(0, "Shipped");
         });
     }
-    
+
     /**
      * Test linking tables.
      */

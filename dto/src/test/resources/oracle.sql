@@ -241,7 +241,7 @@ CREATE TABLE order_items
     order_id   NUMBER                                , -- fk
     item_id    NUMBER                                ,
     product_id NUMBER NOT NULL                       , -- fk
-    quantity   NUMBER( 8, 2 ) NOT NULL                        ,
+    quantity   NUMBER( 8, 0 ) NOT NULL                        ,
     unit_price NUMBER( 8, 2 ) NOT NULL                        ,
     CONSTRAINT pk_order_items 
       PRIMARY KEY( order_id, item_id ),

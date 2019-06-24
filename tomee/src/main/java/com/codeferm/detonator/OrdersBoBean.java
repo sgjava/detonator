@@ -3,7 +3,8 @@
  */
 package com.codeferm.detonator;
 
-import com.codeferm.dto.OrdersKey;
+import com.codeferm.dto.OrderItems;
+import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -38,15 +39,24 @@ public class OrdersBoBean {
     }
 
     /**
+     * Get orders BO.
+     * 
+     * @return BO.
+     */
+    public OrdersBo getOrdersBo() {
+        return ordersBo;
+    }
+
+    /**
      * Create new order.
      *
      * @param customerId Customer ID.
      * @param salesmanId Salesman ID.
-     * @return Generated key.
+     * @param list List of OrderItems.
      */
     @Transactional
-    public OrdersKey createOrder(final long customerId, final long salesmanId) {
-        return ordersBo.createOrder(customerId, salesmanId);
+    public void createOrder(final long customerId, final long salesmanId, final List<OrderItems> list) {
+        ordersBo.createOrder(customerId, salesmanId, list);
     }
 
     /**

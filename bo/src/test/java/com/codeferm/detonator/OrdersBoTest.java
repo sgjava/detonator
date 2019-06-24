@@ -12,11 +12,13 @@ import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
 import com.lmax.disruptor.TimeoutException;
+import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
@@ -116,37 +118,23 @@ public class OrdersBoTest {
     public void createOrder() {
         logger.debug("createOrder");
         final var ordersBo = createBo();
-        final var key = ordersBo.createOrder(1, 1);
-        // Verify record was commited
-        var dto = ordersBo.getOrders().find(key);
-        assertNotNull(dto);
-        // Status should be pending
-        assertEquals("Pending", dto.getStatus());
-        // Update status
-        ordersBo.updateStatus(key.getOrderId(), "Shipped");
-        dto = ordersBo.getOrders().find(key);
-        // Verify status update was commited
-        assertNotNull(dto);
-        assertEquals("Shipped", dto.getStatus());
-
-    }
-
-    /**
-     * Test updateInventory method concurrency.
-     */
-    @Test
-    public void updateInventory() {
-        logger.debug("updateInventory");
-        final var ordersBo = createBo();
-        // Get inventories dto
-        final var dto = ordersBo.productExists(3L, 1L);
         // Database pool size - 1 threads
         final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
         //
         for (int i = 0; i < 100; i++) {
             final Runnable task = () -> {
-                // Subtract 1 from inventory
-                ordersBo.updateInventory(dto.getProductId(), dto.getWarehouseId(), -1);
+                final List<OrderItems> list = new ArrayList<>();
+                final OrderItems item1 = new OrderItems();
+                item1.setItemId(1L);
+                item1.setProductId(3L);
+                item1.setQuantity(1);
+                list.add(item1);
+                final OrderItems item2 = new OrderItems();
+                item2.setItemId(2L);
+                item2.setProductId(4L);
+                item2.setQuantity(1);
+                list.add(item2);
+                ordersBo.createOrder(1, 1, list);
             };
             executor.execute(task);
         }
@@ -166,10 +154,6 @@ public class OrdersBoTest {
         } catch (TimeoutException e) {
             throw new RuntimeException("Disruptor shutdown timeout", e);
         }
-        // Get updated inventories dto
-        final var dtoUpdated = ordersBo.productExists(dto.getProductId(), dto.getWarehouseId());
-        logger.debug("Quantity left {}", dtoUpdated.getQuantity());
-        assertEquals(dto.getQuantity() - 100, dtoUpdated.getQuantity());
     }
 
     /**

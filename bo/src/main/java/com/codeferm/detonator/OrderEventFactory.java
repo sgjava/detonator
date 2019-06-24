@@ -12,7 +12,7 @@ import com.lmax.disruptor.EventFactory;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class InventoryEventFactory implements EventFactory<InventoryEvent> {
+public class OrderEventFactory implements EventFactory<OrderEvent> {
 
     /**
      * Return new inventory event.
@@ -20,8 +20,8 @@ public class InventoryEventFactory implements EventFactory<InventoryEvent> {
      * @return Inventory event.
      */
     @Override
-    public InventoryEvent newInstance() {
-        return new InventoryEvent();
+    public OrderEvent newInstance() {
+        return new OrderEvent();
     }
 
 }

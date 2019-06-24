@@ -139,8 +139,8 @@ CREATE TABLE order_items
     order_id   bigint                                , -- fk
     item_id    bigint                                ,
     product_id bigint NOT NULL                       , -- fk
-    quantity   NUMBER( 8, 2 ) NOT NULL                        ,
-    unit_price NUMBER( 8, 2 ) NOT NULL                        ,
+    quantity   NUMBER( 8, 0 ) NOT NULL               ,
+    unit_price NUMBER( 8, 2 ) NOT NULL               ,
     CONSTRAINT pk_order_items 
       PRIMARY KEY( order_id, item_id ),
     CONSTRAINT fk_order_items_products 

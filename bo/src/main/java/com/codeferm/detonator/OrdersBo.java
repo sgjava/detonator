@@ -16,11 +16,7 @@ import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
-import java.sql.Date;
-import java.time.LocalDate;
-import java.util.concurrent.locks.ReentrantLock;
-import javax.validation.Validation;
-import javax.validation.Validator;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,7 +25,7 @@ import org.apache.logging.log4j.Logger;
  * also use transactions in your calling class to handle automatic rollback on exception. Bean validation is built in if your DTOs
  * are decorated with javax.validation.constraints.* annotations.
  *
- * This class should be considered thread safe since the Validator and DAOs are thread safe.
+ * This class should be considered thread safe.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
@@ -41,10 +37,6 @@ public class OrdersBo {
      * Logger.
      */
     private final Logger logger = LogManager.getLogger(OrdersBo.class);
-    /**
-     * Bean validator.
-     */
-    private final Validator validator;
     /**
      * Orders DAO.
      */
@@ -62,24 +54,23 @@ public class OrdersBo {
      */
     private Dao<InventoriesKey, Inventories> inventories;
     /**
-     * Disruptor used for inventory changes.
+     * Disruptor used for orders.
      */
-    private final Disruptor<InventoryEvent> disruptor;
+    private final Disruptor<OrderEvent> disruptor;
     /**
-     * Inventory event ring buffer.
+     * Order event ring buffer.
      */
-    private final RingBuffer<InventoryEvent> ringBuffer;
+    private final RingBuffer<OrderEvent> ringBuffer;
 
     /**
      * Default constructor. Initialize validator and lock.
      */
     public OrdersBo() {
-        validator = Validation.buildDefaultValidatorFactory().getValidator();
         // Construct the Disruptor
-        disruptor = new Disruptor<>(new InventoryEventFactory(), 128, DaemonThreadFactory.INSTANCE, ProducerType.SINGLE,
+        disruptor = new Disruptor<>(new OrderEventFactory(), 128, DaemonThreadFactory.INSTANCE, ProducerType.SINGLE,
                 new BusySpinWaitStrategy());
         // Connect the handler        
-        disruptor.handleEventsWith(new InventoryEventHandler());
+        disruptor.handleEventsWith(new OrderEventHandler());
         // Start the Disruptor, starts all threads running
         ringBuffer = disruptor.start();
     }
@@ -116,67 +107,12 @@ public class OrdersBo {
         this.inventories = inventories;
     }
 
-    public Validator getValidator() {
-        return validator;
-    }
-
-    public Disruptor<InventoryEvent> getDisruptor() {
+    public Disruptor<OrderEvent> getDisruptor() {
         return disruptor;
     }
 
-    public RingBuffer<InventoryEvent> getRingBuffer() {
+    public RingBuffer<OrderEvent> getRingBuffer() {
         return ringBuffer;
-    }
-
-    /**
-     * Throws exception if bean validation fails.
-     *
-     * @param dto DTO to validate.
-     */
-    public void dtoValid(final Object dto) {
-        var violations = validator.validate(dto);
-        if (violations.size() > 0) {
-            var message = "";
-            // Build exception message
-            message = violations.stream().map(violation -> String.format("%s.%s %s | ", violation.getRootBeanClass().
-                    getSimpleName(), violation.getPropertyPath(), violation.getMessage())).reduce(message, String::concat);
-            // Trim last seperator
-            message = message.substring(0, message.length() - 3);
-            throw new RuntimeException(String.format("Bean violations: %s", message));
-        }
-    }
-
-    /**
-     * Throw exception if product and warehouse doesn't exist or return dto if it does.
-     *
-     * @param productId
-     * @param warehouseId
-     * @return
-     */
-    public Inventories productExists(final Long productId, final Long warehouseId) {
-        // Make sure order exists 
-        final var dto = inventories.find(new InventoriesKey(productId, warehouseId));
-        if (dto == null) {
-            throw new RuntimeException(String.format("productId %d : warehouseId %d not found", productId, warehouseId));
-        }
-        return dto;
-    }
-
-    /**
-     * Update inventory quantities in thread safe manner using ring buffer.
-     *
-     * @param productId Product ID.
-     * @param warehouseId Warehouse ID.
-     * @param quantity Quantity add, but you can use a negative number to subtract quantity.
-     */
-    public void updateInventory(final Long productId, final Long warehouseId, final Integer quantity) {
-        final var sequenceId = ringBuffer.next();
-        final var event = ringBuffer.get(sequenceId);
-        event.setProductId(productId);
-        event.setQuantity(quantity);
-        event.setWarehouseId(warehouseId);
-        event.setInventories(inventories);
-        ringBuffer.publish(sequenceId);
     }
 
     /**
@@ -195,29 +131,23 @@ public class OrdersBo {
     }
 
     /**
-     * Create new order.
+     * Publish event to create order.
      *
      * @param customerId Customer ID.
      * @param salesmanId Salesman ID.
-     * @return Generated key.
+     * @param list List of OrderItems.
      */
-    public OrdersKey createOrder(final long customerId, final long salesmanId) {
-        // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
-        final var dto = new Orders();
-        dto.setCustomerId(customerId);
-        dto.setOrderDate(Date.valueOf(LocalDate.now()));
-        dto.setSalesmanId(salesmanId);
-        dto.setStatus("Pending");
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating {}", dto);
-        }
-        // Save DTO and return identity key
-        var k = orders.saveReturnKey(dto, new String[]{"ORDER_ID"});
-        // Set key in value
-        dto.setOrderId(k.getOrderId());
-        // Do bean validation after key created and throw exception on validation failure
-        dtoValid(dto);
-        return k;
+    public void createOrder(final long customerId, final long salesmanId, final List<OrderItems> list) {
+        final var sequenceId = ringBuffer.next();
+        final var event = ringBuffer.get(sequenceId);
+        event.setCustomerId(customerId);
+        event.setSalesmanId(salesmanId);
+        event.setInventories(inventories);
+        event.setOrderItems(orderItems);
+        event.setOrderItemsList(list);
+        event.setOrders(orders);
+        event.setProducts(products);
+        ringBuffer.publish(sequenceId);
     }
 
     /**

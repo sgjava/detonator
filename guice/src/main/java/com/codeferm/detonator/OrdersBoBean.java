@@ -3,7 +3,8 @@
  */
 package com.codeferm.detonator;
 
-import com.codeferm.dto.OrdersKey;
+import com.codeferm.dto.OrderItems;
+import java.util.List;
 
 /**
  * Orders business object with transactions.
@@ -38,11 +39,11 @@ public class OrdersBoBean {
      *
      * @param customerId Customer ID.
      * @param salesmanId Salesman ID.
-     * @return Generated key.
+     * @param list List of OrderItems.
      */
     @Transaction
-    public OrdersKey createOrder(final long customerId, final long salesmanId) {
-        return ordersBo.createOrder(customerId, salesmanId);
+    public void createOrder(final long customerId, final long salesmanId, final List<OrderItems> list) {
+        ordersBo.createOrder(customerId, salesmanId, list);
     }
 
     /**
@@ -55,7 +56,7 @@ public class OrdersBoBean {
     public void updateStatus(final long ordersId, final String status) {
         ordersBo.updateStatus(ordersId, status);
     }
-    
+
     /**
      * Show how you can link child tables easily without composite SQL.
      *
@@ -63,5 +64,5 @@ public class OrdersBoBean {
      */
     public void orderInfo(final long ordersId) {
         ordersBo.orderInfo(ordersId);
-    }    
+    }
 }

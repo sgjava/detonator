@@ -159,12 +159,12 @@ public class MakeDtoTest {
         logger.debug("dtoTemplate");
         final var makeDto = new MakeDto(dataSource, "src/main/resources/templates", true);
         final var metadataExtract = new MetadataExtract();
-        final var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_orders"));
+        final var tables = metadataExtract.uniqueTableNames(sqlMap.get("md_order_items"));
         // Use camelCase of table name
         final var className = metadataExtract.toCamelCase(tables.get(0));
         // Use StringWriter for template
         final var out = new StringWriter();
-        makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_orders"), null, "com.codeferm.dto", className, out);
+        makeDto.dtoTemplate("dto.ftl", sqlMap.get("md_order_items"), null, "com.codeferm.dto", className, out);
         logger.debug(out.toString());
     }
     

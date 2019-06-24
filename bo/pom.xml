@@ -30,7 +30,7 @@
                     <dbDriver>org.h2.Driver</dbDriver>
                     <dbUser>sa</dbUser>
                     <dbPassword></dbPassword>
-                    <dbUrl>jdbc:h2:~/test</dbUrl>
+                    <dbUrl>jdbc:h2:/tmp/test</dbUrl>
                     <dbPoolSize>10</dbPoolSize>
                     <!--
                     <dbDriver>oracle.jdbc.driver.OracleDriver</dbDriver>

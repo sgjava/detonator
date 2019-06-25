@@ -31,7 +31,7 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class OrdersBo {
+public class OrdersBo implements Observer<OrderEventHandler, Orders> {
 
     /**
      * Logger.
@@ -69,8 +69,11 @@ public class OrdersBo {
         // Construct the Disruptor
         disruptor = new Disruptor<>(new OrderEventFactory(), 128, DaemonThreadFactory.INSTANCE, ProducerType.SINGLE,
                 new BusySpinWaitStrategy());
-        // Connect the handler        
-        disruptor.handleEventsWith(new OrderEventHandler());
+        final var oeh = new OrderEventHandler();
+        // Observe OrderEventHandler
+        oeh.addObserver(this);
+        // Connect the handler
+        disruptor.handleEventsWith(oeh);
         // Start the Disruptor, starts all threads running
         ringBuffer = disruptor.start();
     }
@@ -113,6 +116,17 @@ public class OrdersBo {
 
     public RingBuffer<OrderEvent> getRingBuffer() {
         return ringBuffer;
+    }
+
+    /**
+     * Observable used after order creation.
+     *
+     * @param object Object we are observing.
+     * @param data Disruptor event.
+     */
+    @Override
+    public void update(final Observable<OrderEventHandler, Orders> object, final Orders data) {
+        logger.debug("Order created: {}", data);
     }
 
     /**

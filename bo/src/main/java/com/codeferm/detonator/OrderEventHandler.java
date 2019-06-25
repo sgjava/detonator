@@ -25,7 +25,7 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class OrderEventHandler implements EventHandler<OrderEvent> {
+public class OrderEventHandler extends Observable<OrderEventHandler, Orders> implements EventHandler<OrderEvent> {
 
     /**
      * Logger.
@@ -65,9 +65,9 @@ public class OrderEventHandler implements EventHandler<OrderEvent> {
      * Create order using event data and return key.
      *
      * @param event Order event.
-     * @return Generated key.
+     * @return DTO with generated key.
      */
-    public OrdersKey createOrder(final OrderEvent event) {
+    public Orders createOrder(final OrderEvent event) {
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
         dto.setCustomerId(event.getCustomerId());
@@ -80,7 +80,7 @@ public class OrderEventHandler implements EventHandler<OrderEvent> {
         dto.setOrderId(k.getOrderId());
         // Do bean validation after key created and throw exception on validation failure
         dtoValid(dto);
-        return k;
+        return dto;
     }
 
     /**
@@ -110,7 +110,7 @@ public class OrderEventHandler implements EventHandler<OrderEvent> {
             inv = list.get(i);
             // Remove item quantity from inventory
             inv.setQuantity(inv.getQuantity() - item.getQuantity());
-            // Update quantity
+            // Save update
             event.getInventories().update(inv.getKey(), inv);
         } else {
             throw new RuntimeException(String.format("productId %d not in invenroty", item.getProductId()));
@@ -133,14 +133,19 @@ public class OrderEventHandler implements EventHandler<OrderEvent> {
             final var inv = updateInventory(event, item);
             final var product = event.getProducts().find(new ProductsKey(inv.getProductId()));
             item.setUnitPrice(product.getStandardCost());
+            // Validate DTO before insert
+            dtoValid(item);
             // Add item to order
             event.getOrderItems().update(item.getKey(), item);
         }
     }
-    
+
     @Override
     public void onEvent(final OrderEvent event, final long sequence, final boolean endOfBatch) {
         // Create order and add items
-        addItems(event, createOrder(event));
+        final var dto = createOrder(event);
+        addItems(event, dto.getKey());
+        // Notify observers that order created
+        notifyObservers(dto);
     }
 }

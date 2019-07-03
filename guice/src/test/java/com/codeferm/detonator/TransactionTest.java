@@ -12,14 +12,12 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
-import com.lmax.disruptor.TimeoutException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -141,7 +139,13 @@ public class TransactionTest {
                 "inventories.properties"),
                 InventoriesKey.class, Inventories.class);
         // Create BO and set DAOs
-        final var ordersBo = new OrdersBo();
+        final var queue = TransactionFactory.createObject(CreateOrderQueueBean.class, AtomikosTransModule.class);
+        queue.setOrders(orders);
+        queue.setOrderItems(orderItems);
+        queue.setProducts(products);
+        queue.setInventories(inventories);
+        queue.addObserver(new OrderCreatedBean(Integer.parseInt(properties.getProperty("db.pool.size")) - 1));
+        final var ordersBo = new OrdersBo(queue);
         ordersBo.setOrders(orders);
         ordersBo.setOrderItems(orderItems);
         ordersBo.setProducts(products);
@@ -170,11 +174,7 @@ public class TransactionTest {
         item2.setQuantity(1);
         list.add(item2);
         bo.createOrder(1, 1, list);
-        try {
-            bo.getOrdersBo().getDisruptor().shutdown(10, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            throw new RuntimeException("Disruptor shutdown timeout", e);
-        }
+        bo.getOrdersBo().getOrderQueue().shutdown();
     }
 
     /**

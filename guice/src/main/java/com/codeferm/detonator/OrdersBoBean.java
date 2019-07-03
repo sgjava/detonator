@@ -41,7 +41,6 @@ public class OrdersBoBean {
      * @param salesmanId Salesman ID.
      * @param list List of OrderItems.
      */
-    @Transaction
     public void createOrder(final long customerId, final long salesmanId, final List<OrderItems> list) {
         ordersBo.createOrder(customerId, salesmanId, list);
     }

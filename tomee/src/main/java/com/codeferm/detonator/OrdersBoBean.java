@@ -3,10 +3,21 @@
  */
 package com.codeferm.detonator;
 
+import com.codeferm.dto.Inventories;
+import com.codeferm.dto.InventoriesKey;
 import com.codeferm.dto.OrderItems;
+import com.codeferm.dto.OrderItemsKey;
+import com.codeferm.dto.Orders;
+import com.codeferm.dto.OrdersKey;
+import com.codeferm.dto.Products;
+import com.codeferm.dto.ProductsKey;
 import java.util.List;
-import javax.enterprise.context.ApplicationScoped;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.jms.JMSContext;
+import javax.jms.Queue;
 import javax.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +29,7 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0.0
  * @since 1.0.0
  */
-@ApplicationScoped
+@Singleton
 public class OrdersBoBean {
 
     /**
@@ -26,10 +37,40 @@ public class OrdersBoBean {
      */
     private final Logger logger = LogManager.getLogger(OrdersBoBean.class);
     /**
-     * Plain Java business object.
+     * Orders DAO.
      */
     @Inject
-    @OrdersBoType
+    private Dao<OrdersKey, Orders> orders;
+    /**
+     * OrderItems DAO.
+     */
+    @Inject
+    private Dao<OrderItemsKey, OrderItems> orderItems;
+    /**
+     * Products DAO.
+     */
+    @Inject
+    private Dao<ProductsKey, Products> products;
+    /**
+     * Inventories DAO.
+     */
+    @Inject
+    private Dao<InventoriesKey, Inventories> inventories;
+    /**
+     * Injected JMS Context.
+     */
+    @Inject
+    JMSContext jmsContext;
+    /**
+     * Create Order MDB.
+     *
+     * For TomEE use openejb.deploymentId.format={ejbJarId}/{ejbName}
+     */
+    @Resource(name = "CreateOrderBean")
+    private Queue createOrderBean;
+    /**
+     * Plain Java business object.
+     */
     private OrdersBo ordersBo;
 
     /**
@@ -39,8 +80,20 @@ public class OrdersBoBean {
     }
 
     /**
+     * Create BO.
+     */
+    @PostConstruct
+    void init() {
+        ordersBo = new OrdersBo(new CreateOrderQueueClient(jmsContext, createOrderBean));
+        ordersBo.setOrderItems(orderItems);
+        ordersBo.setOrders(orders);
+        ordersBo.setProducts(products);
+        ordersBo.setInventories(inventories);
+    }
+
+    /**
      * Get orders BO.
-     * 
+     *
      * @return BO.
      */
     public OrdersBo getOrdersBo() {
@@ -54,7 +107,6 @@ public class OrdersBoBean {
      * @param salesmanId Salesman ID.
      * @param list List of OrderItems.
      */
-    @Transactional
     public void createOrder(final long customerId, final long salesmanId, final List<OrderItems> list) {
         ordersBo.createOrder(customerId, salesmanId, list);
     }

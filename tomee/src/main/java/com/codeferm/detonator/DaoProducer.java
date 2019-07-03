@@ -33,8 +33,8 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import javax.inject.Singleton;
 import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,13 +46,13 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0.0
  * @since 1.0.0
  */
-@ApplicationScoped
-public class OrdersProducer {
+@Singleton
+public class DaoProducer {
 
     /**
      * Logger.
      */
-    private final Logger logger = LogManager.getLogger(OrdersProducer.class);
+    private final Logger logger = LogManager.getLogger(DaoProducer.class);
     /**
      * DataSource.
      */
@@ -62,17 +62,12 @@ public class OrdersProducer {
      * DAO Map.
      */
     private final Map<String, DbDao<?, ?>> map;
-    /**
-     * Plain Java business object.
-     */
-    final OrdersBo ordersBo;
 
     /**
      * Default constructor.
      */
-    public OrdersProducer() {
+    public DaoProducer() {
         map = new ConcurrentHashMap<>();
-        ordersBo = new OrdersBo();
     }
 
     /**
@@ -111,10 +106,6 @@ public class OrdersProducer {
         logger.debug("Init DAO Map");
         daoConfig();
         logger.debug("Done DAO Map");
-        ordersBo.setOrderItems(getOrderItems());
-        ordersBo.setOrders(getOrders());
-        ordersBo.setProducts(getProducts());
-        ordersBo.setInventories(getInventories());
     }
 
     /**
@@ -126,7 +117,7 @@ public class OrdersProducer {
     public Properties loadProperties(final String propertyFile) {
         Properties props = new Properties();
         // Get properties from classpath
-        try (final var stream = OrdersProducer.class.getClassLoader().getResourceAsStream(propertyFile)) {
+        try (final var stream = DaoProducer.class.getClassLoader().getResourceAsStream(propertyFile)) {
             props.load(stream);
         } catch (IOException e) {
             throw new RuntimeException("Property file exception", e);
@@ -192,11 +183,5 @@ public class OrdersProducer {
     @Produces
     public Dao<WarehousesKey, Warehouses> getWarehouses() {
         return (Dao<WarehousesKey, Warehouses>) map.get("warehouses");
-    }
-
-    @Produces
-    @OrdersBoType
-    public OrdersBo getOrdersBo() {
-        return ordersBo;
     }
 }

@@ -11,11 +11,6 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
-import com.lmax.disruptor.BusySpinWaitStrategy;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
-import com.lmax.disruptor.util.DaemonThreadFactory;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +26,7 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class OrdersBo implements Observer<OrderEventHandler, Orders> {
+public class OrdersBo {
 
     /**
      * Logger.
@@ -54,28 +49,17 @@ public class OrdersBo implements Observer<OrderEventHandler, Orders> {
      */
     private Dao<InventoriesKey, Inventories> inventories;
     /**
-     * Disruptor used for orders.
+     * Order queue used to create orders.
      */
-    private final Disruptor<OrderEvent> disruptor;
-    /**
-     * Order event ring buffer.
-     */
-    private final RingBuffer<OrderEvent> ringBuffer;
+    final private OrderQueue orderQueue;
 
     /**
-     * Default constructor. Initialize validator and lock.
+     * Default constructor.
+     * 
+     * @param orderQueue 
      */
-    public OrdersBo() {
-        // Construct the Disruptor
-        disruptor = new Disruptor<>(new OrderEventFactory(), 128, DaemonThreadFactory.INSTANCE, ProducerType.SINGLE,
-                new BusySpinWaitStrategy());
-        final var oeh = new OrderEventHandler();
-        // Observe OrderEventHandler
-        oeh.addObserver(this);
-        // Connect the handler
-        disruptor.handleEventsWith(oeh);
-        // Start the Disruptor, starts all threads running
-        ringBuffer = disruptor.start();
+    public OrdersBo(final OrderQueue orderQueue) {
+        this.orderQueue = orderQueue;
     }
 
     public Dao<OrdersKey, Orders> getOrders() {
@@ -110,23 +94,8 @@ public class OrdersBo implements Observer<OrderEventHandler, Orders> {
         this.inventories = inventories;
     }
 
-    public Disruptor<OrderEvent> getDisruptor() {
-        return disruptor;
-    }
-
-    public RingBuffer<OrderEvent> getRingBuffer() {
-        return ringBuffer;
-    }
-
-    /**
-     * Observable used after order creation.
-     *
-     * @param object Object we are observing.
-     * @param data Disruptor event.
-     */
-    @Override
-    public void update(final Observable<OrderEventHandler, Orders> object, final Orders data) {
-        logger.debug("Order created: {}", data);
+    public OrderQueue getOrderQueue() {
+        return orderQueue;
     }
 
     /**
@@ -145,23 +114,19 @@ public class OrdersBo implements Observer<OrderEventHandler, Orders> {
     }
 
     /**
-     * Publish event to create order.
+     * Create order based on OrderMessage.
      *
      * @param customerId Customer ID.
      * @param salesmanId Salesman ID.
      * @param list List of OrderItems.
      */
     public void createOrder(final long customerId, final long salesmanId, final List<OrderItems> list) {
-        final var sequenceId = ringBuffer.next();
-        final var event = ringBuffer.get(sequenceId);
-        event.setCustomerId(customerId);
-        event.setSalesmanId(salesmanId);
-        event.setInventories(inventories);
-        event.setOrderItems(orderItems);
-        event.setOrderItemsList(list);
-        event.setOrders(orders);
-        event.setProducts(products);
-        ringBuffer.publish(sequenceId);
+        final var orderMessage = new OrderMessage();
+        orderMessage.setCustomerId(customerId);
+        orderMessage.setSalesmanId(salesmanId);
+        orderMessage.setOrderItemsList(list);
+        // Send to queue and return right away
+        orderQueue.createOrder(orderMessage);
     }
 
     /**

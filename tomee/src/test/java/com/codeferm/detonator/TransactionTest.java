@@ -6,13 +6,13 @@ package com.codeferm.detonator;
 import com.codeferm.dto.OrderItems;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
-import com.lmax.disruptor.TimeoutException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.ejb.embeddable.EJBContainer;
 import javax.inject.Inject;
@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -133,6 +134,9 @@ public class TransactionTest {
         // Use log4j2 for logging
         System.setProperty("openejb.logger.external", "true");
         System.setProperty("openejb.log.factory", "log4j2");
+        // Set up for JMS
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "*");
+        System.setProperty("openejb.environment.default", "true");
         final Properties p = new Properties();
         // XADataSource
         p.put("dataSourceXa", String.format("new://Resource?type=XADataSource&class-name=%s", properties.getProperty(
@@ -150,8 +154,8 @@ public class TransactionTest {
         p.put("dataSource.userName", properties.getProperty("db.user"));
         p.put("dataSource.password", properties.getProperty("db.password"));
         p.put("dataSource.jtaManaged", true);
-        p.put("dataSource.maxActive", 11);
-        p.put("dataSource.maxIdle", 5);
+//        p.put("dataSource.maxActive", 11);
+        p.put("dataSource.maxIdle", Integer.parseInt(properties.getProperty("db.pool.size")));
         ejbContainer = EJBContainer.createEJBContainer(p);
         context = ejbContainer.getContext();
     }
@@ -197,25 +201,56 @@ public class TransactionTest {
     @Test
     public void commit() {
         logger.debug("commit");
+        // Database pool size - 1 threads
+        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
+        // Create some OrderItems
         final List<OrderItems> list = new ArrayList<>();
-        final OrderItems item1 = new OrderItems();
+        final var item1 = new OrderItems();
         item1.setItemId(1L);
         item1.setProductId(3L);
         item1.setQuantity(1);
         list.add(item1);
-        final OrderItems item2 = new OrderItems();
+        final var item2 = new OrderItems();
         item2.setItemId(2L);
         item2.setProductId(4L);
         item2.setQuantity(1);
         list.add(item2);
-        ordersBo.createOrder(1, 1, list);
-        // Wait for Disruptor threads to finish
-        logger.debug("Waiting for Disruptor to finish");
+        logger.debug("Waiting for JMS startup");
+        final Runnable firstTask = () -> {
+            ordersBo.createOrder(1, 1, list);
+        };
+        executor.execute(firstTask);
+        // Wait for JMS Start up, so it doesn't impact elapsed time
         try {
-            ordersBo.getOrdersBo().getDisruptor().shutdown(10, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            throw new RuntimeException("Disruptor shutdown timeout", e);
+            TimeUnit.MILLISECONDS.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
+        logger.debug("Start BO client threads");
+        for (int i = 0; i < 200; i++) {
+            final Runnable task = () -> {
+                ordersBo.createOrder(1, 1, list);
+            };
+            executor.execute(task);
+        }
+        final var start = System.nanoTime();
+        // Shutdow executor service
+        executor.shutdown();
+        // Wait for BO client threads to finish
+        logger.debug("Waiting for BO client threads to finish");
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            logger.debug("BO client threads finished");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        ordersBo.getOrdersBo().getOrderQueue().shutdown();
+        final var stop = System.nanoTime();
+        logger.debug("TPS: {}", 200 / ((stop-start) / 1000000000L));
+        // See if last order created
+        final var dto = ordersBo.getOrdersBo().getOrders().find(new OrdersKey(306L));
+        assertNotNull(dto);
+        logger.debug("Last order: {}", dto);
     }
 
     /**

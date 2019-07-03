@@ -12,13 +12,19 @@
         <Logger name="com.codeferm.detonator.DataLoader" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="org.apache" level="info" additivity="false">
+        <Logger name="org.apache.webbeans" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="OpenEJB" level="info" additivity="false">
+        <Logger name="org.apache.geronimo.connector" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="Transaction" level="debug" additivity="false">
+        <Logger name="org.apache.activemq" level="warn" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="OpenEJB" level="warn" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="Transaction" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
     </Loggers>

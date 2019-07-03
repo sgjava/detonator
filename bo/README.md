@@ -6,5 +6,5 @@ wrappers to add transactional support.
 hard to implement on Android as well.
 * Bean Validation 2.0 used if DTOs are decorated with Bean Validation 2.0 annotations. An exception is thrown if validation fails
 and the calling code can do a rollback implicitly.
-* Orders are created using Disruptor ring buffer to adjust inventory in thread safe way.
+* Orders are created using a queue to adjust inventory in thread safe way.
 * See unit tests for example code.

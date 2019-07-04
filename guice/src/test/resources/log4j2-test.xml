@@ -9,13 +9,16 @@
         <Root level="debug">
             <AppenderRef ref="Console"/>
         </Root>
-        <Logger name="com.codeferm.detonator.DataLoader" level="info">
+        <Logger name="com.codeferm.detonator.DataLoader" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="com.atomikos" level="error">
+        <Logger name="com.codeferm.detonator.AtomikosTransInterceptor" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="org.hibernate.validator" level="warn">
+        <Logger name="com.atomikos" level="error" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.hibernate.validator" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
     </Loggers>

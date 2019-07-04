@@ -3,6 +3,8 @@
  */
 package com.codeferm.detonator;
 
+import com.codeferm.dto.Inventories;
+import com.codeferm.dto.InventoriesKey;
 import com.codeferm.dto.OrderItems;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
@@ -52,6 +54,11 @@ public class TransactionTest {
      */
     @Inject
     private Dao<OrdersKey, Orders> ordersDao;
+    /**
+     * Inventories DAO.
+     */
+    @Inject
+    private Dao<InventoriesKey, Inventories> inventories;
     /**
      * Business object.
      */
@@ -194,6 +201,20 @@ public class TransactionTest {
         logger.debug("Closing EJBContainer");
         ejbContainer.close();
     }
+    
+    /**
+     * Max out inventory for all products.
+     *
+     * @param value Quantity of each inventory record.
+     */
+    public void updateInventory(final int value) {
+        final var list = inventories.findAll();
+        // Max out inventory
+        for (final Inventories inv : list) {
+            inv.setQuantity(value);
+            inventories.update(inv.getKey(), inv);
+        }
+    }    
 
     /**
      * Test JTA commit.
@@ -201,6 +222,8 @@ public class TransactionTest {
     @Test
     public void commit() {
         logger.debug("commit");
+        final var maxOrders = Integer.parseInt(properties.getProperty("orders.max.create"));
+        updateInventory(maxOrders);
         // Database pool size - 1 threads
         final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
         // Create some OrderItems
@@ -227,7 +250,7 @@ public class TransactionTest {
             throw new RuntimeException(e);
         }
         logger.debug("Start BO client threads");
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < maxOrders; i++) {
             final Runnable task = () -> {
                 ordersBo.createOrder(1, 1, list);
             };
@@ -246,7 +269,7 @@ public class TransactionTest {
         }
         ordersBo.getOrdersBo().getOrderQueue().shutdown();
         final var stop = System.nanoTime();
-        logger.debug("TPS: {}", 200 / ((stop-start) / 1000000000L));
+        logger.debug("TPS: {}", maxOrders / ((stop-start) / 1000000000L));
         // See if last order created
         final var dto = ordersBo.getOrdersBo().getOrders().find(new OrdersKey(306L));
         assertNotNull(dto);

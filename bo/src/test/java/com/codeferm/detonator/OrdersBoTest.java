@@ -87,6 +87,11 @@ public class OrdersBoTest {
         ((BasicDataSource) dataSource).close();
     }
 
+    /**
+     * Create Orders BO.
+     *
+     * @return Orders BO.
+     */
     public OrdersBo createBo() {
         // Create generic DAOs
         final Dao<OrdersKey, Orders> orders
@@ -114,11 +119,29 @@ public class OrdersBoTest {
     }
 
     /**
+     * Max out inventory for all products.
+     *
+     * @param value Quantity of each inventory record.
+     */
+    public void updateInventory(final int value) {
+        final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(dataSource, common.loadProperties(
+                "inventories.properties"), InventoriesKey.class, Inventories.class);
+        final var list = inventories.findAll();
+        // Max out inventory
+        for (final Inventories inv : list) {
+            inv.setQuantity(value);
+            inventories.update(inv.getKey(), inv);
+        }
+    }
+
+    /**
      * Test createOrder method.
      */
     @Test
     public void createOrder() {
         logger.debug("createOrder");
+        final var maxOrders = Integer.parseInt(properties.getProperty("orders.max.create"));
+        updateInventory(maxOrders);
         final var ordersBo = createBo();
         final List<OrderItems> list = new ArrayList<>();
         final OrderItems item1 = new OrderItems();
@@ -133,8 +156,6 @@ public class OrdersBoTest {
         list.add(item2);
         // Database pool size - 1 threads
         final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
-        //
-        final var maxOrders = Integer.parseInt(properties.getProperty("orders.max.create"));
         final var start = System.nanoTime();
         for (int i = 0; i < maxOrders; i++) {
             final Runnable task = () -> {
@@ -156,7 +177,7 @@ public class OrdersBoTest {
         logger.debug("Waiting for create order thread to finish");
         ordersBo.getOrderQueue().shutdown();
         final var stop = System.nanoTime();
-        logger.debug("TPS: {}", maxOrders / ((stop-start) / 1000000000L));
+        logger.debug("TPS: {}", maxOrders / ((stop - start) / 1000000000L));
         logger.debug("Create order thread finished");
     }
 

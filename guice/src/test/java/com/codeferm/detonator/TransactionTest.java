@@ -18,6 +18,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -152,6 +154,22 @@ public class TransactionTest {
         ordersBo.setInventories(inventories);
         return ordersBo;
     }
+    
+    /**
+     * Max out inventory for all products.
+     *
+     * @param value Quantity of each inventory record.
+     */
+    public void updateInventory(final int value) {
+        final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(dataSource, common.loadProperties(
+                "inventories.properties"), InventoriesKey.class, Inventories.class);
+        final var list = inventories.findAll();
+        // Max out inventory
+        for (final Inventories inv : list) {
+            inv.setQuantity(value);
+            inventories.update(inv.getKey(), inv);
+        }
+    }    
 
     /**
      * Test JTA commit.
@@ -159,9 +177,8 @@ public class TransactionTest {
     @Test
     public void commit() {
         logger.debug("commit");
-        // Create transactional business object
-        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
-        bo.setOrdersBo(createBo());
+        final var maxOrders = Integer.parseInt(properties.getProperty("orders.max.create"));
+        updateInventory(maxOrders);
         final List<OrderItems> list = new ArrayList<>();
         final OrderItems item1 = new OrderItems();
         item1.setItemId(1L);
@@ -173,8 +190,34 @@ public class TransactionTest {
         item2.setProductId(4L);
         item2.setQuantity(1);
         list.add(item2);
-        bo.createOrder(1, 1, list);
-        bo.getOrdersBo().getOrderQueue().shutdown();
+        // Create transactional business object
+        OrdersBoBean ordersBo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
+        ordersBo.setOrdersBo(createBo());
+        // Database pool size - 1 threads
+        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
+        final var start = System.nanoTime();
+        for (int i = 0; i < maxOrders; i++) {
+            final Runnable task = () -> {
+                ordersBo.createOrder(1, 1, list);
+            };
+            executor.execute(task);
+        }
+        // Shutdow executor service
+        executor.shutdown();
+        // Wait for BO client threads to finish
+        logger.debug("Waiting for BO client threads to finish");
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            logger.debug("BO client threads finished");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        // Wait for create order threads to finish
+        logger.debug("Waiting for create order thread to finish");
+        ordersBo.getOrdersBo().getOrderQueue().shutdown();
+        final var stop = System.nanoTime();
+        logger.debug("TPS: {}", maxOrders / ((stop - start) / 1000000000L));
+        logger.debug("Create order thread finished");
     }
 
     /**

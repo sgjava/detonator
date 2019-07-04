@@ -134,13 +134,14 @@ public class OrdersBoTest {
         // Database pool size - 1 threads
         final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
         //
-        for (int i = 0; i < 200; i++) {
+        final var maxOrders = Integer.parseInt(properties.getProperty("orders.max.create"));
+        final var start = System.nanoTime();
+        for (int i = 0; i < maxOrders; i++) {
             final Runnable task = () -> {
                 ordersBo.createOrder(1, 1, list);
             };
             executor.execute(task);
         }
-        final var start = System.nanoTime();
         // Shutdow executor service
         executor.shutdown();
         // Wait for BO client threads to finish
@@ -155,7 +156,7 @@ public class OrdersBoTest {
         logger.debug("Waiting for create order thread to finish");
         ordersBo.getOrderQueue().shutdown();
         final var stop = System.nanoTime();
-        logger.debug("TPS: {}", 200 / ((stop-start) / 1000000000L));
+        logger.debug("TPS: {}", maxOrders / ((stop-start) / 1000000000L));
         logger.debug("Create order thread finished");
     }
 

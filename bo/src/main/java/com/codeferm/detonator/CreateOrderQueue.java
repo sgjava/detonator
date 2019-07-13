@@ -3,14 +3,8 @@
  */
 package com.codeferm.detonator;
 
-import com.codeferm.dto.Inventories;
-import com.codeferm.dto.InventoriesKey;
-import com.codeferm.dto.OrderItems;
-import com.codeferm.dto.OrderItemsKey;
 import com.codeferm.dto.Orders;
-import com.codeferm.dto.OrdersKey;
-import com.codeferm.dto.Products;
-import com.codeferm.dto.ProductsKey;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -18,8 +12,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * CreateOrder is not thread safe because it updates the inventory. SingleThreadExecutor used to make sure only one update at a
- * time.
+ * UpdateInventoryDao is not thread safe because it updates the inventory. SingleThreadExecutor used to make sure only one update at
+ * a time.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
@@ -31,70 +25,44 @@ public class CreateOrderQueue extends Observable<CreateOrderQueue, Orders> imple
      * Logger.
      */
     private final Logger logger = LogManager.getLogger(CreateOrderQueue.class);
-
     /**
-     * Orders DAO.
+     * Validation bean.
      */
-    private Dao<OrdersKey, Orders> orders;
-    /**
-     * OrderItems DAO.
-     */
-    private Dao<OrderItemsKey, OrderItems> orderItems;
-    /**
-     * Products DAO.
-     */
-    private Dao<ProductsKey, Products> products;
-    /**
-     * Inventories DAO.
-     */
-    private Dao<InventoriesKey, Inventories> inventories;
+    private final ValidateBean validateBean;
     /**
      * Single threaded executor service.
      */
-    final private ExecutorService executor;
+    private final ExecutorService executor;
+    /**
+     * Create order logic.
+     */
+    private CreateOrder createOrder;
 
+    /**
+     * Construct with ValidateBean and ExecutorService.
+     */
     public CreateOrderQueue() {
-        executor = Executors.newSingleThreadExecutor();
+        validateBean = new ValidateBean();
+        executor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("create-order-queue-%d").build());
     }
 
-    @Override
-    public Dao<OrdersKey, Orders> getOrders() {
-        return orders;
+    /**
+     * Construct with ValidateBean, CreateOrder and ExecutorService.
+     *
+     * @param createOrder CreateOrder
+     */
+    public CreateOrderQueue(final CreateOrder createOrder) {
+        validateBean = new ValidateBean();
+        this.createOrder = createOrder;
+        executor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("create-order-queue-%d").build());
     }
 
-    @Override
-    public void setOrders(Dao<OrdersKey, Orders> orders) {
-        this.orders = orders;
+    public CreateOrder getCreateOrder() {
+        return createOrder;
     }
 
-    @Override
-    public Dao<OrderItemsKey, OrderItems> getOrderItems() {
-        return orderItems;
-    }
-
-    @Override
-    public void setOrderItems(Dao<OrderItemsKey, OrderItems> orderItems) {
-        this.orderItems = orderItems;
-    }
-
-    @Override
-    public Dao<ProductsKey, Products> getProducts() {
-        return products;
-    }
-
-    @Override
-    public void setProducts(Dao<ProductsKey, Products> products) {
-        this.products = products;
-    }
-
-    @Override
-    public Dao<InventoriesKey, Inventories> getInventories() {
-        return inventories;
-    }
-
-    @Override
-    public void setInventories(Dao<InventoriesKey, Inventories> inventories) {
-        this.inventories = inventories;
+    public void setCreateOrder(final CreateOrder createOrder) {
+        this.createOrder = createOrder;
     }
 
     /**
@@ -103,15 +71,9 @@ public class CreateOrderQueue extends Observable<CreateOrderQueue, Orders> imple
      * @param orderMessage Order message.
      */
     @Override
-    public void createOrder(final OrderMessage orderMessage) {
+    public void create(final OrderMessage orderMessage) {
         final Runnable task = () -> {
-            final var createOrder = new CreateOrder();
-            createOrder.setOrderMessage(orderMessage);
-            createOrder.setInventories(inventories);
-            createOrder.setOrderItems(orderItems);
-            createOrder.setOrders(orders);
-            createOrder.setProducts(products);
-            notifyObservers(createOrder.createOrder());
+            notifyObservers(createOrder.create(orderMessage));
         };
         executor.execute(task);
     }

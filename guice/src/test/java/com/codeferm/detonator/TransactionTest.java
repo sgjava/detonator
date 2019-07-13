@@ -21,6 +21,7 @@ import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
@@ -29,7 +30,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * Test transactions.
+ * Test Guice transactions.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
@@ -55,40 +56,20 @@ public class TransactionTest {
     private static Common common;
 
     /**
-     * Create test database.
+     * Max out inventory for all products.
      *
-     * @param fileName SQL script to create database.
-     * @param delimiter Line delimiter.
-     * @param removeDelimiter True to remove delimiter from statement
+     * @param ds DataSource.
+     * @param value Quantity of each inventory record.
      */
-    public static void createDb(final String fileName, final String delimiter, boolean removeDelimiter) {
-        final var dataLoader = new DataLoader(dataSource);
-        dataLoader.execScript(fileName, delimiter, removeDelimiter);
-    }
-
-    /**
-     * Load properties file from file path or fail back to class path.
-     *
-     * @param propertyFile Name of property file.
-     * @return Properties.
-     */
-    public static Properties loadProperties(final String propertyFile) {
-        Properties props = new Properties();
-        try {
-            // Get properties from file
-            props.load(new FileInputStream(propertyFile));
-            logger.debug("Properties loaded from file {}", propertyFile);
-        } catch (IOException e1) {
-            logger.warn("Properties file not found {}", propertyFile);
-            // Get properties from classpath
-            try (final var stream = TransactionTest.class.getClassLoader().getResourceAsStream(propertyFile)) {
-                props.load(stream);
-                logger.debug("Properties loaded from class path {}", propertyFile);
-            } catch (IOException e2) {
-                throw new RuntimeException("No properties found", e2);
-            }
+    public static void updateInventory(final DataSource ds, final int value) {
+        final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(ds, common.loadProperties("inventories.properties"),
+                InventoriesKey.class, Inventories.class);
+        final var list = inventories.findAll();
+        // Max out inventory
+        for (final Inventories inv : list) {
+            inv.setQuantity(value);
+            inventories.update(inv.getKey(), inv);
         }
-        return props;
     }
 
     /**
@@ -98,25 +79,39 @@ public class TransactionTest {
     public static void beforeAll() {
         common = new Common();
         // Get database properties from dto project
-        properties = loadProperties("../dto/src/test/resources/database.properties");
+        properties = common.loadProperties("../dto/src/test/resources/database.properties");
         // Merge app properties
-        properties.putAll(loadProperties("app.properties"));
+        properties.putAll(common.loadProperties("app.properties"));
+        // Create DBCP DataSource
+        final var ds = new BasicDataSource();
+        ds.setDriverClassName(properties.getProperty("db.driver"));
+        ds.setUsername(properties.getProperty("db.user"));
+        ds.setPassword(properties.getProperty("db.password"));
+        ds.setUrl(properties.getProperty("db.url"));
+        ds.setMaxTotal(Integer.parseInt(properties.getProperty("db.pool.size")));
+        // Create database?
+        if (Boolean.parseBoolean(properties.getProperty("db.create"))) {
+            common.createDb(ds, properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.parseBoolean(
+                    properties.getProperty("db.remove.delimiter")));
+        }
+        updateInventory(ds, Integer.parseInt(properties.getProperty("orders.max.create")));
+        // Shutdown DBCP pool
+        try {
+            ((BasicDataSource) ds).close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         // Create AtomikosXADataSourceBean
-        final AtomikosDataSourceBean ds = new AtomikosDataSourceBean();
-        ds.setUniqueResourceName("TransactionTest");
-        ds.setXaDataSourceClassName(properties.getProperty("db.xa.driver"));
+        final AtomikosDataSourceBean xaDs = new AtomikosDataSourceBean();
+        xaDs.setUniqueResourceName("TransactionTest");
+        xaDs.setXaDataSourceClassName(properties.getProperty("db.xa.driver"));
         Properties p = new Properties();
         p.setProperty("user", properties.getProperty("db.xa.user"));
         p.setProperty("password", properties.getProperty("db.xa.password"));
         p.setProperty("URL", properties.getProperty("db.xa.url"));
-        ds.setXaProperties(p);
-        ds.setPoolSize(Integer.parseInt(properties.getProperty("db.xa.pool.size")));
-        dataSource = ds;
-        // Create database?
-        if (Boolean.parseBoolean(properties.getProperty("db.create"))) {
-            createDb(properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.parseBoolean(properties.
-                    getProperty("db.remove.delimiter")));
-        }
+        xaDs.setXaProperties(p);
+        xaDs.setPoolSize(Integer.parseInt(properties.getProperty("db.xa.pool.size")));
+        dataSource = xaDs;
     }
 
     /**
@@ -140,36 +135,12 @@ public class TransactionTest {
         final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(dataSource, common.loadProperties(
                 "inventories.properties"),
                 InventoriesKey.class, Inventories.class);
-        // Create BO and set DAOs
+        // Queue bean uses Guice transactions 
         final var queue = TransactionFactory.createObject(CreateOrderQueueBean.class, AtomikosTransModule.class);
-        queue.setOrders(orders);
-        queue.setOrderItems(orderItems);
-        queue.setProducts(products);
-        queue.setInventories(inventories);
-        queue.addObserver(new OrderCreatedBean(Integer.parseInt(properties.getProperty("db.pool.size")) - 1));
-        final var ordersBo = new OrdersBo(queue);
-        ordersBo.setOrders(orders);
-        ordersBo.setOrderItems(orderItems);
-        ordersBo.setProducts(products);
-        ordersBo.setInventories(inventories);
-        return ordersBo;
+        queue.setCreateOrder(new CreateOrder(new UpdateInventoryDao(orderItems, inventories), orders, orderItems, products));
+        // Create BO
+        return new OrdersBo(queue, orders, orderItems, products, inventories);
     }
-    
-    /**
-     * Max out inventory for all products.
-     *
-     * @param value Quantity of each inventory record.
-     */
-    public void updateInventory(final int value) {
-        final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(dataSource, common.loadProperties(
-                "inventories.properties"), InventoriesKey.class, Inventories.class);
-        final var list = inventories.findAll();
-        // Max out inventory
-        for (final Inventories inv : list) {
-            inv.setQuantity(value);
-            inventories.update(inv.getKey(), inv);
-        }
-    }    
 
     /**
      * Test JTA commit.
@@ -178,7 +149,6 @@ public class TransactionTest {
     public void commit() {
         logger.debug("commit");
         final var maxOrders = Integer.parseInt(properties.getProperty("orders.max.create"));
-        updateInventory(maxOrders);
         final List<OrderItems> list = new ArrayList<>();
         final OrderItems item1 = new OrderItems();
         item1.setItemId(1L);
@@ -191,14 +161,17 @@ public class TransactionTest {
         item2.setQuantity(1);
         list.add(item2);
         // Create transactional business object
-        OrdersBoBean ordersBo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
-        ordersBo.setOrdersBo(createBo());
+        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
+        bo.setOrdersBo(createBo());
+        // Add observer
+        final var orderCreated = new OrderCreatedBean(Integer.parseInt(properties.getProperty("db.xa.pool.size")) - 1);
+        ((CreateOrderQueue) bo.getOrdersBo().getOrderQueue()).addObserver(orderCreated);
         // Database pool size - 1 threads
-        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
+        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.xa.pool.size")) - 1);
         final var start = System.nanoTime();
         for (int i = 0; i < maxOrders; i++) {
             final Runnable task = () -> {
-                ordersBo.createOrder(1, 1, list);
+                bo.createOrder(1, 1, list);
             };
             executor.execute(task);
         }
@@ -214,10 +187,12 @@ public class TransactionTest {
         }
         // Wait for create order threads to finish
         logger.debug("Waiting for create order thread to finish");
-        ordersBo.getOrdersBo().getOrderQueue().shutdown();
+        bo.getOrdersBo().getOrderQueue().shutdown();
         final var stop = System.nanoTime();
         logger.debug("TPS: {}", maxOrders / ((stop - start) / 1000000000L));
         logger.debug("Create order thread finished");
+        logger.debug("Waiting for order created thread to finish");
+        orderCreated.shutdown();
     }
 
     /**

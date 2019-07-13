@@ -11,7 +11,6 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
-import java.util.Enumeration;
 import java.util.concurrent.TimeUnit;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
@@ -46,11 +45,11 @@ public class CreateOrderQueueClient implements OrderQueue {
     /**
      * JMS context.
      */
-    final private JMSContext jmsContext;
+    private final JMSContext jmsContext;
     /**
      * Create order MDB.
      */
-    final private Queue createOrderBean;
+    private final Queue createOrderBean;
 
     /**
      * Construct queue client with JMSContext and Queue.
@@ -64,47 +63,7 @@ public class CreateOrderQueueClient implements OrderQueue {
     }
 
     @Override
-    public Dao<OrdersKey, Orders> getOrders() {
-        return orders;
-    }
-
-    @Override
-    public void setOrders(Dao<OrdersKey, Orders> orders) {
-        this.orders = orders;
-    }
-
-    @Override
-    public Dao<OrderItemsKey, OrderItems> getOrderItems() {
-        return orderItems;
-    }
-
-    @Override
-    public void setOrderItems(Dao<OrderItemsKey, OrderItems> orderItems) {
-        this.orderItems = orderItems;
-    }
-
-    @Override
-    public Dao<ProductsKey, Products> getProducts() {
-        return products;
-    }
-
-    @Override
-    public void setProducts(Dao<ProductsKey, Products> products) {
-        this.products = products;
-    }
-
-    @Override
-    public Dao<InventoriesKey, Inventories> getInventories() {
-        return inventories;
-    }
-
-    @Override
-    public void setInventories(Dao<InventoriesKey, Inventories> inventories) {
-        this.inventories = inventories;
-    }
-
-    @Override
-    public void createOrder(final OrderMessage orderMessage) {
+    public void create(final OrderMessage orderMessage) {
         jmsContext.createProducer().send(createOrderBean, orderMessage);
     }
 

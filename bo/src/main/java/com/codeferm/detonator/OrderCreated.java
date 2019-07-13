@@ -4,6 +4,7 @@
 package com.codeferm.detonator;
 
 import com.codeferm.dto.Orders;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +27,7 @@ public class OrderCreated implements Observer<CreateOrderQueue, Orders> {
     /**
      * Multi threaded executor service.
      */
-    final private ExecutorService executor;
+    private final ExecutorService executor;
 
     /**
      * Construct with pooled executor.
@@ -34,9 +35,15 @@ public class OrderCreated implements Observer<CreateOrderQueue, Orders> {
      * @param poolSize Size of pool should be one less than DB pool size.
      */
     public OrderCreated(final int poolSize) {
-        executor = Executors.newFixedThreadPool(poolSize);
+        executor = Executors.newFixedThreadPool(poolSize, new ThreadFactoryBuilder().setNameFormat("order-created-%d").build());
     }
 
+    /**
+     * Observer update.
+     *
+     * @param object Observable that called.
+     * @param data Orders DTO.
+     */
     @Override
     public void update(final Observable<CreateOrderQueue, Orders> object, final Orders data) {
         final Runnable task = () -> {

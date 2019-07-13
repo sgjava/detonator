@@ -15,7 +15,7 @@
         <Logger name="com.codeferm.detonator.AtomikosTransInterceptor" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="com.atomikos" level="error" additivity="false">
+        <Logger name="com.atomikos" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
         <Logger name="org.hibernate.validator" level="warn" additivity="false">

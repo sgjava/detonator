@@ -61,6 +61,10 @@ public class CreateOrderBean implements MessageListener {
      */
     @Inject
     private Dao<InventoriesKey, Inventories> inventories;
+    /**
+     * Create order logic.
+     */
+    private CreateOrder createOrder;
 
     /**
      * Init.
@@ -68,6 +72,10 @@ public class CreateOrderBean implements MessageListener {
     @PostConstruct
     public void init() {
         logger.debug("PostConstruct");
+        createOrder = new CreateOrder(new UpdateInventoryDao(orderItems, inventories));
+        createOrder.setOrderItems(orderItems);
+        createOrder.setOrders(orders);
+        createOrder.setProducts(products);
     }
 
     /**
@@ -93,13 +101,7 @@ public class CreateOrderBean implements MessageListener {
         final OrderMessage orderMessage;
         try {
             orderMessage = (OrderMessage) objectMessage.getObject();
-            final var createOrder = new CreateOrder();
-            createOrder.setOrderMessage(orderMessage);
-            createOrder.setInventories(inventories);
-            createOrder.setOrderItems(orderItems);
-            createOrder.setOrders(orders);
-            createOrder.setProducts(products);
-            createOrder.createOrder();
+            createOrder.create(orderMessage);
             //logger.debug("Created {}", orderMessage);
         } catch (JMSException e) {
             throw new RuntimeException(e);

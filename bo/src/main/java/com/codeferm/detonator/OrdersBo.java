@@ -51,15 +51,40 @@ public class OrdersBo {
     /**
      * Order queue used to create orders.
      */
-    final private OrderQueue orderQueue;
+    private OrderQueue orderQueue;
 
     /**
      * Default constructor.
-     * 
-     * @param orderQueue 
+     */
+    public OrdersBo() {
+    }
+
+    /**
+     * Construct with OrderQueue.
+     *
+     * @param orderQueue Order queue.
      */
     public OrdersBo(final OrderQueue orderQueue) {
         this.orderQueue = orderQueue;
+    }
+
+    /**
+     * Construct with OrderQueue.
+     *
+     * @param orders Orders DAO.
+     * @param orderItems OrderItems DAO.
+     * @param products Products DAO.
+     * @param inventories Inventories DAO.
+     * @param orderQueue Order queue.
+     */
+    public OrdersBo(final OrderQueue orderQueue, final Dao<OrdersKey, Orders> orders,
+            final Dao<OrderItemsKey, OrderItems> orderItems, final Dao<ProductsKey, Products> products,
+            final Dao<InventoriesKey, Inventories> inventories) {
+        this.orderQueue = orderQueue;
+        this.orders = orders;
+        this.orderItems = orderItems;
+        this.products = products;
+        this.inventories = inventories;
     }
 
     public Dao<OrdersKey, Orders> getOrders() {
@@ -126,7 +151,7 @@ public class OrdersBo {
         orderMessage.setSalesmanId(salesmanId);
         orderMessage.setOrderItemsList(list);
         // Send to queue and return right away
-        orderQueue.createOrder(orderMessage);
+        orderQueue.create(orderMessage);
     }
 
     /**

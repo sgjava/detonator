@@ -11,6 +11,9 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,23 +25,24 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 
 /**
- * Test Order OB.
+ * Test MapDB DAO.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
  */
-public class OrdersBoTest {
+public class MapDbOrdersBoTest {
 
     /**
      * Logger.
      */
-    private static final Logger logger = LogManager.getLogger(OrdersBoTest.class);
+    private final Logger logger = LogManager.getLogger(MapDbOrdersBoTest.class);
     /**
      * Test properties.
      */
@@ -47,7 +51,10 @@ public class OrdersBoTest {
      * DataSource.
      */
     private static DataSource dataSource;
-
+    /**
+     * MapDB database.
+     */
+    private static DB db;
     /**
      * Common test methods.
      */
@@ -63,6 +70,14 @@ public class OrdersBoTest {
         properties = common.loadProperties("../dto/src/test/resources/database.properties");
         // Merge app properties
         properties.putAll(common.loadProperties("app.properties"));
+        // Delete MapDB file
+        try {
+            Files.deleteIfExists(Paths.get(properties.getProperty("map.file")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        // Create MapDB
+        db = DBMaker.fileDB(properties.getProperty("map.file")).make();
         // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
@@ -73,7 +88,7 @@ public class OrdersBoTest {
         dataSource = ds;
         // Create database?
         if (Boolean.parseBoolean(properties.getProperty("db.create"))) {
-            common.createDb(dataSource, properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.
+            common.copyDbToMap(dataSource, db, properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.
                     parseBoolean(properties.getProperty("db.remove.delimiter")));
         }
     }
@@ -86,6 +101,8 @@ public class OrdersBoTest {
     @AfterAll
     public static void afterAll() throws SQLException {
         ((BasicDataSource) dataSource).close();
+        db.commit();
+        db.close();
     }
 
     /**
@@ -95,14 +112,11 @@ public class OrdersBoTest {
      */
     public OrdersBo createBo() {
         // Create generic DAOs
-        final Dao<OrdersKey, Orders> orders
-                = new GenDbDao<>(dataSource, common.loadProperties("orders.properties"), OrdersKey.class, Orders.class);
-        final Dao<OrderItemsKey, OrderItems> orderItems = new GenDbDao<>(dataSource, common.loadProperties("orderitems.properties"),
-                OrderItemsKey.class, OrderItems.class);
-        final Dao<ProductsKey, Products> products = new GenDbDao<>(dataSource, common.loadProperties("products.properties"),
-                ProductsKey.class, Products.class);
-        final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(dataSource, common.loadProperties(
-                "inventories.properties"), InventoriesKey.class, Inventories.class);
+        final Dao<OrdersKey, Orders> orders = new GenMapDbDao<>(db, "orders", OrdersKey.class, Orders.class);
+        final Dao<OrderItemsKey, OrderItems> orderItems = new GenMapDbDao<>(db, "orderitems", OrderItemsKey.class, OrderItems.class);
+        final Dao<ProductsKey, Products> products = new GenMapDbDao<>(db, "products", ProductsKey.class, Products.class);
+        final Dao<InventoriesKey, Inventories> inventories
+                = new GenMapDbDao<>(db, "inventories", InventoriesKey.class, Inventories.class);
         // Create BO
         return new OrdersBo(new CreateOrderQueue(
                 new CreateOrder(new UpdateInventoryDao(orderItems, inventories), orders, orderItems, products)), orders, orderItems,
@@ -115,8 +129,8 @@ public class OrdersBoTest {
      * @param value Quantity of each inventory record.
      */
     public void updateInventory(final int value) {
-        final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(dataSource, common.loadProperties(
-                "inventories.properties"), InventoriesKey.class, Inventories.class);
+        final Dao<InventoriesKey, Inventories> inventories
+                = new GenMapDbDao<>(db, "inventories", InventoriesKey.class, Inventories.class);
         final var list = inventories.findAll();
         // Max out inventory
         for (final Inventories inv : list) {
@@ -124,7 +138,7 @@ public class OrdersBoTest {
             inventories.update(inv.getKey(), inv);
         }
     }
-
+    
     /**
      * Create OrderItems List.
      *
@@ -152,15 +166,8 @@ public class OrdersBoTest {
     public void createOrder() {
         logger.debug("createOrder");
         final var maxOrders = Integer.parseInt(properties.getProperty("orders.max.create"));
-        // Max out inventory
         updateInventory(maxOrders);
-        // Create BO
         final var ordersBo = createBo();
-        // Get all orders
-        var orders = ordersBo.getOrders().findAll();
-        // Get last one
-        final var lastOrder = orders.get(orders.size() - 1);
-        logger.debug("Last order: {}", lastOrder);
         // Add observer
         final var orderCreated = new OrderCreated(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
         ((CreateOrderQueue) ordersBo.getOrderQueue()).addObserver(orderCreated);
@@ -192,11 +199,7 @@ public class OrdersBoTest {
         logger.debug("Create order thread finished");
         logger.debug("Waiting for order created thread to finish");
         orderCreated.shutdown();
-        // Get last order based on maxOrders
-        final var order = ordersBo.getOrders().find(new OrdersKey(lastOrder.getOrderId() + maxOrders));
-        assertNotNull(order);
-        logger.debug("Last order: {}",order);
-        
+
     }
 
     /**
@@ -208,5 +211,4 @@ public class OrdersBoTest {
         final var ordersBo = createBo();
         ordersBo.orderInfo(1);
     }
-
 }

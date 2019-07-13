@@ -3,33 +3,25 @@
  */
 package com.codeferm.detonator;
 
-import com.codeferm.dto.Inventories;
-import com.codeferm.dto.InventoriesKey;
 import com.codeferm.dto.OrderItems;
 import com.codeferm.dto.OrderItemsKey;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
-import java.io.Serializable;
 import java.sql.Date;
 import java.time.LocalDate;
-import javax.validation.Validation;
-import javax.validation.Validator;
 
 /**
- * CreateOrder is not thread safe because it updates the inventory. Use a single threaded queue to process orders.
+ * CreateOrder uses UpdateInventory to update the inventory in a thread safe way. UpdateInventoryDao is a single threaded queue used
+ * to process orders. UpdateInventory can be implemented for concurrent updates as well.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
  */
-public class CreateOrder implements Serializable {
+public class CreateOrder {
 
-    /**
-     * OrderMessage has all data to create order.
-     */
-    private OrderMessage orderMessage;
     /**
      * Orders DAO.
      */
@@ -43,27 +35,39 @@ public class CreateOrder implements Serializable {
      */
     private Dao<ProductsKey, Products> products;
     /**
-     * Inventories DAO.
+     * Validation bean.
      */
-    private Dao<InventoriesKey, Inventories> inventories;
+    private final ValidateBean validateBean;
     /**
-     * Bean validator.
+     * Updates to inventory.
      */
-    private final Validator validator;
+    private final UpdateInventory updateInventory;
 
     /**
-     * Default constructor. Initialize validator.
+     * Construct with UpdateInventory.
+     *
+     * @param updateInventory Inventory updater.
      */
-    public CreateOrder() {
-        validator = Validation.buildDefaultValidatorFactory().getValidator();
+    public CreateOrder(final UpdateInventory updateInventory) {
+        validateBean = new ValidateBean();
+        this.updateInventory = updateInventory;
     }
 
-    public OrderMessage getOrderMessage() {
-        return orderMessage;
-    }
-
-    public void setOrderMessage(OrderMessage orderMessage) {
-        this.orderMessage = orderMessage;
+    /**
+     * Construct with UpdateInventory.
+     *
+     * @param updateInventory Inventory updater.
+     * @param orders Orders DAO.
+     * @param orderItems OrderItems DAO.
+     * @param products Products DAO.
+     */
+    public CreateOrder(final UpdateInventory updateInventory, final Dao<OrdersKey, Orders> orders,
+            final Dao<OrderItemsKey, OrderItems> orderItems, final Dao<ProductsKey, Products> products) {
+        validateBean = new ValidateBean();
+        this.updateInventory = updateInventory;
+        this.orders = orders;
+        this.orderItems = orderItems;
+        this.products = products;
     }
 
     public Dao<OrdersKey, Orders> getOrders() {
@@ -90,81 +94,27 @@ public class CreateOrder implements Serializable {
         this.products = products;
     }
 
-    public Dao<InventoriesKey, Inventories> getInventories() {
-        return inventories;
-    }
-
-    public void setInventories(Dao<InventoriesKey, Inventories> inventories) {
-        this.inventories = inventories;
-    }
-
-    /**
-     * Throws exception if bean validation fails.
-     *
-     * @param dto DTO to validate.
-     */
-    public void dtoValid(final Object dto) {
-        var violations = validator.validate(dto);
-        if (violations.size() > 0) {
-            var message = "";
-            // Build exception message
-            message = violations.stream().map(violation -> String.format("%s.%s %s | ", violation.getRootBeanClass().
-                    getSimpleName(), violation.getPropertyPath(), violation.getMessage())).reduce(message, String::concat);
-            // Trim last seperator
-            message = message.substring(0, message.length() - 3);
-            throw new RuntimeException(String.format("Bean violations: %s", message));
-        }
-    }
-
-    /**
-     * Since the customer address does not really allow for selecting by warehouse region we will find first warehouse with
-     * inventory.
-     *
-     * @param item OrderItems DTO.
-     * @return
-     */
-    public Inventories updateInventory(final OrderItems item) {
-        // Get warehouses by product.
-        var list = inventories.findRange(new InventoriesKey(item.getProductId(), 0L), new InventoriesKey(item.getProductId(),
-                Long.MAX_VALUE));
-        // See if we get any hits
-        if (list == null) {
-            throw new RuntimeException(String.format("productId %d not found", item.getProductId()));
-        }
-        int i = 0;
-        // Rifle through list and see if any warehouse has product
-        while (i < list.size() && list.get(i).getQuantity() < item.getQuantity()) {
-            i++;
-        }
-        Inventories inv = null;
-        // There's enough quantity?
-        if (i < list.size()) {
-            inv = list.get(i);
-            // Remove item quantity from inventory
-            inv.setQuantity(inv.getQuantity() - item.getQuantity());
-            // Save quantity update
-            inventories.update(inv.getKey(), inv);
-        } else {
-            throw new RuntimeException(String.format("productId %d not in invenroty", item.getProductId()));
-        }
-        return inv;
+    public UpdateInventory getUpdateInventory() {
+        return updateInventory;
     }
 
     /**
      * Add OrderItems to Orders. OrderItems.itemId must be set prior to calling.
      *
      * @param k Orders key.
+     * @param orderMessage Order message.
      */
-    public void addItems(final OrdersKey k) {
+    public void addItems(final OrdersKey k, final OrderMessage orderMessage) {
         // Process list of items
         for (final OrderItems item : orderMessage.getOrderItemsList()) {
             item.setOrderId(k.getOrderId());
             // Search warehouses for product
-            final var inv = updateInventory(item);
+            final var inv = updateInventory.update(item);
             final var product = products.find(new ProductsKey(inv.getProductId()));
+            // Set price.
             item.setUnitPrice(product.getStandardCost());
             // Validate DTO before insert
-            dtoValid(item);
+            validateBean.valid(item);
             // Add item to order
             orderItems.update(item.getKey(), item);
         }
@@ -173,9 +123,10 @@ public class CreateOrder implements Serializable {
     /**
      * Create order and return key.
      *
+     * @param orderMessage Order message.
      * @return DTO with generated key.
      */
-    public Orders createOrder() {
+    public Orders create(final OrderMessage orderMessage) {
         // Create DTO to save (note we skip setting orderId since it's an identity field and will be auto generated)
         final var dto = new Orders();
         dto.setCustomerId(orderMessage.getCustomerId());
@@ -187,10 +138,9 @@ public class CreateOrder implements Serializable {
         // Set key in value
         dto.setOrderId(k.getOrderId());
         // Do bean validation after key created and throw exception on validation failure
-        dtoValid(dto);
+        validateBean.valid(dto);
         // Add items
-        addItems(dto.getKey());
-        // Notify observers DTO created
+        addItems(dto.getKey(), orderMessage);
         return dto;
     }
 
@@ -201,7 +151,7 @@ public class CreateOrder implements Serializable {
      */
     @Override
     public String toString() {
-        return "CreateOrder{" + "orderMessage=" + orderMessage + ", orders=" + orders + ", orderItems=" + orderItems + ", products=" +
-                products + ", inventories=" + inventories + ", validator=" + validator + '}';
+        return "CreateOrder{" + "orders=" + orders + ", orderItems=" + orderItems + ", products=" + products + ", validateBean="
+                + validateBean + ", updateInventory=" + updateInventory + '}';
     }
 }

@@ -65,7 +65,8 @@ public class GenDbDaoTest {
         // Get database properties from dto project
         properties = common.loadProperties("../dto/src/test/resources/database.properties");
         // Merge app properties
-        properties.putAll(common.loadProperties("app.properties"));        // Create DBCP DataSource
+        properties.putAll(common.loadProperties("app.properties"));
+        // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
         ds.setUsername(properties.getProperty("db.user"));

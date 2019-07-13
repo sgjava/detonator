@@ -12,7 +12,19 @@ package com.codeferm.detonator;
  */
 public class CreateOrderQueueBean extends CreateOrderQueue {
 
+    /**
+     * Default constructor.
+     */
     public CreateOrderQueueBean() {
+    }
+
+    /**
+     * Construct with CreateOrder and ExecutorService.
+     *
+     * @param createOrder CreateOrder
+     */
+    public CreateOrderQueueBean(CreateOrder createOrder) {
+        super(createOrder);
     }
 
     /**
@@ -22,7 +34,7 @@ public class CreateOrderQueueBean extends CreateOrderQueue {
      */
     @Override
     @Transaction
-    public void createOrder(final OrderMessage orderMessage) {
-        super.createOrder(orderMessage);
+    public void create(final OrderMessage orderMessage) {
+        super.create(orderMessage);
     }
 }

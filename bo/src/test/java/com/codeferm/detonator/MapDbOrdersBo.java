@@ -11,58 +11,66 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.AfterAll;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 
 /**
- * Test Order OB.
+ * Runnable MapDB DAO for profiling.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0
  * @since 1.0.0
  */
-public class OrdersBoTest {
+public class MapDbOrdersBo {
 
     /**
      * Logger.
      */
-    private static final Logger logger = LogManager.getLogger(OrdersBoTest.class);
+    private final Logger logger = LogManager.getLogger(MapDbOrdersBo.class);
     /**
      * Test properties.
      */
-    private static Properties properties;
+    private Properties properties;
     /**
-     * DataSource.
+     * MapDB database.
      */
-    private static DataSource dataSource;
-
+    private DB db;
     /**
      * Common test methods.
      */
-    private static Common common;
+    private Common common;
 
     /**
      * Set up DataSource and initialize database.
      */
-    @BeforeAll
-    public static void beforeAll() {
+    public void beforeAll() {
         common = new Common();
         // Get database properties from dto project
         properties = common.loadProperties("../dto/src/test/resources/database.properties");
         // Merge app properties
         properties.putAll(common.loadProperties("app.properties"));
+        // Delete MapDB file
+        try {
+            Files.deleteIfExists(Paths.get(properties.getProperty("map.file")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        // Create MapDB
+        db = DBMaker.fileDB(properties.getProperty("map.file")).make();
         // Create DBCP DataSource
         final var ds = new BasicDataSource();
         ds.setDriverClassName(properties.getProperty("db.driver"));
@@ -70,22 +78,24 @@ public class OrdersBoTest {
         ds.setPassword(properties.getProperty("db.password"));
         ds.setUrl(properties.getProperty("db.url"));
         ds.setMaxTotal(Integer.parseInt(properties.getProperty("db.pool.size")));
-        dataSource = ds;
         // Create database?
         if (Boolean.parseBoolean(properties.getProperty("db.create"))) {
-            common.createDb(dataSource, properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.
+            common.copyDbToMap(ds, db, properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.
                     parseBoolean(properties.getProperty("db.remove.delimiter")));
+        }
+        try {
+            ((BasicDataSource) ds).close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
     /**
      * Shut down DataSource.
-     *
-     * @throws SQLException Possible exception.
      */
-    @AfterAll
-    public static void afterAll() throws SQLException {
-        ((BasicDataSource) dataSource).close();
+    public void afterAll() {
+        db.commit();
+        db.close();
     }
 
     /**
@@ -95,14 +105,11 @@ public class OrdersBoTest {
      */
     public OrdersBo createBo() {
         // Create generic DAOs
-        final Dao<OrdersKey, Orders> orders
-                = new GenDbDao<>(dataSource, common.loadProperties("orders.properties"), OrdersKey.class, Orders.class);
-        final Dao<OrderItemsKey, OrderItems> orderItems = new GenDbDao<>(dataSource, common.loadProperties("orderitems.properties"),
-                OrderItemsKey.class, OrderItems.class);
-        final Dao<ProductsKey, Products> products = new GenDbDao<>(dataSource, common.loadProperties("products.properties"),
-                ProductsKey.class, Products.class);
-        final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(dataSource, common.loadProperties(
-                "inventories.properties"), InventoriesKey.class, Inventories.class);
+        final Dao<OrdersKey, Orders> orders = new GenMapDbDao<>(db, "orders", OrdersKey.class, Orders.class);
+        final Dao<OrderItemsKey, OrderItems> orderItems = new GenMapDbDao<>(db, "orderitems", OrderItemsKey.class, OrderItems.class);
+        final Dao<ProductsKey, Products> products = new GenMapDbDao<>(db, "products", ProductsKey.class, Products.class);
+        final Dao<InventoriesKey, Inventories> inventories = new GenMapDbDao<>(db, "inventories", InventoriesKey.class,
+                Inventories.class);
         // Create BO
         return new OrdersBo(new CreateOrderQueue(
                 new CreateOrder(new UpdateInventoryDao(orderItems, inventories), orders, orderItems, products)), orders, orderItems,
@@ -115,8 +122,8 @@ public class OrdersBoTest {
      * @param value Quantity of each inventory record.
      */
     public void updateInventory(final int value) {
-        final Dao<InventoriesKey, Inventories> inventories = new GenDbDao<>(dataSource, common.loadProperties(
-                "inventories.properties"), InventoriesKey.class, Inventories.class);
+        final Dao<InventoriesKey, Inventories> inventories
+                = new GenMapDbDao<>(db, "inventories", InventoriesKey.class, Inventories.class);
         final var list = inventories.findAll();
         // Max out inventory
         for (final Inventories inv : list) {
@@ -124,7 +131,7 @@ public class OrdersBoTest {
             inventories.update(inv.getKey(), inv);
         }
     }
-
+    
     /**
      * Create OrderItems List.
      *
@@ -143,7 +150,7 @@ public class OrdersBoTest {
         item2.setQuantity(1);
         list.add(item2);
         return list;
-    }
+    }    
 
     /**
      * Test createOrder method.
@@ -152,21 +159,15 @@ public class OrdersBoTest {
     public void createOrder() {
         logger.debug("createOrder");
         final var maxOrders = Integer.parseInt(properties.getProperty("orders.max.create"));
-        // Max out inventory
         updateInventory(maxOrders);
-        // Create BO
         final var ordersBo = createBo();
-        // Get all orders
-        var orders = ordersBo.getOrders().findAll();
-        // Get last one
-        final var lastOrder = orders.get(orders.size() - 1);
-        logger.debug("Last order: {}", lastOrder);
         // Add observer
         final var orderCreated = new OrderCreated(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
         ((CreateOrderQueue) ordersBo.getOrderQueue()).addObserver(orderCreated);
         final List<OrderItems> list = createOrderItemsList();
         // Database pool size - 1 threads
-        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
+        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1,
+                new ThreadFactoryBuilder().setNameFormat("create-order-client-%d").build());
         final var start = System.nanoTime();
         for (int i = 0; i < maxOrders; i++) {
             final Runnable task = () -> {
@@ -192,21 +193,12 @@ public class OrdersBoTest {
         logger.debug("Create order thread finished");
         logger.debug("Waiting for order created thread to finish");
         orderCreated.shutdown();
-        // Get last order based on maxOrders
-        final var order = ordersBo.getOrders().find(new OrdersKey(lastOrder.getOrderId() + maxOrders));
-        assertNotNull(order);
-        logger.debug("Last order: {}",order);
-        
     }
 
-    /**
-     * Test linking tables.
-     */
-    @Test
-    public void linkTables() {
-        logger.debug("linkTables");
-        final var ordersBo = createBo();
-        ordersBo.orderInfo(1);
+    public static void main(String[] args) throws InterruptedException {
+        final var mapDbOrdersBo = new MapDbOrdersBo();
+        mapDbOrdersBo.beforeAll();
+        mapDbOrdersBo.createOrder();
+        mapDbOrdersBo.afterAll();
     }
-
 }

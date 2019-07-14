@@ -3,6 +3,7 @@
  */
 package com.codeferm.detonator;
 
+import com.codeferm.dto.Dto;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -45,17 +46,13 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      */
     private final Class kClass;
     /**
-     * getKey method of value object.
+     * MapDB atomic Long use for primary key.
      */
-    private final Method keyReadMethod;
+    private final Atomic.Long keyInc;
     /**
      * Used for keys with single value.
      */
     private Method writeMethod;
-    /**
-     * MapDB atomic Long use for primary key.
-     */
-    private final Atomic.Long keyInc;
 
     /**
      * Constructor.
@@ -78,42 +75,13 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
         } else {
             keyInc = null;
         }
-        // Get value vFields
-        final var vFields = vClass.getDeclaredFields();
-        // Get last kField
-        final var vField = vFields[vFields.length - 1];
-        // Last kField should be key if it exists
-        if (vField.getName().equals("key")) {
-            try {
-                // Value key read method
-                keyReadMethod = new PropertyDescriptor(vField.getName(), vClass).getReadMethod();
-                final var kFields = kClass.getDeclaredFields();
-                // Key write method method
-                writeMethod = new PropertyDescriptor(kFields[0].getName(), kClass).getWriteMethod();
-            } catch (IntrospectionException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            keyReadMethod = null;
+        try {
+            final var kFields = kClass.getDeclaredFields();
+            // Key write method method
+            writeMethod = new PropertyDescriptor(kFields[0].getName(), kClass).getWriteMethod();
+        } catch (IntrospectionException e) {
+            throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Get key or null;
-     *
-     * @param value Value to get key from.
-     * @return ID;
-     */
-    public K getKey(V value) {
-        K key = null;
-        if (keyReadMethod != null) {
-            try {
-                key = (K) keyReadMethod.invoke(value, (Object[]) null);
-            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return key;
     }
 
     /**
@@ -158,12 +126,12 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      */
     @Override
     public void save(final V value) {
-        final K key = getKey(value);
+        final K k = ((Dto) value).getKey();
         // Treat this like SQL DB and throw key violation if key exists
-        if (!map.containsKey(key)) {
-            map.put(key, value);
+        if (!map.containsKey(k)) {
+            map.put(k, value);
         } else {
-            throw new RuntimeException(String.format("Key already exists: %s", key));
+            throw new RuntimeException(String.format("Key already exists: %s", k));
         }
     }
 
@@ -177,7 +145,7 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
     @Override
     public K saveReturnKey(final V value, final String[] keyNames) {
         // Get key from value
-        var k = getKey(value);
+        final K k = ((Dto) value).getKey();
         try {
             // Write next atomic value to key field
             writeMethod.invoke(k, keyInc.incrementAndGet());

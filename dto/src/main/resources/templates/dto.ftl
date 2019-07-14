@@ -4,7 +4,6 @@
 package ${packageName};
 
 <#assign imports = imports + [ "java.util.Objects" ] />
-<#assign imports = imports + [ "java.io.Serializable" ] />
 <#list imports as import>
 import ${import};
 </#list>
@@ -14,7 +13,7 @@ import ${import};
  *
  * ${sql}
  */
-public class ${className} implements Serializable {
+public class ${className} implements Dto {
 <#list map?values as rsmdDto>
 
     /**
@@ -67,17 +66,9 @@ public class ${className} implements Serializable {
      *
      * @return key Get key.
      */
+    @Override
     public ${className}Key getKey() {
         return key;
-    }
-
-    /**
-     * Mutator for field key.
-     *
-     * @param key Set key.
-     */
-    public void setKey(final ${className}Key key) {
-        this.key = key;
     }
 </#if>
 

@@ -67,10 +67,6 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
      * Key method parameters.
      */
     private final List<Parameter[]> kParams;
-    /**
-     * getKey method of value object.
-     */
-    private Method keyMethod;
 
     /**
      * Constructor to initialize DataSource and cache value and key methods.
@@ -102,38 +98,6 @@ public class GenDbDao<K, V> implements DbDao<K, V> {
             kParams = null;
         }
         dbDao = new DbUtilsDs(this.dataSource);
-        // Get value fields
-        final var fields = vClass.getDeclaredFields();
-        // Get last field
-        final var field = fields[fields.length - 1];
-        // Last field should be key if it exists
-        if (field.getName().equals("key")) {
-            try {
-                keyMethod = new PropertyDescriptor(field.getName(), vClass).getReadMethod();
-            } catch (IntrospectionException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            keyMethod = null;
-        }
-    }
-
-    /**
-     * Get key or null;
-     *
-     * @param value Value to get key from.
-     * @return ID;
-     */
-    public K getKey(V value) {
-        K k = null;
-        if (keyMethod != null) {
-            try {
-                k = (K) keyMethod.invoke(value, (Object[]) null);
-            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return k;
     }
 
     /**

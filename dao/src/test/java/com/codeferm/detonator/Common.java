@@ -9,6 +9,7 @@ import com.codeferm.dto.Countries;
 import com.codeferm.dto.CountriesKey;
 import com.codeferm.dto.Customers;
 import com.codeferm.dto.CustomersKey;
+import com.codeferm.dto.Dto;
 import com.codeferm.dto.Employees;
 import com.codeferm.dto.EmployeesKey;
 import com.codeferm.dto.Inventories;
@@ -124,7 +125,7 @@ public class Common {
         // Get all records
         final var list = dao.findAll();
         list.forEach(dto -> {
-            map.put(dao.getKey(dto), dto);
+            map.put(((Dto)dto).getKey(), dto);
         });
         // Create auto increment key starting with last key in map
         final var lastKey = ((BTreeMap) map).lastKey();

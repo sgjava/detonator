@@ -4,7 +4,6 @@
 package ${packageName};
 
 <#assign imports = imports + [ "java.util.Objects" ] />
-<#assign imports = imports + [ "java.io.Serializable" ] />
 <#list map?values as rsmdDto>
 <#if rsmdDto.getNullable() == 0 && !imports?seq_contains("javax.validation.constraints.NotNull")>
 <#assign imports = imports + [ "javax.validation.constraints.NotNull" ] />
@@ -19,7 +18,7 @@ import ${import};
  *
  * ${sql}
  */
-public class ${className} implements Serializable {
+public class ${className} implements Dto {
 <#list map?values as rsmdDto>
 
     /**
@@ -75,17 +74,9 @@ public class ${className} implements Serializable {
      *
      * @return key Get key.
      */
+    @Override
     public ${className}Key getKey() {
         return key;
-    }
-
-    /**
-     * Mutator for field key.
-     *
-     * @param key Set key.
-     */
-    public void setKey(final ${className}Key key) {
-        this.key = key;
     }
 </#if>
 

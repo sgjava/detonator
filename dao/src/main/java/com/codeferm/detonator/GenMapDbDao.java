@@ -76,9 +76,10 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
             keyInc = null;
         }
         try {
+            // Get key vFields
             final var kFields = kClass.getDeclaredFields();
             // Key write method method
-            writeMethod = new PropertyDescriptor(kFields[0].getName(), kClass).getWriteMethod();
+            writeMethod = new PropertyDescriptor(kFields[0].getName(), vClass).getWriteMethod();
         } catch (IntrospectionException e) {
             throw new RuntimeException(e);
         }
@@ -144,17 +145,15 @@ public class GenMapDbDao<K, V> implements Dao<K, V> {
      */
     @Override
     public K saveReturnKey(final V value, final String[] keyNames) {
-        // Get key from value
-        final K k = ((Dto) value).getKey();
         try {
             // Write next atomic value to key field
-            writeMethod.invoke(k, keyInc.incrementAndGet());
+            writeMethod.invoke(value, keyInc.incrementAndGet());
             // Save in map
-            map.put(k, value);
+            map.put(((Dto) value).getKey(), value);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-        return k;
+        return ((Dto) value).getKey();
     }
 
     /**

@@ -252,8 +252,9 @@ public class GenDbDaoTest {
         dto.setStatus("Pending");
         // Save DTO and return identity key
         final var key = dao.saveReturnKey(dto, new String[]{"ORDER_ID"});
-        // Verify returned key
-        assertEquals(117, key.getOrderId());
+        // Make sure keys match
+        final var retDto = dao.find(key);
+        assertEquals(retDto.getKey(), key);
     }
 
     /**

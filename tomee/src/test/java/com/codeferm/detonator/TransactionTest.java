@@ -161,8 +161,8 @@ public class TransactionTest {
         p.put("dataSource.userName", properties.getProperty("db.user"));
         p.put("dataSource.password", properties.getProperty("db.password"));
         p.put("dataSource.jtaManaged", true);
-//        p.put("dataSource.maxActive", 11);
-        p.put("dataSource.maxIdle", Integer.parseInt(properties.getProperty("db.pool.size")));
+        p.put("dataSource.initialSize", properties.getProperty("db.xa.pool.size"));
+        p.put("dataSource.maxIdle", Integer.parseInt(properties.getProperty("db.xa.pool.size")) / 10);
         ejbContainer = EJBContainer.createEJBContainer(p);
         context = ejbContainer.getContext();
     }
@@ -201,7 +201,7 @@ public class TransactionTest {
         logger.debug("Closing EJBContainer");
         ejbContainer.close();
     }
-    
+
     /**
      * Max out inventory for all products.
      *
@@ -214,7 +214,7 @@ public class TransactionTest {
             inv.setQuantity(value);
             inventories.update(inv.getKey(), inv);
         }
-    }    
+    }
 
     /**
      * Test JTA commit.
@@ -225,7 +225,7 @@ public class TransactionTest {
         final var maxOrders = Integer.parseInt(properties.getProperty("orders.max.create"));
         updateInventory(maxOrders);
         // Database pool size - 1 threads
-        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
+        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("client.max.threads")));
         // Create some OrderItems
         final List<OrderItems> list = new ArrayList<>();
         final var item1 = new OrderItems();
@@ -269,7 +269,7 @@ public class TransactionTest {
         }
         ordersBo.getOrdersBo().getOrderQueue().shutdown();
         final var stop = System.nanoTime();
-        logger.debug("TPS: {}", maxOrders / ((stop-start) / 1000000000L));
+        logger.debug("TPS: {}", maxOrders / ((stop - start) / 1000000000L));
         // See if last order created
         final var dto = ordersBo.getOrdersBo().getOrders().find(new OrdersKey(306L));
         assertNotNull(dto);

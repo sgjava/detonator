@@ -131,7 +131,7 @@ public class MapDbOrdersBo {
             inventories.update(inv.getKey(), inv);
         }
     }
-    
+
     /**
      * Create OrderItems List.
      *
@@ -150,7 +150,7 @@ public class MapDbOrdersBo {
         item2.setQuantity(1);
         list.add(item2);
         return list;
-    }    
+    }
 
     /**
      * Test createOrder method.
@@ -162,7 +162,9 @@ public class MapDbOrdersBo {
         updateInventory(maxOrders);
         final var ordersBo = createBo();
         // Add observer
-        final var orderCreated = new OrderCreated(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
+        final var orderCreated = new OrderCreated(new OrderShipped(properties.getProperty("template.dir"), properties.getProperty(
+                "template"), properties.getProperty("output.dir"), ordersBo, Integer.parseInt(properties.getProperty(
+                "order.shipped.max.threads"))), Integer.parseInt(properties.getProperty("order.created.max.threads")));
         ((CreateOrderQueue) ordersBo.getOrderQueue()).addObserver(orderCreated);
         final List<OrderItems> list = createOrderItemsList();
         // Database pool size - 1 threads

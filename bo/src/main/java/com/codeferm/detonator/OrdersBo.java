@@ -11,7 +11,10 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -172,22 +175,30 @@ public class OrdersBo {
     }
 
     /**
-     * Show how you can link child tables easily without composite SQL.
+     * Show how you can link child tables easily without composite SQL. This will create a model for FreeMarker template or other
+     * uses.
      *
      * @param ordersId Orders ID.
+     * @return Map of objects representing order.
      */
-    public void orderInfo(final long ordersId) {
+    public Map<String, Object> orderInfo(final long ordersId) {
         // Make sure order exists 
         final var ordersDto = orderExists(ordersId);
-        logger.debug("Order {}", ordersDto);
+        // Template model
+        final Map<String, Object> model = new HashMap<>();
+        // Order
+        model.put("ordersDto", ordersDto);
         // Get list of order items by key range
         final var orderItemsList = orderItems.findRange(new OrderItemsKey(0L, ordersDto.getOrderId()), new OrderItemsKey(Long.MAX_VALUE,
                 ordersDto.getOrderId()));
-        logger.debug("Order items {}", orderItemsList);
-        // Show product for each order item
+        model.put("orderItemsList", orderItemsList);
+        // Product list in same order as order items list
+        final List<Products> productsList = new ArrayList<>();
+        // Product for each order item
         orderItemsList.forEach(items -> {
-            final var dto = products.find(new ProductsKey(items.getProductId()));
-            logger.debug("itemId {}, Product {}", items.getItemId(), dto);
+            productsList.add(products.find(new ProductsKey(items.getProductId())));
         });
+        model.put("productsList", productsList);
+        return model;
     }
 }

@@ -12,8 +12,14 @@ package com.codeferm.detonator;
  */
 public class OrderCreatedBean extends OrderCreated {
 
-    public OrderCreatedBean(final int poolSize) {
-        super(poolSize);
+    /**
+     * Construct with OrderShipped and maxThreads.
+     *
+     * @param orderShipped Order shipped logic.
+     * @param maxThreads Maximum processing threads.
+     */
+    public OrderCreatedBean(final OrderShipped orderShipped, final int maxThreads) {
+        super(orderShipped, maxThreads);
     }
 
 }

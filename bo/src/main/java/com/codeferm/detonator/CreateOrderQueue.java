@@ -26,10 +26,6 @@ public class CreateOrderQueue extends Observable<CreateOrderQueue, Orders> imple
      */
     private final Logger logger = LogManager.getLogger(CreateOrderQueue.class);
     /**
-     * Validation bean.
-     */
-    private final ValidateBean validateBean;
-    /**
      * Single threaded executor service.
      */
     private final ExecutorService executor;
@@ -42,7 +38,6 @@ public class CreateOrderQueue extends Observable<CreateOrderQueue, Orders> imple
      * Construct with ValidateBean and ExecutorService.
      */
     public CreateOrderQueue() {
-        validateBean = new ValidateBean();
         executor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("create-order-queue-%d").build());
     }
 
@@ -52,7 +47,6 @@ public class CreateOrderQueue extends Observable<CreateOrderQueue, Orders> imple
      * @param createOrder CreateOrder
      */
     public CreateOrderQueue(final CreateOrder createOrder) {
-        validateBean = new ValidateBean();
         this.createOrder = createOrder;
         executor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("create-order-queue-%d").build());
     }
@@ -73,7 +67,13 @@ public class CreateOrderQueue extends Observable<CreateOrderQueue, Orders> imple
     @Override
     public void create(final OrderMessage orderMessage) {
         final Runnable task = () -> {
-            notifyObservers(createOrder.create(orderMessage));
+            try {
+                notifyObservers(createOrder.create(orderMessage));
+            } catch (RuntimeException e) {
+                // DeTOnator exception handling throws RuntimeException
+                // You could have an exception queue deal with exceptions
+                logger.error("Create order error {}", e.getMessage());
+            }
         };
         executor.execute(task);
     }

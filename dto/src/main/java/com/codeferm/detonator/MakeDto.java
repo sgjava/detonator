@@ -153,8 +153,7 @@ public class MakeDto {
      * @param writer Template output.
      */
     public void keyTemplate(final String template, final String sql, final List<String> list, final String packageName,
-            final String className,
-            final Writer writer) {
+            final String className, final Writer writer) {
         final var formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss");
         final var metadataExtract = new MetadataExtract();
         final var map = metadataExtract.getResultSetMetaData(dataSource, sql, mapTypes);

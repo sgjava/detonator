@@ -81,9 +81,7 @@ public class CreateOrderBean implements MessageListener {
     /**
      * Destroy cache.
      */
-    //CHECKSTYLE:OFF DesignForExtension - CDI beans cannot have final methods
     @PreDestroy
-    //CHECKSTYLE:ON DesignForExtension
     public void destroy() {
         logger.debug("PreDestroy");
     }
@@ -97,12 +95,9 @@ public class CreateOrderBean implements MessageListener {
      */
     @Override
     public void onMessage(final Message message) {
-        final ObjectMessage objectMessage = (ObjectMessage) message;
-        final OrderMessage orderMessage;
+        final var objectMessage = (ObjectMessage) message;
         try {
-            orderMessage = (OrderMessage) objectMessage.getObject();
-            createOrder.create(orderMessage);
-            //logger.debug("Created {}", orderMessage);
+            createOrder.create((OrderMessage) objectMessage.getObject());
         } catch (JMSException e) {
             throw new RuntimeException(e);
         }

@@ -12,8 +12,6 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -164,7 +162,9 @@ public class TransactionTest {
         OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
         bo.setOrdersBo(createBo());
         // Add observer
-        final var orderCreated = new OrderCreatedBean(Integer.parseInt(properties.getProperty("db.xa.pool.size")) - 1);
+        final var orderCreated = new OrderCreated(new OrderShipped(properties.getProperty("template.dir"), properties.getProperty(
+                "template"), properties.getProperty("output.dir"), bo.getOrdersBo(), Integer.parseInt(properties.getProperty(
+                "order.shipped.max.threads"))), Integer.parseInt(properties.getProperty("order.created.max.threads")));
         ((CreateOrderQueue) bo.getOrdersBo().getOrderQueue()).addObserver(orderCreated);
         // Database pool size - 1 threads
         final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.xa.pool.size")) - 1);
@@ -193,6 +193,8 @@ public class TransactionTest {
         logger.debug("Create order thread finished");
         logger.debug("Waiting for order created thread to finish");
         orderCreated.shutdown();
+        logger.debug("Waiting for order shipped thread to finish");
+        orderCreated.getOrderShipped().shutdown();
     }
 
     /**

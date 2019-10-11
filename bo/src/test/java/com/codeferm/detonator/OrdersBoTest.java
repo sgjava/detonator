@@ -11,6 +11,7 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
+import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -151,6 +152,8 @@ public class OrdersBoTest {
     @Test
     public void createOrder() {
         logger.debug("createOrder");
+        final var outputDir = new File(properties.getProperty("output.dir"));
+        outputDir.mkdirs();
         final var maxOrders = Integer.parseInt(properties.getProperty("orders.max.create"));
         // Max out inventory
         updateInventory(maxOrders);
@@ -162,11 +165,13 @@ public class OrdersBoTest {
         final var lastOrder = orders.get(orders.size() - 1);
         logger.debug("Last order: {}", lastOrder);
         // Add observer
-        final var orderCreated = new OrderCreated(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
+        final var orderCreated = new OrderCreated(new OrderShipped(properties.getProperty("template.dir"), properties.getProperty(
+                "template"), properties.getProperty("output.dir"), ordersBo, Integer.parseInt(properties.getProperty(
+                "order.shipped.max.threads"))), Integer.parseInt(properties.getProperty("order.created.max.threads")));
         ((CreateOrderQueue) ordersBo.getOrderQueue()).addObserver(orderCreated);
         final List<OrderItems> list = createOrderItemsList();
         // Database pool size - 1 threads
-        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("db.pool.size")) - 1);
+        final var executor = Executors.newFixedThreadPool(Integer.parseInt(properties.getProperty("client.max.threads")));
         final var start = System.nanoTime();
         for (int i = 0; i < maxOrders; i++) {
             final Runnable task = () -> {
@@ -192,11 +197,13 @@ public class OrdersBoTest {
         logger.debug("Create order thread finished");
         logger.debug("Waiting for order created thread to finish");
         orderCreated.shutdown();
+        logger.debug("Waiting for order shipped thread to finish");
+        orderCreated.getOrderShipped().shutdown();
         // Get last order based on maxOrders
         final var order = ordersBo.getOrders().find(new OrdersKey(lastOrder.getOrderId() + maxOrders));
         assertNotNull(order);
-        logger.debug("Last order: {}",order);
-        
+        logger.debug("Last order: {}", order);
+
     }
 
     /**
@@ -206,7 +213,8 @@ public class OrdersBoTest {
     public void linkTables() {
         logger.debug("linkTables");
         final var ordersBo = createBo();
-        ordersBo.orderInfo(1);
+        assertNotNull(ordersBo);
+        logger.debug(ordersBo.orderInfo(1));
     }
 
 }

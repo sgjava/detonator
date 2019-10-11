@@ -28,14 +28,28 @@ public class OrderCreated implements Observer<CreateOrderQueue, Orders> {
      * Multi threaded executor service.
      */
     private final ExecutorService executor;
+    /**
+     * Order shipped logic.
+     */
+    private OrderShipped orderShipped;
 
     /**
      * Construct with pooled executor.
      *
-     * @param poolSize Size of pool should be one less than DB pool size.
+     * @param orderShipped Order shipped logic.
+     * @param maxThreads Maximum processing threads.
      */
-    public OrderCreated(final int poolSize) {
-        executor = Executors.newFixedThreadPool(poolSize, new ThreadFactoryBuilder().setNameFormat("order-created-%d").build());
+    public OrderCreated(final OrderShipped orderShipped, final int maxThreads) {
+        this.orderShipped = orderShipped;
+        executor = Executors.newFixedThreadPool(maxThreads, new ThreadFactoryBuilder().setNameFormat("order-created-%d").build());
+    }
+
+    public OrderShipped getOrderShipped() {
+        return orderShipped;
+    }
+
+    public void setOrderShipped(OrderShipped orderShipped) {
+        this.orderShipped = orderShipped;
     }
 
     /**
@@ -48,6 +62,7 @@ public class OrderCreated implements Observer<CreateOrderQueue, Orders> {
     public void update(final Observable<CreateOrderQueue, Orders> object, final Orders data) {
         final Runnable task = () -> {
             //logger.debug("Created {}", data);
+            orderShipped.shipOrder(data);
         };
         executor.execute(task);
     }

@@ -8,10 +8,15 @@ import com.codeferm.dto.InventoriesKey;
 import com.codeferm.dto.OrderItems;
 import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -165,6 +170,14 @@ public class TransactionTest {
         p.put("dataSource.maxIdle", Integer.parseInt(properties.getProperty("db.xa.pool.size")) / 10);
         ejbContainer = EJBContainer.createEJBContainer(p);
         context = ejbContainer.getContext();
+        // Delete/create dir for orders output
+        try {
+            Files.walk(Paths.get(properties.getProperty("output.dir"))).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(
+                    File::delete);
+            Files.createDirectories(Paths.get(properties.getProperty("output.dir")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }        
     }
 
     /**

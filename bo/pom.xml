@@ -14,10 +14,6 @@
     
     <name>DeTOnator BO</name>
     <description>DeTOnator Business Objects</description>
-
-    <properties>
-        <atomikos.version>4.0.6</atomikos.version>
-    </properties>      
             
     <build>
         <plugins>
@@ -107,17 +103,17 @@
         <dependency>
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
-            <version>2.3.29</version>
+            <version>2.3.30</version>
         </dependency>          
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.13.0</version>
+            <version>2.13.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.13.0</version>
+            <version>2.13.3</version>
         </dependency>        
         <dependency>
             <groupId>commons-dbutils</groupId>
@@ -133,7 +129,7 @@
         <dependency>
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
-            <version>6.1.1.Final</version>
+            <version>6.1.5.Final</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -145,13 +141,13 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.6.0</version>
+            <version>5.6.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.6.0</version>
+            <version>5.6.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>

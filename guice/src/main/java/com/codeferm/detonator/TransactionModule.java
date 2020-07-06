@@ -11,21 +11,21 @@ import com.google.inject.matcher.Matchers;
  * {@link com.codeferm.detonator.Transaction}.
  *
  * @see com.codeferm.detonator.Transaction
- * @see com.codeferm.detonator.AtomikosTransInterceptor
+ * @see com.codeferm.detonator.AtomikosTransInterceptorNew
  * @see com.codeferm.detonator.TransactionFactory
  *
  * @author sgoldsmith
  * @version 1.0.0
  * @since 1.0.0
  */
-public class AtomikosTransModule extends AbstractModule {
+public class TransactionModule extends AbstractModule {
 
     /**
      * Inject transaction interceptor annotated with Transaction.
      */
     @Override
     protected void configure() {
-        final AtomikosTransInterceptor interceptor = new AtomikosTransInterceptor();
+        final TransactionInterceptor interceptor = new TransactionInterceptor();
         // Request injection of AtomikosTransInterceptor
         requestInjection(interceptor);
         // Match all methods of class with @Transaction annotation

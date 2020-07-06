@@ -35,7 +35,7 @@ public class MakeDto {
     /**
      * FreeMarker configuration singleton.
      */
-    private final Configuration configuration = new Configuration(Configuration.getVersion());
+    private final Configuration configuration = new Configuration(Configuration.VERSION_2_3_30);
     /**
      * Map data types.
      */

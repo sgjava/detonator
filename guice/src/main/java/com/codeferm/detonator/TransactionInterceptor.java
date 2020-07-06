@@ -3,7 +3,7 @@
  */
 package com.codeferm.detonator;
 
-import com.atomikos.icatch.jta.UserTransactionImp;
+import com.arjuna.ats.internal.jta.transaction.arjunacore.UserTransactionImple;
 import java.lang.reflect.Method;
 import javax.transaction.UserTransaction;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -43,12 +43,12 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class AtomikosTransInterceptor implements MethodInterceptor {
+public class TransactionInterceptor implements MethodInterceptor {
 
     /**
      * Logger.
      */
-    private final Logger logger = LogManager.getLogger(AtomikosTransInterceptor.class);
+    private final Logger logger = LogManager.getLogger(TransactionInterceptor.class);
 
     /**
      * Invoke method wrapped in a transaction.
@@ -68,7 +68,7 @@ public class AtomikosTransInterceptor implements MethodInterceptor {
             object = invocation.proceed();
 
         } else {
-            final UserTransaction userTransaction = new UserTransactionImp();
+            final UserTransaction userTransaction = new UserTransactionImple();
             // Begin transaction
             userTransaction.begin();
             try {
@@ -86,6 +86,8 @@ public class AtomikosTransInterceptor implements MethodInterceptor {
                 }
                 userTransaction.rollback();
                 throw e;
+            } finally {
+                //userTransaction.close();
             }
         }
         return object;

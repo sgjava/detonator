@@ -3,7 +3,7 @@
  */
 package com.codeferm.detonator;
 
-import com.atomikos.jdbc.AtomikosDataSourceBean;
+import com.arjuna.ats.jta.TransactionManager;
 import com.codeferm.dto.Inventories;
 import com.codeferm.dto.InventoriesKey;
 import com.codeferm.dto.OrderItems;
@@ -12,6 +12,9 @@ import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +23,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbcp2.managed.BasicManagedDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -99,17 +104,27 @@ public class TransactionTest {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        // Create AtomikosXADataSourceBean
-        final AtomikosDataSourceBean xaDs = new AtomikosDataSourceBean();
-        xaDs.setUniqueResourceName("TransactionTest");
-        xaDs.setXaDataSourceClassName(properties.getProperty("db.xa.driver"));
-        Properties p = new Properties();
-        p.setProperty("user", properties.getProperty("db.xa.user"));
-        p.setProperty("password", properties.getProperty("db.xa.password"));
-        p.setProperty("URL", properties.getProperty("db.xa.url"));
-        xaDs.setXaProperties(p);
-        xaDs.setPoolSize(Integer.parseInt(properties.getProperty("db.xa.pool.size")));
+        System.getProperties().put("com.arjuna.ats.arjuna.objectstore.objectStoreDir", properties.getProperty(
+                "narayana.object.store.dir"));
+        System.getProperties().put("ObjectStoreEnvironmentBean.objectStoreDir", properties.getProperty("narayana.object.store.dir"));
+        // Create BasicManagedDataSource
+        final var xaDs = new BasicManagedDataSource();
+        xaDs.setTransactionManager(TransactionManager.transactionManager());
+        final var jdbcDataSource = new JdbcDataSource();
+        jdbcDataSource.setURL(properties.getProperty("db.xa.url"));
+        xaDs.setXaDataSourceInstance(jdbcDataSource);
+        xaDs.setDriverClassName(properties.getProperty("db.xa.driver"));
+        xaDs.setUrl(properties.getProperty("db.xa.url"));
+        xaDs.setUsername(properties.getProperty("db.xa.user"));
+        xaDs.setPassword(properties.getProperty("db.xa.password"));
+        xaDs.setInitialSize(Integer.parseInt(properties.getProperty("db.xa.pool.size")));
         dataSource = xaDs;
+        // Create dir for orders output
+        try {
+            Files.createDirectories(Paths.get(properties.getProperty("output.dir")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -119,7 +134,7 @@ public class TransactionTest {
      */
     @AfterAll
     public static void afterAll() throws SQLException {
-        ((AtomikosDataSourceBean) dataSource).close();
+        ((BasicManagedDataSource) dataSource).close();
     }
 
     public OrdersBo createBo() {
@@ -134,7 +149,7 @@ public class TransactionTest {
                 "inventories.properties"),
                 InventoriesKey.class, Inventories.class);
         // Queue bean uses Guice transactions 
-        final var queue = TransactionFactory.createObject(CreateOrderQueueBean.class, AtomikosTransModule.class);
+        final var queue = TransactionFactory.createObject(CreateOrderQueueBean.class, TransactionModule.class);
         queue.setCreateOrder(new CreateOrder(new UpdateInventoryDao(orderItems, inventories), orders, orderItems, products));
         // Create BO
         return new OrdersBo(queue, orders, orderItems, products, inventories);
@@ -159,7 +174,7 @@ public class TransactionTest {
         item2.setQuantity(1);
         list.add(item2);
         // Create transactional business object
-        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
+        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, TransactionModule.class);
         bo.setOrdersBo(createBo());
         // Add observer
         final var orderCreated = new OrderCreated(new OrderShipped(properties.getProperty("template.dir"), properties.getProperty(
@@ -204,7 +219,7 @@ public class TransactionTest {
     public void rollback() {
         logger.debug("rollback");
         // Create transactional business object
-        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
+        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, TransactionModule.class);
         bo.setOrdersBo(createBo());
         // Record doesn't exist and should rollback
         Assertions.assertThrows(RuntimeException.class, () -> {
@@ -219,7 +234,7 @@ public class TransactionTest {
     public void linkTables() {
         logger.debug("linkTables");
         // Create transactional business object
-        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, AtomikosTransModule.class);
+        OrdersBoBean bo = TransactionFactory.createObject(OrdersBoBean.class, TransactionModule.class);
         bo.setOrdersBo(createBo());
         bo.orderInfo(1);
     }

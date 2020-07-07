@@ -12,8 +12,8 @@ import java.lang.annotation.Target;
 /**
  * Runtime annotation for method level transaction.
  *
- * @see com.codeferm.detonator.AtomikosTransInterceptor
- * @see com.codeferm.detonator.AtomikosTransModule
+ * @see com.codeferm.detonator.TransactionInterceptor
+ * @see com.codeferm.detonator.TransactionModule
  *
  * @author sgoldsmith
  * @version 1.0.0

@@ -16,7 +16,7 @@ import org.apache.logging.log4j.Logger;
  * {@link java.lang.Exception} is thrown.
  * <p>
  * <p>
- * Currently this class supports {@link javax.transaction.UserTransaction} and Atomikos {@code UserTransactionImp} for the
+ * Currently this class supports {@link javax.transaction.UserTransaction} and Narayana {@code UserTransactionImp} for the
  * implementation. Other JTA implementations could be leveraged as well.
  * <p>
  * <p>
@@ -36,7 +36,7 @@ import org.apache.logging.log4j.Logger;
  * It is not possible to use method interception on instances that aren't constructed by Guice.
  *
  * @see com.codeferm.detonator.Transaction
- * @see com.codeferm.detonator.AtomikosTransModule
+ * @see com.codeferm.detonator.TransactionModule
  * @see com.codeferm.detonator.TransactionFactory
  *
  * @author sgoldsmith

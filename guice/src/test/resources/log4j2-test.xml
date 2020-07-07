@@ -12,10 +12,10 @@
         <Logger name="com.codeferm.detonator.DataLoader" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="com.codeferm.detonator.AtomikosTransInterceptor" level="info" additivity="false">
+        <Logger name="com.codeferm.detonator.TransactionInterceptor" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="com.atomikos" level="warn" additivity="false">
+        <Logger name="com.arjuna" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
         <Logger name="org.hibernate.validator" level="warn" additivity="false">

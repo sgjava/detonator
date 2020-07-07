@@ -13,7 +13,7 @@ generate other artifact types and other languages.
 high performance code generation to your Maven based projects.
 * [DeTOnator DAO](https://github.com/sgjava/detonator/tree/master/dao) is a generic Java SE DAO layer.
 * [DeTOnator Guice](https://github.com/sgjava/detonator/tree/master/guice) A Java SE based JTA is provided with
-annotations, Atomikos, Guice and AOP magic.
+annotations, Narayana, Guice and AOP magic.
 * [DeTOnator TomEE](https://github.com/sgjava/detonator/tree/master/tomee) Use DeTOnator DAO in a Jakarta EE project with transaction support.
 * Based on OpenJDK 11 LTS.
 

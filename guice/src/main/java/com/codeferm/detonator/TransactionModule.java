@@ -7,11 +7,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 
 /**
- * Binds {@link com.codeferm.dbaccess.transaction.AtomikosTransInterceptor} in the Guice module for methods annotated with
+ * Binds {@link com.codeferm.dbaccess.transaction.TransactionInterceptor} in the Guice module for methods annotated with
  * {@link com.codeferm.detonator.Transaction}.
  *
  * @see com.codeferm.detonator.Transaction
- * @see com.codeferm.detonator.AtomikosTransInterceptorNew
+ * @see com.codeferm.detonator.TransactionInterceptorNew
  * @see com.codeferm.detonator.TransactionFactory
  *
  * @author sgoldsmith
@@ -26,7 +26,7 @@ public class TransactionModule extends AbstractModule {
     @Override
     protected void configure() {
         final TransactionInterceptor interceptor = new TransactionInterceptor();
-        // Request injection of AtomikosTransInterceptor
+        // Request injection of TransactionInterceptor
         requestInjection(interceptor);
         // Match all methods of class with @Transaction annotation
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transaction.class), interceptor);

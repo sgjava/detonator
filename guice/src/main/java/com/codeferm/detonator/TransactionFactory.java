@@ -14,14 +14,14 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * Simple factory class that returns and Object with methods wrapped in a transaction if the method is annotated with
- * {@link com.codeferm.detonator.Transaction}. The method interceptor null {@link com.codeferm.detonator.AtomikosTransInterceptor},
+ * {@link com.codeferm.detonator.Transaction}. The method interceptor null {@link com.codeferm.detonator.TransactionInterceptor},
  * {@link com.codeferm.dbaccess.transaction.QueryRunnerTransInterceptor} or
  * {@link com.codeferm.dbaccess.transaction.JdbcTransInterceptor} is binded with Guice using
- * {@link com.codeferm.dbaccess.transaction.AtomikosTransModule}.
+ * {@link com.codeferm.dbaccess.transaction.TransactionModule}.
  *
  * @see com.codeferm.detonator.Transaction
- * @see com.codeferm.detonator.AtomikosTransInterceptor
- * @see com.codeferm.detonator.AtomikosTransModule
+ * @see com.codeferm.detonator.TransactionInterceptor
+ * @see com.codeferm.detonator.TransactionModule
  *
  * @author sgoldsmith
  * @version 1.0.0

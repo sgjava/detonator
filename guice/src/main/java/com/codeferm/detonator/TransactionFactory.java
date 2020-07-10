@@ -1,8 +1,5 @@
 /*
  * Copyright (c) Steven P. Goldsmith. All rights reserved.
- *
- * Created by Steven P. Goldsmith on December 27, 2011
- * sgoldsmith@com.codeferm
  */
 package com.codeferm.detonator;
 

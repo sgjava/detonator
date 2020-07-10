@@ -3,14 +3,6 @@
  */
 package com.codeferm.detonator;
 
-import com.codeferm.dto.Inventories;
-import com.codeferm.dto.InventoriesKey;
-import com.codeferm.dto.OrderItems;
-import com.codeferm.dto.OrderItemsKey;
-import com.codeferm.dto.Orders;
-import com.codeferm.dto.OrdersKey;
-import com.codeferm.dto.Products;
-import com.codeferm.dto.ProductsKey;
 import java.util.concurrent.TimeUnit;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;

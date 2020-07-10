@@ -27,22 +27,6 @@ import javax.jms.Queue;
 public class CreateOrderQueueClient implements OrderQueue {
 
     /**
-     * Orders DAO.
-     */
-    private Dao<OrdersKey, Orders> orders;
-    /**
-     * OrderItems DAO.
-     */
-    private Dao<OrderItemsKey, OrderItems> orderItems;
-    /**
-     * Products DAO.
-     */
-    private Dao<ProductsKey, Products> products;
-    /**
-     * Inventories DAO.
-     */
-    private Dao<InventoriesKey, Inventories> inventories;
-    /**
      * JMS context.
      */
     private final JMSContext jmsContext;

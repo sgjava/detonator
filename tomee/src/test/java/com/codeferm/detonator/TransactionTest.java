@@ -6,7 +6,6 @@ package com.codeferm.detonator;
 import com.codeferm.dto.Inventories;
 import com.codeferm.dto.InventoriesKey;
 import com.codeferm.dto.OrderItems;
-import com.codeferm.dto.Orders;
 import com.codeferm.dto.OrdersKey;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
@@ -55,11 +55,6 @@ public class TransactionTest {
      */
     private static Properties properties;
     /**
-     * Orders DAO.
-     */
-    @Inject
-    private Dao<OrdersKey, Orders> ordersDao;
-    /**
      * Inventories DAO.
      */
     @Inject
@@ -68,7 +63,7 @@ public class TransactionTest {
      * Business object.
      */
     @Inject
-    private OrdersBoBean ordersBo;
+    private OrdersBo ordersBo;
     /**
      * EJB container.
      */
@@ -170,14 +165,16 @@ public class TransactionTest {
         p.put("dataSource.maxIdle", Integer.parseInt(properties.getProperty("db.xa.pool.size")) / 10);
         ejbContainer = EJBContainer.createEJBContainer(p);
         context = ejbContainer.getContext();
-        // Delete/create dir for orders output
         try {
-            Files.walk(Paths.get(properties.getProperty("output.dir"))).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(
-                    File::delete);
+            // Delete files
+            if (Files.exists(Paths.get(properties.getProperty("output.dir")))) {
+                Arrays.stream(new File(properties.getProperty("output.dir")).listFiles()).forEach(File::delete);
+            }
+            // Create dir
             Files.createDirectories(Paths.get(properties.getProperty("output.dir")));
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }        
+        }
     }
 
     /**
@@ -280,11 +277,11 @@ public class TransactionTest {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        ordersBo.getOrdersBo().getOrderQueue().shutdown();
+        ordersBo.getOrderQueue().shutdown();
         final var stop = System.nanoTime();
         logger.debug("TPS: {}", maxOrders / ((stop - start) / 1000000000L));
         // See if last order created
-        final var dto = ordersBo.getOrdersBo().getOrders().find(new OrdersKey(306L));
+        final var dto = ordersBo.getOrders().find(new OrdersKey(1106L));
         assertNotNull(dto);
         logger.debug("Last order: {}", dto);
     }

@@ -14,11 +14,10 @@ import com.codeferm.dto.ProductsKey;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -82,14 +81,16 @@ public class OrdersBoTest {
             common.createDb(dataSource, properties.getProperty("db.sample"), properties.getProperty("db.delimiter"), Boolean.
                     parseBoolean(properties.getProperty("db.remove.delimiter")));
         }
-        // Delete/create dir for orders output
         try {
-            Files.walk(Paths.get(properties.getProperty("output.dir"))).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(
-                    File::delete);
+            // Delete files
+            if (Files.exists(Paths.get(properties.getProperty("output.dir")))) {
+                Arrays.stream(new File(properties.getProperty("output.dir")).listFiles()).forEach(File::delete);
+            }
+            // Create dir
             Files.createDirectories(Paths.get(properties.getProperty("output.dir")));
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }        
+        }
     }
 
     /**

@@ -56,7 +56,7 @@ public class CreateOrderQueueClient implements OrderQueue {
                     enumeration.nextElement();
                 }
                 queueBrowser.close();
-                TimeUnit.MILLISECONDS.sleep(1);
+                TimeUnit.MILLISECONDS.sleep(100);
                 queueBrowser = jmsContext.createBrowser(createOrderBean);
                 enumeration = queueBrowser.getEnumeration();
             }

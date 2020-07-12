@@ -40,7 +40,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * DAO and business object producer. Probably a more type safe way of doing this, but this works and is efficient.
+ * DAO producer. Probably a more type safe way of doing this, but this works and is efficient.
  *
  * @author Steven P. Goldsmith
  * @version 1.0.0

@@ -1,8 +1,5 @@
 /*
  * Copyright (c) Steven P. Goldsmith. All rights reserved.
- *
- * Created by Steven P. Goldsmith on July 3, 2016
- * sgoldsmith@codeferm.com
  */
 package com.codeferm.detonator;
 
@@ -16,25 +13,27 @@ import com.codeferm.dto.Products;
 import com.codeferm.dto.ProductsKey;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
+import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
+import javax.jms.Queue;
 import org.apache.logging.log4j.LogManager;
 
 /**
- * MDB used for asynchronous order creation using a single thread.
+ * MDB used for asynchronous order creation using single session.
  *
  * @author sgoldsmith
  * @version 1.0.0
  * @since 1.0.0
  */
 @MessageDriven(activationConfig = {
-    @ActivationConfigProperty(propertyName = "maxSessions", propertyValue = "1"),
-    @ActivationConfigProperty(propertyName = "maxMessagesPerSessions", propertyValue = "1")})
+    @ActivationConfigProperty(propertyName = "maxSessions", propertyValue = "1")})
 public class CreateOrderBean implements MessageListener {
 
     /**
@@ -61,6 +60,18 @@ public class CreateOrderBean implements MessageListener {
      */
     @Inject
     private Dao<InventoriesKey, Inventories> inventories;
+    /**
+     * Injected JMS Context.
+     */
+    @Inject
+    JMSContext jmsContext;    
+    /**
+     * Order Created MDB.
+     *
+     * For TomEE use openejb.deploymentId.format={ejbJarId}/{ejbName}
+     */
+    @Resource(name = "OrderCreatedBean")
+    private Queue orderCreatedBean;
     /**
      * Create order logic.
      */
@@ -97,7 +108,9 @@ public class CreateOrderBean implements MessageListener {
     public void onMessage(final Message message) {
         final var objectMessage = (ObjectMessage) message;
         try {
-            createOrder.create((OrderMessage) objectMessage.getObject());
+            var orderMessage = (OrderMessage) objectMessage.getObject();
+            var orders = createOrder.create(orderMessage);
+            jmsContext.createProducer().send(orderCreatedBean, orders);
         } catch (JMSException e) {
             throw new RuntimeException(e);
         }

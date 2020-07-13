@@ -11,12 +11,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -59,6 +57,11 @@ public class TransactionTest {
      */
     @Inject
     private Dao<InventoriesKey, Inventories> inventories;
+    /**
+     * Business object.
+     */
+    @Inject
+    private OrdersBoBean ordersBoBean;    
     /**
      * Business object.
      */
@@ -250,7 +253,7 @@ public class TransactionTest {
         list.add(item2);
         logger.debug("Waiting for JMS startup");
         final Runnable firstTask = () -> {
-            ordersBo.createOrder(1, 1, list);
+            ordersBoBean.createOrder(1, 1, list);
         };
         executor.execute(firstTask);
         // Wait for JMS Start up, so it doesn't impact elapsed time
@@ -262,7 +265,7 @@ public class TransactionTest {
         logger.debug("Start BO client threads");
         for (int i = 0; i < maxOrders; i++) {
             final Runnable task = () -> {
-                ordersBo.createOrder(1, 1, list);
+                ordersBoBean.createOrder(1, 1, list);
             };
             executor.execute(task);
         }
@@ -294,7 +297,7 @@ public class TransactionTest {
         logger.debug("rollback");
         // Record doesn't exist and should rollback
         Assertions.assertThrows(RuntimeException.class, () -> {
-            ordersBo.updateStatus(0, "Shipped");
+            ordersBoBean.updateStatus(0, "Shipped");
         });
     }
 
@@ -304,7 +307,7 @@ public class TransactionTest {
     @Test
     public void linkTables() {
         logger.debug("linkTables");
-        ordersBo.orderInfo(1);
+        ordersBoBean.orderInfo(1);
     }
 
 }

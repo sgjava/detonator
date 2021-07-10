@@ -4,7 +4,7 @@ DeTOnator Business Objects are plain Java Objects using the generic Dao interfac
 wrappers to add transactional support. One of the corner cases is using a RDBMS or Map to update inventory. Since everything should
 be built thread safe you have to consider concurrent database updates. If multiple threads read the same value then the product
 quantity will get out of sync. The simple way to solve this is to use a queue and let it handle the single threading. I've implemented
-this with Java SE, Java EE and Guice/AOP. Keeping the business logic separated from the underlying technology (JMS, MDB, Guice, etc.)
+this with Java SE, Jakarta EE and Guice/AOP. Keeping the business logic separated from the underlying technology (JMS, MDB, Guice, etc.)
 is easy with simple wrapper classes.
 
 A future version will include concurrent inventory management by using atomics. I'm already doing this with MapDB if the PK is a

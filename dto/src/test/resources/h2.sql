@@ -1,18 +1,18 @@
 -- H2 sample database
 
 -- drop tables
-DROP TABLE regions IF EXISTS;
-DROP TABLE countries IF EXISTS;
-DROP TABLE locations IF EXISTS;
-DROP TABLE warehouses IF EXISTS;
-DROP TABLE employees IF EXISTS;
-DROP TABLE product_categories IF EXISTS;
-DROP TABLE products IF EXISTS;
-DROP TABLE customers IF EXISTS;
-DROP TABLE contacts IF EXISTS;
-DROP TABLE orders IF EXISTS;
-DROP TABLE order_items IF EXISTS;
 DROP TABLE inventories IF EXISTS;
+DROP TABLE warehouses IF EXISTS;
+DROP TABLE locations IF EXISTS;
+DROP TABLE countries IF EXISTS;
+DROP TABLE regions IF EXISTS;
+DROP TABLE order_items IF EXISTS;
+DROP TABLE products IF EXISTS;
+DROP TABLE product_categories IF EXISTS;
+DROP TABLE orders IF EXISTS;
+DROP TABLE employees IF EXISTS;
+DROP TABLE contacts IF EXISTS;
+DROP TABLE customers IF EXISTS;
 
 -- regions
 CREATE TABLE regions

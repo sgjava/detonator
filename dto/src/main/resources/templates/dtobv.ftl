@@ -5,8 +5,8 @@ package ${packageName};
 
 <#assign imports = imports + [ "java.util.Objects" ] />
 <#list map?values as rsmdDto>
-<#if rsmdDto.getNullable() == 0 && !imports?seq_contains("javax.validation.constraints.NotNull")>
-<#assign imports = imports + [ "javax.validation.constraints.NotNull" ] />
+<#if rsmdDto.getNullable() == 0 && !imports?seq_contains("jakarta.validation.constraints.NotNull")>
+<#assign imports = imports + [ "jakarta.validation.constraints.NotNull" ] />
 </#if>
 </#list>
 <#list imports as import>

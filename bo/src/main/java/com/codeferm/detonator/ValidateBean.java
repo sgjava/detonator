@@ -3,8 +3,8 @@
  */
 package com.codeferm.detonator;
 
-import javax.validation.Validation;
-import javax.validation.Validator;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 
 /**
  * This class can validate beans using Bean Validation 2.0 (JSR 380).

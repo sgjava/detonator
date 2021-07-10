@@ -16,7 +16,7 @@ import org.apache.logging.log4j.Logger;
  * {@link java.lang.Exception} is thrown.
  * <p>
  * <p>
- * Currently this class supports {@link javax.transaction.UserTransaction} and Narayana {@code UserTransactionImp} for the
+ * Currently this class supports {@link jakarta.transaction.UserTransaction} and Narayana {@code UserTransactionImp} for the
  * implementation. Other JTA implementations could be leveraged as well.
  * <p>
  * <p>

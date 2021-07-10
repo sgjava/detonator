@@ -21,7 +21,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Plain Java business object that only needs DAOs set from calling class. This way you can use DataSource or XADataSource. You can
  * also use transactions in your calling class to handle automatic rollback on exception. Bean validation is built in if your DTOs
- * are decorated with javax.validation.constraints.* annotations.
+ * are decorated with jakarta.validation.constraints.* annotations.
  *
  * This class should be considered thread safe.
  *

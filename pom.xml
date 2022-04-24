@@ -15,7 +15,9 @@
         <module>dao</module>
         <module>bo</module>
         <module>guice</module>
+        <!--
         <module>tomee</module>
+            -->
     </modules>
     
     <properties>

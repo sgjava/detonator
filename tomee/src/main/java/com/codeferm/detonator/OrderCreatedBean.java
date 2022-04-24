@@ -9,6 +9,7 @@ import jakarta.annotation.PreDestroy;
 import jakarta.ejb.ActivationConfigProperty;
 import jakarta.ejb.MessageDriven;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageListener;
@@ -35,11 +36,15 @@ public class OrderCreatedBean implements MessageListener {
      * Business object.
      */
     @Inject
+    @Named
     private OrdersBo ordersBo;
     /**
      * Create order logic.
      */
     private OrderShipped orderShipped;
+
+    public OrderCreatedBean() {
+    }
 
     /**
      * Load properties file from class path.

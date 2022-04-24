@@ -17,6 +17,7 @@ import jakarta.annotation.Resource;
 import jakarta.ejb.ActivationConfigProperty;
 import jakarta.ejb.MessageDriven;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.jms.JMSContext;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
@@ -44,27 +45,31 @@ public class CreateOrderBean implements MessageListener {
      * Orders DAO.
      */
     @Inject
+    @Named("test")
     private Dao<OrdersKey, Orders> orders;
     /**
      * OrderItems DAO.
      */
     @Inject
+    @Named
     private Dao<OrderItemsKey, OrderItems> orderItems;
     /**
      * Products DAO.
      */
     @Inject
+    @Named
     private Dao<ProductsKey, Products> products;
     /**
      * Inventories DAO.
      */
     @Inject
+    @Named
     private Dao<InventoriesKey, Inventories> inventories;
     /**
      * Injected JMS Context.
      */
     @Inject
-    JMSContext jmsContext;    
+    JMSContext jmsContext;
     /**
      * Order Created MDB.
      *
@@ -76,6 +81,9 @@ public class CreateOrderBean implements MessageListener {
      * Create order logic.
      */
     private CreateOrder createOrder;
+
+    public CreateOrderBean() {
+    }
 
     /**
      * Init.

@@ -15,6 +15,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.ejb.Singleton;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.jms.JMSContext;
 import jakarta.jms.Queue;
 import jakarta.ws.rs.Produces;

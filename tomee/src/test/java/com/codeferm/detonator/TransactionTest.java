@@ -145,9 +145,8 @@ public class TransactionTest {
         System.setProperty("openejb.logger.external", "true");
         System.setProperty("openejb.log.factory", "log4j2");
         // Set up for JMS
-        //System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "*");
-        //System.setProperty("openejb.environment.default", "true");
-        //System.setProperty("openejb.scan.webapp.container", "true");
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "*");
+        System.setProperty("openejb.environment.default", "true");
         final Properties p = new Properties();
         // XADataSource
         p.put("dataSourceXa", String.format("new://Resource?type=XADataSource&class-name=%s", properties.getProperty(

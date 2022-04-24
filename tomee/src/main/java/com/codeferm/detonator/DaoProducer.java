@@ -30,6 +30,7 @@ import com.codeferm.dto.WarehousesKey;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.ejb.Singleton;
+import jakarta.inject.Named;
 import jakarta.ws.rs.Produces;
 import java.io.IOException;
 import java.util.Map;
@@ -161,6 +162,7 @@ public class DaoProducer {
     }
 
     @Produces
+    @Named("test")
     public Dao<OrdersKey, Orders> getOrders() {
         return (Dao<OrdersKey, Orders>) map.get("orders");
     }

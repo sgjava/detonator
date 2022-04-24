@@ -7,6 +7,8 @@ import com.codeferm.dto.Inventories;
 import com.codeferm.dto.InventoriesKey;
 import com.codeferm.dto.OrderItems;
 import com.codeferm.dto.OrdersKey;
+import jakarta.ejb.embeddable.EJBContainer;
+import jakarta.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -19,8 +21,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import javax.ejb.embeddable.EJBContainer;
-import javax.inject.Inject;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -61,7 +61,7 @@ public class TransactionTest {
      * Business object.
      */
     @Inject
-    private OrdersBoBean ordersBoBean;    
+    private OrdersBoBean ordersBoBean;
     /**
      * Business object.
      */
@@ -145,8 +145,9 @@ public class TransactionTest {
         System.setProperty("openejb.logger.external", "true");
         System.setProperty("openejb.log.factory", "log4j2");
         // Set up for JMS
-        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "*");
-        System.setProperty("openejb.environment.default", "true");
+        //System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "*");
+        //System.setProperty("openejb.environment.default", "true");
+        //System.setProperty("openejb.scan.webapp.container", "true");
         final Properties p = new Properties();
         // XADataSource
         p.put("dataSourceXa", String.format("new://Resource?type=XADataSource&class-name=%s", properties.getProperty(

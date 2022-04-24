@@ -4,14 +4,14 @@
 package com.codeferm.detonator;
 
 import com.codeferm.dto.OrderItems;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import jakarta.ejb.Singleton;
+import jakarta.inject.Inject;
+import jakarta.jms.JMSContext;
+import jakarta.jms.Queue;
+import jakarta.transaction.Transactional;
 import java.util.List;
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.jms.JMSContext;
-import javax.jms.Queue;
-import javax.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

@@ -3,10 +3,10 @@
  */
 package com.codeferm.detonator;
 
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSException;
+import jakarta.jms.Queue;
 import java.util.concurrent.TimeUnit;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-import javax.jms.Queue;
 
 /**
  * CreateOrder is not thread safe because it updates the inventory. SingleThreadExecutor used to make sure only one update at a
